@@ -1,0 +1,1663 @@
+@{
+    ViewData["Title"] = "Carton SN Label Print — Sakura";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    /* ── Sigma Red design tokens — shared across all Sakura pages ─────────── */
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .snl-page { max-width: 1040px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .snl-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+    .snl-header h1 { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.3px; color: var(--red-dark); }
+    .snl-header p {
+        font-family: var(--font-body); font-size: 0.85rem;
+        color: var(--gray-500); margin-top: 5px;
+    }
+    .snl-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 12px;
+        background: linear-gradient(90deg, var(--red-dark), var(--red-mid));
+    }
+    .snl-badge {
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .snl-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+    .snl-layout { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
+    .snl-left { width: 100%; min-width: 0; }
+    .snl-right { width: 100%; min-width: 0; }
+
+    /* Printer Configuration — same width as the other sections, just more compact
+       vertically (smaller padding/gaps/controls) since it only holds a handful of fields. */
+    .snl-right .t-section { padding: 16px 22px 14px; }
+    .snl-right .t-section-label { margin-bottom: 10px; }
+    .snl-right .mode-toggle { margin-bottom: 12px; }
+    .snl-right .mode-toggle label { padding: 8px 14px; }
+    .snl-right .t-grid { gap: 10px 16px; }
+    .snl-right .t-field { margin-bottom: 0; }
+    .snl-right .t-field label { margin-bottom: 4px; }
+    .snl-right .t-field input, .snl-right .t-field select { min-height: 38px; padding: 7px 12px; font-size: 13px; }
+    .snl-right .t-btn, .snl-right .btn-icon { min-height: 38px; padding: 8px 14px; }
+
+    /* ── Reused section/grid/field/button primitives (same as SnLabel.cshtml) ── */
+    .t-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 24px 26px 20px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .t-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+    .t-section-label .hint {
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.2px; text-transform: none;
+        color: var(--gray-400);
+    }
+
+    .t-grid { display: grid; gap: 16px 20px; }
+    .t-grid-2 { grid-template-columns: 1fr 1fr; }
+    .t-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .printer-grid { align-items: end; }
+    .usb-row .t-field { flex: 1; margin-bottom: 0; }
+
+    .mode-toggle {
+        display: flex; gap: 0; margin-bottom: 18px;
+        border: 1.5px solid var(--gray-200); border-radius: 10px; overflow: hidden;
+    }
+    .mode-toggle label {
+        flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 11px 16px; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-500); cursor: pointer;
+        transition: all 0.2s ease; margin-bottom: 0; user-select: none; background: var(--white);
+    }
+    .mode-toggle label:first-of-type { border-right: 1.5px solid var(--gray-200); }
+    .mode-toggle input[type="radio"] { display: none; }
+    .mode-toggle label.active { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); }
+
+    .node-indicator {
+        position: absolute; top: 20px; right: 24px; display: flex; align-items: center; gap: 6px;
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 600; color: var(--gray-500);
+    }
+    .node-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-400); }
+    .node-dot.alive { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .node-dot.dead { background: var(--danger); }
+
+    .usb-status { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; margin-top: 6px; height: 14px; color: var(--gray-500); }
+    .usb-status.ok  { color: var(--success); }
+    .usb-status.bad { color: var(--danger); }
+
+    /* ── Printer Configuration — collapsible header, same pattern as SnLabel.cshtml ──────── */
+    .snl-config-topright { position: absolute; top: 18px; right: 20px; display: flex; align-items: center; gap: 12px; }
+    .snl-config-topright .node-indicator { position: static; top: auto; right: auto; }
+    .snl-collapse-btn {
+        background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 6px; cursor: pointer;
+        width: 22px; height: 22px; padding: 0; margin: 0;
+        color: var(--gray-500); font-size: 12px; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .snl-collapse-btn:hover { color: var(--red); border-color: var(--red); background: var(--red-xlight); }
+    .snl-collapse-btn span { display: inline-block; transition: transform 0.2s ease; }
+    .snl-collapse-btn.open span { transform: rotate(180deg); }
+
+    /* Inline "✓ Saved" feedback next to a Save button — fades in/out instead of a toast. */
+    .snl-inline-saved {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; color: var(--success);
+        opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+    }
+    .snl-inline-saved.show { opacity: 1; }
+
+    /* "Saved" lit-up state on the Work Order Save button — stays green until Reset is pressed. */
+    .t-btn-ghost.is-saved, .t-btn-ghost.is-saved:hover {
+        background: var(--success); border-color: #047857; color: var(--white);
+    }
+
+    /* Work Order lookup result readout — 1 hàng, chia đều: Color / Quantity (remain/total) /
+       Carton (remain/total). */
+    .snl-readout {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        padding: 14px 4px; border-top: 1px dashed var(--gray-200); border-bottom: 1px dashed var(--gray-200);
+    }
+    .snl-readout .stat { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
+    .snl-readout .stat .k {
+        font-family: var(--font-body); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.4px;
+        text-transform: uppercase; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    }
+    .snl-readout .stat .v {
+        font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--red-dark); letter-spacing: 0.2px;
+    }
+    @@media (max-width: 480px) {
+        .snl-readout { grid-template-columns: 1fr; }
+    }
+
+    .btn-icon {
+        flex-shrink: 0; background: var(--white); border: 1.5px solid var(--gray-200); color: var(--gray-500);
+        font-family: var(--font-body); font-weight: 600; font-size: 0.8rem; min-height: 46px;
+        padding: 8px 14px; border-radius: 10px; cursor: pointer; margin-bottom: 0;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .btn-icon:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+
+    .t-field label {
+        display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .t-field input, .t-field select {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .t-field input:hover, .t-field select:hover { border-color: var(--red-mid); }
+    .t-field input:focus, .t-field select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .t-field input.invalid { border-color: var(--danger); }
+    .t-field select {
+        appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
+    }
+
+    .t-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .t-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 46px; padding: 11px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px;
+    }
+    .t-btn-primary { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); box-shadow: 0 4px 14px rgba(200,16,46,0.35); }
+    .t-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,16,46,0.4); }
+    .t-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .t-btn-outline { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-outline:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+    .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+
+    .t-status {
+        font-family: var(--font-body); font-size: 0.85rem; padding: 12px 16px; border-radius: 12px;
+        display: none; align-items: flex-start; gap: 10px; margin-top: 14px; line-height: 1.5;
+        box-shadow: var(--shadow-sm);
+    }
+    .t-status.show { display: flex; }
+    .t-status-inline { margin-top: 0; min-height: 40px; padding: 7px 12px; font-size: 0.75rem; box-shadow: none; }
+    .t-status.ok  { background: #ECFDF5; border-left: 3px solid var(--success); color: #065F46; }
+    .t-status.err { background: var(--red-xlight); border-left: 3px solid var(--danger); color: #7F1D1D; }
+
+    /* ── Serial numbers grid (same interaction pattern as /toast, reskinned) ── */
+    .serial-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-flow: column;
+        gap: 14px;
+        margin-top: 6px;
+    }
+    @@media (max-width: 640px) {
+        .serial-grid { grid-template-columns: 1fr; grid-auto-flow: row; }
+    }
+    .serial-input-wrap { position: relative; }
+    .serial-input-wrap input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 60px 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 13px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .serial-input-wrap input:hover { border-color: var(--red-mid); }
+    .serial-input-wrap input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .serial-input-wrap input.valid { border-color: var(--success); }
+    .serial-input-wrap input.invalid { border-color: var(--danger); }
+    .serial-input-wrap .slot-idx {
+        position: absolute; left: 14px; top: -8px; background: var(--white); padding: 0 4px;
+        font-family: var(--font-body); font-size: 10px; font-weight: 700; color: var(--gray-400); letter-spacing: 0.5px;
+    }
+    .serial-badge {
+        position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+        font-family: var(--font-body); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+        padding: 3px 7px; border-radius: 20px; display: none;
+    }
+    .serial-badge.ok  { display: block; background: #ECFDF5; color: var(--success); }
+    .serial-badge.err { display: block; background: var(--red-xlight); color: var(--danger); }
+
+    .count-pill {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+        min-height: 40px; padding: 8px 16px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        color: var(--gray-500); display: flex; align-items: center; gap: 6px;
+    }
+    .count-pill strong { color: var(--red-dark); font-size: 15px; font-family: var(--font-head); }
+
+    @@media (max-width: 860px) {
+        .t-grid-2, .t-grid-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Modal "Quản lý Pallet" ── */
+    .pm-overlay {
+        position: fixed; inset: 0; background: rgba(17,24,39,0.45); z-index: 200;
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .pm-modal {
+        background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg);
+        width: 100%; max-width: 640px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .pm-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 22px; border-bottom: 1px solid var(--gray-200);
+        font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--red-dark);
+    }
+    .pm-modal-close {
+        background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 8px; cursor: pointer;
+        width: 28px; height: 28px; padding: 0; color: var(--gray-500); font-size: 13px;
+        display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
+    }
+    .pm-modal-close:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .pm-modal-body { padding: 20px 22px; overflow-y: auto; }
+    .pm-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 0.8rem; }
+    .pm-table th {
+        text-align: left; padding: 8px 10px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px;
+        text-transform: uppercase; color: var(--gray-500); border-bottom: 1.5px solid var(--gray-200); white-space: nowrap;
+    }
+    .pm-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-100); color: var(--gray-900); }
+    .pm-table .pm-del-btn {
+        background: var(--red-xlight); color: var(--danger); border: 1px solid var(--red-light); border-radius: 8px;
+        cursor: pointer; padding: 5px 10px; font-size: 0.75rem; font-weight: 600;
+    }
+    .pm-table .pm-del-btn:hover { background: var(--red-light); }
+
+    /* ── Language switcher — fixed top-right, shared across all Sakura pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 560px) {
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("_LangSwitcher")
+
+<div class="snl-page">
+
+    <header class="snl-header">
+        <div>
+            <h1 data-i18n="cartonsn.title">CARTON SN LABEL PRINT</h1>
+            <p data-i18n="cartonsn.subtitle">Carton Serial Number Print — Sakura</p>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="snl-badge">SAKURA</div>
+    </header>
+
+    <div class="snl-layout">
+
+        <!-- ── Printer Configuration — collapsible, same pattern as SN Label ── -->
+        <div class="snl-right">
+            <div class="t-section" id="printerConfigSection" style="position:relative">
+                <div class="t-section-label" data-i18n="cartonsn.printerConfig">Printer Configuration</div>
+
+                <div class="snl-config-topright">
+                    <div class="node-indicator">
+                        <div class="node-dot" id="nodeDot"></div>
+                        <span id="nodeTxt" data-i18n="cartonsn.serviceChecking">Service …</span>
+                    </div>
+                    <button type="button" class="snl-collapse-btn" id="btnTogglePrinterConfig" data-i18n-title="cartonsn.printerConfigToggleTitle" title="Show/hide printer configuration" aria-expanded="false">
+                        <span id="printerConfigChevron">▾</span>
+                    </button>
+                </div>
+
+                <div id="printerConfigBody" style="display:none">
+                    <!-- Toggle TCP / USB — same component as SN Label / Print page -->
+                    <div class="mode-toggle" id="modeToggle" style="margin-bottom:18px">
+                        <label id="lblTcp" class="active">
+                            <input type="radio" name="cartonsn-print-mode" value="tcp" checked />
+                            <span class="mode-icon">🌐</span>
+                            <span>TCP / IP</span>
+                        </label>
+                        <label id="lblUsb">
+                            <input type="radio" name="cartonsn-print-mode" value="usb" />
+                            <span class="mode-icon">🔌</span>
+                            <span>USB</span>
+                        </label>
+                    </div>
+
+                    <!-- TCP block -->
+                    <div id="tcpBlock">
+                        <div class="t-grid t-grid-2 printer-grid">
+                            <div class="t-field">
+                                <label data-i18n="cartonsn.printerIp">Printer IP</label>
+                                <input type="text" id="printerIp" placeholder="192.168.1.100" />
+                            </div>
+                            <div class="t-field">
+                                <label data-i18n="cartonsn.port">Port</label>
+                                <input type="number" id="printerPort" value="9100" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="t-grid t-grid-2" style="margin-top:10px;align-items:start">
+                        <!-- USB block -->
+                        <div id="usbBlock" class="t-field" style="display:none;margin-bottom:0">
+                            <label data-i18n="cartonsn.usbPrinter">USB Printer</label>
+                            <select id="usbSelect" disabled>
+                                <option value="" data-i18n="cartonsn.usbScanHint">— Click 🔄 to scan —</option>
+                            </select>
+                            <div class="usb-status" id="usbStatus"></div>
+                        </div>
+
+                        <div class="t-field">
+                            <label data-i18n="cartonsn.copies">Copies</label>
+                            <input type="number" id="copies" value="1" min="1" max="10" />
+                        </div>
+                    </div>
+                    <div class="t-actions" style="margin-top:12px">
+                        <button class="t-btn t-btn-ghost" id="btnSavePrinter" data-i18n="cartonsn.save">Save</button>
+                        <span class="snl-inline-saved" id="printerSavedHint" data-i18n="cartonsn.savedHint">✓ Saved</span>
+                        <button class="btn-icon" id="btnRefreshUsb" type="button" data-i18n-title="cartonsn.refreshUsbTitle" title="Rescan printers">
+                            <span data-i18n="cartonsn.refreshUsb">🔄 Refresh</span>
+                        </button>
+                    </div>
+
+                    <div id="printerHint" class="t-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Print Label + Print Pallet + Print Label Carton ── -->
+        <div class="snl-left">
+
+            <div class="t-section" id="printLabelSection" style="position:relative">
+                <div class="t-section-label" data-i18n="cartonsn.printLabel">Work Order</div>
+
+                <div class="snl-config-topright">
+                    <button type="button" class="snl-collapse-btn open" id="btnTogglePrintLabel" data-i18n-title="cartonsn.printLabelToggleTitle" title="Show/hide Print Label" aria-expanded="true">
+                        <span id="printLabelChevron">▾</span>
+                    </button>
+                </div>
+
+                <div id="printLabelBody">
+                    <div style="display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px">
+                        <div class="t-field" style="flex:1;min-width:200px;margin-bottom:0">
+                            <label data-i18n="cartonsn.workOrder">Work Order</label>
+                            <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="cartonsn.workOrderPlaceholder" placeholder="Scan or type Work Order…" style="min-height:40px" />
+                        </div>
+                        <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" data-i18n="cartonsn.lookupBtn" style="min-height:40px">🔍 Lookup</button>
+                        <button type="button" class="t-btn t-btn-ghost" id="btnSaveWo" data-i18n="cartonsn.saveWoBtn" style="min-height:40px">💾 Save</button>
+                        <button type="button" class="t-btn t-btn-ghost" id="btnResetWo" data-i18n="cartonsn.resetBtn" style="min-height:40px">↺ Reset</button>
+                    </div>
+                    <div id="woStatus" class="t-status"></div>
+
+                    <!-- Condition cố định "New" theo yêu cầu nghiệp vụ hiện tại — ẩn khỏi UI (đổi hằng
+                         số CARTON_FIXED_CONDITION ở JS nếu cần đổi giá trị, sẽ có logic chọn riêng sau). -->
+                </div>
+            </div>
+
+            <div class="t-section" id="palletSection">
+                <div class="t-section-label" data-i18n="cartonsn.printPallet">Print Pallet</div>
+                <div id="palletLockedHint" class="hint" data-i18n="cartonsn.palletNeedWoFirst" style="margin:-8px 0 14px;color:var(--gray-400);font-size:0.75rem">Look up a Work Order first to unlock Print Pallet.</div>
+
+                <fieldset id="palletFieldset" disabled style="border:none;padding:0;margin:0">
+                    <div class="t-grid t-grid-2">
+                        <div class="t-field">
+                            <label data-i18n="cartonsn.palletId">Pallet ID</label>
+                            <input type="text" id="palletId" autocomplete="off" data-i18n-placeholder="cartonsn.palletIdPlaceholder" placeholder="PALLET-001" style="min-height:40px" />
+                        </div>
+                        <div class="t-field">
+                            <label data-i18n="cartonsn.poNumber">PO Number</label>
+                            <input type="text" id="poNumber" autocomplete="off" data-i18n-placeholder="cartonsn.poNumberPlaceholder" placeholder="Enter PO Number…" style="min-height:40px" />
+                        </div>
+                        <div class="t-field">
+                            <label data-i18n="cartonsn.inboundReference">Inbound Reference</label>
+                            <input type="text" id="inboundReference" autocomplete="off" data-i18n-placeholder="cartonsn.inboundReferencePlaceholder" placeholder="Enter Inbound Reference…" style="min-height:40px" />
+                        </div>
+                        <div class="t-field">
+                            <label data-i18n="cartonsn.warehouseReference">Warehouse Reference</label>
+                            <input type="text" id="warehouseReference" autocomplete="off" data-i18n-placeholder="cartonsn.warehouseReferencePlaceholder" placeholder="Enter Warehouse Reference…" style="min-height:40px" />
+                        </div>
+                    </div>
+
+                    <div class="t-field" style="margin-top:16px">
+                        <label data-i18n="cartonsn.deliveryAddress">Delivery Address</label>
+                        <textarea id="deliveryAddress" rows="1" data-i18n-placeholder="cartonsn.deliveryAddressPlaceholder" placeholder="Enter Delivery Address…" style="width:100%;min-height:40px;resize:vertical;background:var(--white);border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;font-family:var(--font-body);font-weight:500;font-size:14px;color:var(--gray-900);outline:none"></textarea>
+                    </div>
+
+                    <div class="t-actions" style="margin-top:14px">
+                        <button type="button" class="t-btn t-btn-ghost" id="btnSavePalletInfo" data-i18n="cartonsn.savePalletInfoBtn" style="min-height:40px">💾 Save Info</button>
+                        <span class="count-pill" id="palletBoxBadge" style="min-height:40px">
+                            <span data-i18n="cartonsn.boxesInPalletLabel">📦 Boxes in Pallet:</span>&nbsp;<strong id="palletBoxCount">0</strong>
+                        </span>
+                        <button type="button" class="t-btn t-btn-outline" id="btnManagePallet" data-i18n="cartonsn.managePalletBtn" style="min-height:40px">⚙️ Manage</button>
+                        <button type="button" class="t-btn t-btn-primary" id="btnPrintPalletLabel" data-i18n="cartonsn.printPalletLabelBtn" style="min-height:40px">🖨️ Print Pallet Label</button>
+                        <!-- TEMP TEST — gọi thẳng API /pallet/print, bỏ qua check bridge/máy in,
+                             không gửi bridge (chỉ tải .zpl). Xoá nút này sau khi test xong. -->
+                        <button type="button" class="t-btn t-btn-outline" id="btnTestPrintPalletLabel" style="min-height:40px">🧪 Test Print Pallet (no printer)</button>
+                    </div>
+                    <div id="palletStatus" class="t-status"></div>
+                </fieldset>
+            </div>
+
+            <!-- ── Modal "Quản lý Pallet" — quét/thêm Carton Number vào Pallet ID hiện tại + xoá
+                 từng thùng khỏi pallet. Ẩn mặc định, mở qua nút ⚙️ Manage. ── -->
+            <div id="palletManageOverlay" class="pm-overlay" style="display:none">
+                <div class="pm-modal">
+                    <div class="pm-modal-header">
+                        <span data-i18n="cartonsn.manageModalTitle">Manage Pallet</span>
+                        <button type="button" class="pm-modal-close" id="btnClosePalletManage" data-i18n-title="cartonsn.manageModalCloseTitle" title="Close" aria-label="Close">✕</button>
+                    </div>
+                    <div class="pm-modal-body">
+                        <div id="palletManageNoId" class="hint" data-i18n="cartonsn.manageEnterPalletIdFirst" style="display:none;padding:20px 0;text-align:center;color:var(--gray-500)">Enter a Pallet ID first.</div>
+                        <div id="palletManageContent" style="display:none">
+                            <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px">
+                                <div class="t-field" style="flex:1;margin-bottom:0">
+                                    <label data-i18n="cartonsn.manageAddCartonLabel">Add Carton Number</label>
+                                    <input type="text" id="manageCartonInput" autocomplete="off" data-i18n-placeholder="cartonsn.manageAddCartonPlaceholder" placeholder="Scan or type Carton Number…" style="min-height:40px" />
+                                </div>
+                            </div>
+                            <div id="manageStatus" class="t-status t-status-inline" style="margin-bottom:10px"></div>
+                            <div style="overflow-x:auto">
+                                <table class="pm-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="cartonsn.manageColId">ID</th>
+                                            <th data-i18n="cartonsn.manageColSerial">Serial</th>
+                                            <th data-i18n="cartonsn.manageColPalletId">Pallet ID</th>
+                                            <th data-i18n="cartonsn.manageColDelete">Delete</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="manageTableBody"></tbody>
+                                </table>
+                                <div id="manageEmptyHint" class="hint" data-i18n="cartonsn.manageNoBoxes" style="display:none;padding:14px 0;text-align:center;color:var(--gray-500)">No boxes scanned into this pallet yet.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-section">
+                <div class="t-section-label">
+                    <span data-i18n="cartonsn.serialNumbers">Print Label Carton</span>
+                    <span class="hint" data-i18n="cartonsn.serialHint">— quét barcode hoặc nhập tay</span>
+                </div>
+
+                <div class="snl-readout" id="woResolved" style="display:none;margin-bottom:16px">
+                    <div class="stat">
+                        <span class="k" data-i18n="cartonsn.color">Color</span>
+                        <span class="v" id="woColor">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="k" data-i18n="cartonsn.woQuantity">Remain Qty / Total Qty</span>
+                        <span class="v" id="woQuantity">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="k" data-i18n="cartonsn.woCarton">Remain Carton / Total Carton</span>
+                        <span class="v" id="woCarton">—</span>
+                    </div>
+                </div>
+
+                <div class="t-field" style="margin-bottom:18px">
+                    <label data-i18n="cartonsn.cartonNumber">Carton Number</label>
+                    <input type="text" id="cartonNumber" autocomplete="off" data-i18n-placeholder="cartonsn.cartonNumberPlaceholder" placeholder="Scan or type Carton Number…" style="min-height:40px" />
+                    <div id="cartonNumberStatus" class="t-status t-status-inline"></div>
+                </div>
+
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:18px">
+                    <div class="count-pill">
+                        <span data-i18n="cartonsn.scannedLabel">Đã quét:</span> <strong id="scannedCount">0</strong>&nbsp;/&nbsp;<span id="scannedTotal">10</span>
+                    </div>
+                </div>
+
+                <div id="serialGrid" class="serial-grid"></div>
+
+                <div class="t-actions" style="margin-top:18px">
+                    <!-- Quét đủ số ô Serial Number là tự động in luôn (xem handleSerialInput) —
+                         ẩn cả nút Print lẫn Preview ZPL, không cần bấm gì thêm. -->
+                    <button type="button" class="t-btn t-btn-primary" id="btnPrint" data-i18n="cartonsn.printBtn" style="display:none">🖨️ Print Carton Label</button>
+                    <!-- TEMP TEST — hiện tạm nút Preview ZPL để test không cần máy in/bridge hoạt
+                         động (previewZpl() vẫn lưu DB + gom Pallet như in thật, chỉ không gửi
+                         bridge). Bỏ data-i18n tạm để giữ nguyên chữ test này; khi revert thì đổi
+                         lại thành style="display:none" data-i18n="cartonsn.previewZplBtn" như cũ. -->
+                    <button type="button" class="t-btn t-btn-outline" id="btnPreviewZpl">📄 Preview ZPL (Test - no printer needed)</button>
+                </div>
+                <div id="printStatus" class="t-status"></div>
+            </div>
+
+            <div style="display:flex;gap:18px">
+                <a href="@Url.Content("~/sakura")" data-i18n="cartonsn.backHome" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
+                    letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
+                    ← Sakura Home
+                </a>
+                <a href="@Url.Content("~/sakura/cartonsn/history")" data-i18n="cartonsn.viewHistory" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
+                    letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
+                    View History →
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+<script>
+(function () {
+    const NODE_SERVICE = 'http://localhost:8021';
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+    const MAX_SN_PER_CARTON = 10;
+
+    // t() reads the current language live via SakuraI18n — keeps dynamically
+    // rendered text (status messages, USB scan results) in sync with EN/ZH.
+    function t(key, fallback) {
+        return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function showStatus(el, msg, type) {
+        el.textContent = msg;
+        el.classList.remove('ok', 'err');
+        el.classList.add('t-status', 'show', type);
+    }
+    function hideStatus(el) { el.classList.remove('show', 'ok', 'err'); }
+
+    // ── Print Label: Work Order / Carton Number ───────────────────────────────
+    const $workOrder     = document.getElementById('workOrder');
+    const $cartonNumber  = document.getElementById('cartonNumber');
+    const $cartonNumberStatus = document.getElementById('cartonNumberStatus');
+    const $btnLookupWo   = document.getElementById('btnLookupWo');
+    const $btnSaveWo     = document.getElementById('btnSaveWo');
+    const $btnResetWo    = document.getElementById('btnResetWo');
+    const $woStatus      = document.getElementById('woStatus');
+    const $woResolved    = document.getElementById('woResolved');
+    const $woColor       = document.getElementById('woColor');
+    const $woQuantity    = document.getElementById('woQuantity');
+    const $woCarton      = document.getElementById('woCarton');
+
+    // Condition tạm cố định "New" — bỏ dropdown theo yêu cầu, sẽ có logic chọn riêng sau.
+    const CARTON_FIXED_CONDITION = 'New';
+
+    const LS_WO = 'sakura_cartonsn_workorder';
+    const LS_CARTON = 'sakura_cartonsn_cartonnumber';
+
+    // Trạng thái Work Order đã lookup — resolvedColor lấy tự động từ Odoo (không còn dropdown
+    // Color để người dùng tự chọn), expectedQuantityThisCarton là số serial cần quét cho CARTON
+    // HIỆN TẠI (đủ hộp = CartonPcsPerCarton, hoặc lẻ hộp = đúng phần dư còn lại của WO).
+    let woResolvedOk = false;
+    let resolvedColor = null;
+    let woTotalQuantity = null;
+    let woRemainingQuantity = null;
+    let expectedQuantityThisCarton = null;
+    let woStatusHideTimer = null;
+
+    function loadWoFields() {
+        const wo = localStorage.getItem(LS_WO);
+        const carton = localStorage.getItem(LS_CARTON);
+        if (wo) $workOrder.value = wo;
+        if (carton) $cartonNumber.value = carton;
+    }
+
+    function resetWoState() {
+        woResolvedOk = false;
+        resolvedColor = null;
+        woTotalQuantity = null;
+        woRemainingQuantity = null;
+        expectedQuantityThisCarton = null;
+        $woResolved.style.display = 'none';
+
+        // Chưa có Work Order hợp lệ (WO đã in hết, chưa lookup, hoặc đang gõ WO khác) -> không
+        // cho nhập Carton Number/Serial Number, tránh quét nhầm vào 1 WO không rõ ràng. Chỉ mở
+        // lại khi lookupWorkOrder() trả về thành công (xem cuối lookupWorkOrder()).
+        $cartonNumber.value = '';
+        $cartonNumber.disabled = true;
+        $cartonNumber.classList.remove('invalid');
+        hideStatus($cartonNumberStatus);
+        $serialGrid.innerHTML = '';
+        $scannedTotal.textContent = '0';
+        $scannedCount.textContent = '0';
+        serialList = [];
+
+        // Print Pallet cần biết màu (SKU/PV ID + EAN) từ WO đã resolve -> khóa lại cùng lúc.
+        setPalletUnlocked(false);
+    }
+
+    async function lookupWorkOrder() {
+        const wo = $workOrder.value.trim();
+        resetWoState();
+
+        // WO đã đổi so với lần Save gần nhất -> đèn "đã save" không còn đúng nữa.
+        if (wo !== localStorage.getItem(LS_WO)) {
+            $btnSaveWo.classList.remove('is-saved');
+        }
+
+        clearTimeout(woStatusHideTimer);
+
+        if (!wo) {
+            showStatus($woStatus, `✗ ${t('cartonsn.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+            return;
+        }
+
+        showStatus($woStatus, `⏳ ${t('cartonsn.woLookingUp', 'Looking up…')}`, 'ok');
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/workorder-lookup?workOrder=${encodeURIComponent(wo)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.lookupFailed', 'Lookup failed.')));
+
+            resolvedColor = body.data.color;
+            woTotalQuantity = body.data.totalQuantity;
+            woRemainingQuantity = body.data.remainingQuantity;
+            expectedQuantityThisCarton = body.data.expectedQuantity;
+
+            $woColor.textContent = resolvedColor;
+            $woQuantity.textContent = `${woRemainingQuantity}/${woTotalQuantity}`;
+            $woCarton.textContent = `${body.data.remainingCarton}/${body.data.totalCarton}`;
+            $woResolved.style.display = 'grid';
+            woResolvedOk = true;
+
+            // WO hợp lệ + còn hàng -> mở lại Carton Number/Serial Number cho quét (resetWoState()
+            // ở đầu hàm đã khóa lại từ trước). Tự áp dụng số lượng serial cần quét cho carton
+            // hiện tại (đủ hộp hoặc lẻ hộp).
+            $cartonNumber.disabled = false;
+            buildSerialGrid(expectedQuantityThisCarton);
+            setPalletUnlocked(true);
+
+            const lookupMsg = t('cartonsn.woLookupSuccess', '{color} — this carton needs {qty} serial(s).')
+                .replace('{color}', resolvedColor).replace('{qty}', expectedQuantityThisCarton);
+            showStatus($woStatus, `✓ ${lookupMsg}`, 'ok');
+            woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
+            $cartonNumber.focus();
+        } catch (e) {
+            // Lookup fail (vd WO đã in đủ số lượng) -> Carton Number/Serial Number vẫn đang khóa
+            // (resetWoState() ở đầu hàm) — chỉ hiện thông báo + gợi ý đổi WO, KHÔNG tự làm gì
+            // thêm, để người vận hành tự nhận ra và đổi Work Order khác rồi Lookup lại.
+            showStatus($woStatus, `✗ ${e.message} ${t('cartonsn.pleaseChangeWo', 'Please change the Work Order and look up again.')}`, 'err');
+        }
+    }
+
+    $btnLookupWo.addEventListener('click', lookupWorkOrder);
+    $workOrder.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); lookupWorkOrder(); }
+    });
+    $workOrder.addEventListener('input', () => {
+        if ($workOrder.value.trim() !== localStorage.getItem(LS_WO)) {
+            $btnSaveWo.classList.remove('is-saved');
+        }
+        if (woResolvedOk) resetWoState();
+    });
+
+    // ── Save / Reset Work Order — Save ghi WO+Carton Number hiện tại vào localStorage để
+    // lần sau mở trang tự điền; Reset xóa ô nhập và mọi state đã resolve. ─────────────────
+    $btnSaveWo.addEventListener('click', () => {
+        const wo = $workOrder.value.trim();
+        if (!wo) {
+            showStatus($woStatus, `✗ ${t('cartonsn.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+            return;
+        }
+        localStorage.setItem(LS_WO, wo);
+        localStorage.setItem(LS_CARTON, $cartonNumber.value.trim());
+        showStatus($woStatus, `✓ ${t('cartonsn.savedMsg', '✓ Saved.')}`, 'ok');
+        clearTimeout(woStatusHideTimer);
+        woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
+        $btnSaveWo.classList.add('is-saved');
+    });
+
+    $btnResetWo.addEventListener('click', () => {
+        clearTimeout(woStatusHideTimer);
+        $workOrder.value = '';
+        resetWoState(); // xóa Carton Number + khóa lại, xóa toàn bộ ô Serial Number
+        localStorage.removeItem(LS_WO);
+        localStorage.removeItem(LS_CARTON);
+        $woStatus.className = 't-status';
+        $btnSaveWo.classList.remove('is-saved');
+        $workOrder.focus();
+    });
+
+    // ── Print Pallet — gom carton đã in vào 1 Pallet ID, đếm realtime, sinh Pallet Number lúc
+    // in tem. Khóa cả vùng cho tới khi WO đã lookup thành công (cần resolvedColor để tra
+    // SKU/PV ID + EAN) — xem setPalletUnlocked() gọi từ resetWoState()/lookupWorkOrder(). ──────
+    const $palletFieldset = document.getElementById('palletFieldset');
+    const $palletLockedHint = document.getElementById('palletLockedHint');
+    const $palletId = document.getElementById('palletId');
+    const $poNumber = document.getElementById('poNumber');
+    const $inboundReference = document.getElementById('inboundReference');
+    const $warehouseReference = document.getElementById('warehouseReference');
+    const $deliveryAddress = document.getElementById('deliveryAddress');
+    const $btnSavePalletInfo = document.getElementById('btnSavePalletInfo');
+    const $palletBoxCount = document.getElementById('palletBoxCount');
+    const $btnManagePallet = document.getElementById('btnManagePallet');
+    const $btnPrintPalletLabel = document.getElementById('btnPrintPalletLabel');
+    const $palletStatus = document.getElementById('palletStatus');
+
+    const LS_PALLET = {
+        id: 'sakura_cartonsn_pallet_id',
+        po: 'sakura_cartonsn_pallet_po',
+        inbound: 'sakura_cartonsn_pallet_inbound',
+        warehouse: 'sakura_cartonsn_pallet_warehouse',
+        address: 'sakura_cartonsn_pallet_address'
+    };
+
+    function setPalletUnlocked(unlocked) {
+        $palletFieldset.disabled = !unlocked;
+        $palletLockedHint.style.display = unlocked ? 'none' : '';
+        if (unlocked) refreshPalletBadge();
+    }
+
+    function loadPalletFields() {
+        const v = k => localStorage.getItem(k);
+        if (v(LS_PALLET.id)) $palletId.value = v(LS_PALLET.id);
+        if (v(LS_PALLET.po)) $poNumber.value = v(LS_PALLET.po);
+        if (v(LS_PALLET.inbound)) $inboundReference.value = v(LS_PALLET.inbound);
+        if (v(LS_PALLET.warehouse)) $warehouseReference.value = v(LS_PALLET.warehouse);
+        if (v(LS_PALLET.address)) $deliveryAddress.value = v(LS_PALLET.address);
+    }
+
+    $btnSavePalletInfo.addEventListener('click', () => {
+        localStorage.setItem(LS_PALLET.id, $palletId.value.trim());
+        localStorage.setItem(LS_PALLET.po, $poNumber.value.trim());
+        localStorage.setItem(LS_PALLET.inbound, $inboundReference.value.trim());
+        localStorage.setItem(LS_PALLET.warehouse, $warehouseReference.value.trim());
+        localStorage.setItem(LS_PALLET.address, $deliveryAddress.value.trim());
+        showStatus($palletStatus, `✓ ${t('cartonsn.savedMsg', '✓ Saved.')}`, 'ok');
+        setTimeout(() => hideStatus($palletStatus), 3000);
+    });
+
+    // Badge "📦 Boxes in Pallet: N" — chỉ hiển thị, không phải nút bấm. Refresh khi Pallet ID
+    // đổi (debounce), sau khi thêm/xoá thùng trong modal Quản lý, và lúc mở khoá vùng này.
+    async function refreshPalletBadge() {
+        const palletId = $palletId.value.trim();
+        if (!palletId) { $palletBoxCount.textContent = '0'; return; }
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/boxes?palletId=${encodeURIComponent(palletId)}`);
+            const body = await res.json();
+            if (res.ok && body.ok) $palletBoxCount.textContent = body.data.boxCount;
+        } catch (e) { /* chỉ là badge hiển thị — im lặng bỏ qua lỗi mạng, không chặn thao tác khác */ }
+    }
+
+    let palletIdDebounce;
+    $palletId.addEventListener('input', () => {
+        clearTimeout(palletIdDebounce);
+        palletIdDebounce = setTimeout(refreshPalletBadge, 300);
+    });
+
+    // ── Modal "Quản lý Pallet" — quét/thêm Carton Number vào Pallet ID hiện tại (server tự chặn
+    // carton không tồn tại/đã thuộc pallet khác/khác màu — xem ScanCartonIntoPalletAsync), xoá
+    // từng dòng để gỡ carton khỏi pallet (trừ lại số đếm). ──────────────────────────────────
+    const $palletManageOverlay = document.getElementById('palletManageOverlay');
+    const $btnClosePalletManage = document.getElementById('btnClosePalletManage');
+    const $palletManageNoId = document.getElementById('palletManageNoId');
+    const $palletManageContent = document.getElementById('palletManageContent');
+    const $manageCartonInput = document.getElementById('manageCartonInput');
+    const $manageStatus = document.getElementById('manageStatus');
+    const $manageTableBody = document.getElementById('manageTableBody');
+    const $manageEmptyHint = document.getElementById('manageEmptyHint');
+
+    function openPalletManage() {
+        $palletManageOverlay.style.display = 'flex';
+        hideStatus($manageStatus);
+        $manageCartonInput.value = '';
+        if (!$palletId.value.trim()) {
+            $palletManageNoId.style.display = '';
+            $palletManageContent.style.display = 'none';
+            return;
+        }
+        $palletManageNoId.style.display = 'none';
+        $palletManageContent.style.display = '';
+        loadManageBoxes();
+        $manageCartonInput.focus();
+    }
+    function closePalletManage() { $palletManageOverlay.style.display = 'none'; }
+
+    $btnManagePallet.addEventListener('click', openPalletManage);
+    $btnClosePalletManage.addEventListener('click', closePalletManage);
+    $palletManageOverlay.addEventListener('click', (e) => { if (e.target === $palletManageOverlay) closePalletManage(); });
+
+    function renderManageTable(boxes) {
+        $manageTableBody.innerHTML = boxes.map(b => `
+            <tr>
+                <td>${b.id}</td>
+                <td>${escHtml(b.cartonNumber)}</td>
+                <td>${escHtml(b.palletId || '')}</td>
+                <td><button type="button" class="pm-del-btn" data-carton="${escHtml(b.cartonNumber)}">${t('cartonsn.manageColDelete', 'Delete')}</button></td>
+            </tr>`).join('');
+        $manageEmptyHint.style.display = boxes.length === 0 ? '' : 'none';
+        $manageTableBody.querySelectorAll('.pm-del-btn').forEach(btn => {
+            btn.addEventListener('click', () => unscanCarton(btn.getAttribute('data-carton')));
+        });
+    }
+
+    async function loadManageBoxes() {
+        const palletId = $palletId.value.trim();
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/boxes?palletId=${encodeURIComponent(palletId)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.managePalletLoadFailed', 'Could not load pallet boxes.')));
+            renderManageTable(body.data.boxes);
+            $palletBoxCount.textContent = body.data.boxCount;
+        } catch (e) {
+            showStatus($manageStatus, `✗ ${e.message}`, 'err');
+        }
+    }
+
+    async function scanCartonIntoPallet() {
+        const palletId = $palletId.value.trim();
+        const cartonNumber = $manageCartonInput.value.trim();
+        if (!cartonNumber) return;
+        if (!palletId) {
+            showStatus($manageStatus, `✗ ${t('cartonsn.managePalletIdRequired', 'Enter a Pallet ID first.')}`, 'err');
+            return;
+        }
+        if (!resolvedColor) {
+            showStatus($manageStatus, `✗ ${t('cartonsn.woLookupRequired', 'Look up a Work Order first.')}`, 'err');
+            return;
+        }
+        $manageCartonInput.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/scan-box`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ palletId, cartonNumber, color: resolvedColor })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.manageScanFailed', 'Could not add this Carton Number to the pallet.')));
+            renderManageTable(body.data.boxes);
+            $palletBoxCount.textContent = body.data.boxCount;
+            $manageCartonInput.value = '';
+            hideStatus($manageStatus);
+        } catch (e) {
+            showStatus($manageStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            $manageCartonInput.disabled = false;
+            $manageCartonInput.focus();
+        }
+    }
+
+    async function unscanCarton(cartonNumber) {
+        const palletId = $palletId.value.trim();
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/unscan-box`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ palletId, cartonNumber })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.manageUnscanFailed', 'Could not remove this box from the pallet.')));
+            renderManageTable(body.data.boxes);
+            $palletBoxCount.textContent = body.data.boxCount;
+        } catch (e) {
+            showStatus($manageStatus, `✗ ${e.message}`, 'err');
+        }
+    }
+
+    let manageCartonDebounce;
+    $manageCartonInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        clearTimeout(manageCartonDebounce);
+        scanCartonIntoPallet();
+    });
+    $manageCartonInput.addEventListener('input', () => {
+        clearTimeout(manageCartonDebounce);
+        manageCartonDebounce = setTimeout(scanCartonIntoPallet, 250);
+    });
+
+    // ── In tem Pallet — server tự tính lại tổng thùng/unit từ DB (không tin số client), sinh
+    // (hoặc dùng lại nếu Pallet ID này đã từng in) Pallet Number, rồi gửi ZPL qua CHUNG khối
+    // Printer Configuration/Local Bridge với luồng in Carton Label ở trên. ─────────────────────
+    async function doPrintPalletLabel() {
+        const palletId = $palletId.value.trim();
+        if (!palletId) {
+            showStatus($palletStatus, `✗ ${t('cartonsn.managePalletIdRequired', 'Enter a Pallet ID first.')}`, 'err');
+            return;
+        }
+        if (!woResolvedOk || !resolvedColor) {
+            showStatus($palletStatus, `✗ ${t('cartonsn.woLookupRequired', 'Look up a Work Order first.')}`, 'err');
+            return;
+        }
+        if (!bridgeOnline || !isPrinterConfigured()) {
+            showStatus($palletStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+
+        $btnPrintPalletLabel.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    palletId,
+                    poNumber: $poNumber.value.trim(),
+                    inboundReference: $inboundReference.value.trim(),
+                    warehouseReference: $warehouseReference.value.trim(),
+                    deliveryAddress: $deliveryAddress.value.trim()
+                })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printPalletFailed', 'Print Pallet Label failed.')));
+
+            const zpl = body.zpl;
+            const copies = parseInt($copies.value) || 1;
+            let msg = `✓ ${t('cartonsn.printPalletGeneratedMsg', 'Pallet label generated ({pallet}, {cartons} carton(s) / {units} unit(s)).')
+                .replace('{pallet}', body.palletNumber).replace('{cartons}', body.quantityCartons).replace('{units}', body.quantityUnits)}`;
+            let statusType = 'ok';
+
+            if (printMode === 'usb') {
+                const printerName = $usbSelect.value;
+                if (printerName) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridgeUsb(zpl, printerName);
+                        msg += t('cartonsn.sentToUsbPrinter', ' Sent to USB printer "{name}" (Local Bridge).').replace('{name}', printerName);
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `pallet-${body.palletNumber}.zpl`);
+                    msg += t('cartonsn.noUsbSelected', ' No USB printer selected — downloaded .zpl file instead.');
+                }
+            } else {
+                const printerIp = $printerIp.value.trim();
+                const printerPort = parseInt($printerPort.value) || 9100;
+                if (printerIp) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridge(zpl, printerIp, printerPort);
+                        msg += t('cartonsn.sentToTcpPrinter', ' Sent to {ip}:{port} (Local Bridge).').replace('{ip}', printerIp).replace('{port}', printerPort);
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `pallet-${body.palletNumber}.zpl`);
+                    msg += t('cartonsn.noIpSet', ' No printer IP set — downloaded .zpl file instead.');
+                }
+            }
+
+            // Chốt pallet xong -> reset Pallet ID + badge để bắt đầu pallet mới ngay (carton đã
+            // gán Pallet ID/Pallet Number vẫn giữ nguyên trong DB, chỉ xoá ô nhập trên UI). PO/
+            // Inbound reference/Warehouse reference/Delivery address giữ nguyên, không reset.
+            if (statusType === 'ok') {
+                $palletId.value = '';
+                localStorage.removeItem(LS_PALLET.id);
+                $palletBoxCount.textContent = '0';
+            }
+            showStatus($palletStatus, msg, statusType);
+        } catch (e) {
+            showStatus($palletStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            $btnPrintPalletLabel.disabled = false;
+        }
+    }
+
+    $btnPrintPalletLabel.addEventListener('click', doPrintPalletLabel);
+
+    // TEMP TEST — bản rút gọn của doPrintPalletLabel(), bỏ check bridgeOnline/isPrinterConfigured
+    // và KHÔNG gửi bridge (luôn tải file .zpl) để test được "chốt pallet" (sinh Pallet Number,
+    // lưu DB, reset Pallet ID/badge) khi máy in/Local Bridge đang lỗi. Xoá hẳn function này +
+    // nút #btnTestPrintPalletLabel trong HTML sau khi test xong.
+    const $btnTestPrintPalletLabel = document.getElementById('btnTestPrintPalletLabel');
+    async function doTestPrintPalletLabel() {
+        const palletId = $palletId.value.trim();
+        if (!palletId) {
+            showStatus($palletStatus, `✗ ${t('cartonsn.managePalletIdRequired', 'Enter a Pallet ID first.')}`, 'err');
+            return;
+        }
+        if (!woResolvedOk || !resolvedColor) {
+            showStatus($palletStatus, `✗ ${t('cartonsn.woLookupRequired', 'Look up a Work Order first.')}`, 'err');
+            return;
+        }
+
+        $btnTestPrintPalletLabel.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    palletId,
+                    poNumber: $poNumber.value.trim(),
+                    inboundReference: $inboundReference.value.trim(),
+                    warehouseReference: $warehouseReference.value.trim(),
+                    deliveryAddress: $deliveryAddress.value.trim()
+                })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printPalletFailed', 'Print Pallet Label failed.')));
+
+            downloadZplFile(body.zpl, `pallet-${body.palletNumber}-TEST.zpl`);
+            $palletId.value = '';
+            localStorage.removeItem(LS_PALLET.id);
+            $palletBoxCount.textContent = '0';
+            showStatus($palletStatus, `✓ [TEST] Pallet label generated (${body.palletNumber}, ${body.quantityCartons} carton(s) / ${body.quantityUnits} unit(s)) — no printer used, downloaded .zpl instead.`, 'ok');
+        } catch (e) {
+            showStatus($palletStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            $btnTestPrintPalletLabel.disabled = false;
+        }
+    }
+    $btnTestPrintPalletLabel.addEventListener('click', doTestPrintPalletLabel);
+
+    // Carton Number không được trùng — mỗi carton là 1 định danh vật lý riêng, đã in rồi thì
+    // không cho nhập lại. Check ngay khi bấm Enter (trước khi nhảy focus sang ô SN đầu tiên),
+    // trùng thì báo lỗi + reset ô + focus lại để nhập cái khác (build-zpl vẫn re-check lại lần
+    // nữa phòng trường hợp bỏ qua bước này — xem BuildCartonLabelZplAsync).
+    async function verifyCartonNumber() {
+        const value = $cartonNumber.value.trim();
+        $cartonNumber.classList.remove('invalid');
+        hideStatus($cartonNumberStatus);
+        if (!value) return false;
+
+        $cartonNumber.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/verify-carton-number?cartonNumber=${encodeURIComponent(value)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) {
+                $cartonNumber.classList.add('invalid');
+                showStatus($cartonNumberStatus, `✗ ${window.SakuraI18n.translateApiError(body, t('cartonsn.cartonNumberAlreadyUsed', 'This Carton Number has already been used.'))}`, 'err');
+                $cartonNumber.value = '';
+                return false;
+            }
+            return true;
+        } catch (e) {
+            showStatus($cartonNumberStatus, `✗ ${t('cartonsn.cartonNumberCheckNetworkError', 'Could not verify Carton Number — check the network and try again.')}`, 'err');
+            return false;
+        } finally {
+            $cartonNumber.disabled = false;
+            $cartonNumber.focus();
+        }
+    }
+
+    // Quét xong (máy quét thường không tự gửi Enter) → debounce 200ms rồi tự check + nhảy
+    // xuống ô Serial đầu tiên, không cần bấm Enter thủ công nữa. Enter vẫn hoạt động để check
+    // ngay lập tức cho ai gõ tay muốn xác nhận luôn.
+    let cartonNumberDebounce;
+    async function checkCartonNumberAndAdvance() {
+        clearTimeout(cartonNumberDebounce);
+        const ok = await verifyCartonNumber();
+        if (ok) document.querySelector('#serialGrid input')?.focus();
+    }
+
+    $cartonNumber.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        checkCartonNumberAndAdvance();
+    });
+    $cartonNumber.addEventListener('input', () => {
+        $cartonNumber.classList.remove('invalid');
+        hideStatus($cartonNumberStatus);
+        clearTimeout(cartonNumberDebounce);
+        cartonNumberDebounce = setTimeout(checkCartonNumberAndAdvance, 200);
+    });
+
+    // ── Serial numbers grid — quét barcode hoặc nhập tay (same pattern as /toast) ──
+    // Số lượng serial/carton không còn ô nhập tay + nút Apply — tự tính từ Work Order lookup
+    // (expectedQuantityThisCarton), mặc định MAX_SN_PER_CARTON khi chưa lookup.
+    const $serialGrid   = document.getElementById('serialGrid');
+    const $scannedCount = document.getElementById('scannedCount');
+    const $scannedTotal = document.getElementById('scannedTotal');
+
+    let serialList = [];
+
+    function buildSerialGrid(qty) {
+        qty = parseInt(qty) || MAX_SN_PER_CARTON;
+        qty = Math.min(Math.max(qty, 1), MAX_SN_PER_CARTON);
+
+        serialList = [];
+        $serialGrid.innerHTML = '';
+        $scannedTotal.textContent = qty;
+        $scannedCount.textContent = '0';
+
+        // 3 cột, đổ theo cột (SN1-4 cột 1, SN5-8 cột 2, SN9-10 cột 3) thay vì theo hàng.
+        const rows = Math.ceil(qty / 3);
+        $serialGrid.style.gridTemplateRows = `repeat(${rows}, auto)`;
+
+        for (let i = 0; i < qty; i++) {
+            const wrap = document.createElement('div');
+            wrap.className = 'serial-input-wrap';
+            wrap.innerHTML = `
+                <span class="slot-idx">SN ${i + 1}</span>
+                <input type="text" id="ser_${i}" placeholder="${t('cartonsn.serialSlotPlaceholder', 'Serial Number {n}').replace('{n}', i + 1)}" autocomplete="off" />
+                <span class="serial-badge" id="badge_${i}"></span>`;
+            $serialGrid.appendChild(wrap);
+        }
+
+        const inputs = $serialGrid.querySelectorAll('input');
+        let timers = {};
+        inputs.forEach((inp, idx) => {
+            inp.addEventListener('input', () => {
+                clearTimeout(timers[idx]);
+                timers[idx] = setTimeout(() => handleSerialInput(inp, idx, inputs), 200);
+            });
+        });
+        inputs[0]?.focus();
+    }
+
+    // 3 điều kiện check khi quét 1 SN vào carton (tránh in nhầm): (1) định dạng Serial Number,
+    // (2) trùng với serial khác đã quét TRONG LẦN NÀY (client tự check bằng string/array —
+    // serialList), (3) đã được quét/in ở carton khác chưa (phải tra DB, gọi server). (1) và (3)
+    // cùng đi qua 1 API duy nhất (verify-serial) vì (3) cần DB, gọi 1 lần cho gọn.
+    async function handleSerialInput(inp, idx, inputs) {
+        const val = inp.value.trim();
+        const badge = document.getElementById(`badge_${idx}`);
+
+        if (!val) {
+            if (inp.dataset.oldVal) serialList = serialList.filter(s => s !== inp.dataset.oldVal);
+            inp.dataset.oldVal = '';
+            inp.className = '';
+            badge.className = 'serial-badge';
+            $scannedCount.textContent = serialList.length;
+            return;
+        }
+
+        // Check (2): trùng trong lần quét hiện tại — không cần gọi server.
+        if (serialList.includes(val) && inp.dataset.oldVal !== val) {
+            markInvalid(inp, badge, t('cartonsn.duplicateSerialShort', 'Duplicate'));
+            showStatus($printStatus, `✗ ${t('cartonsn.duplicateSerial', 'Duplicate serial')}: ${val}`, 'err');
+            inp.value = '';
+            return;
+        }
+
+        // Check (1) + (3): định dạng + đã quét/in ở carton khác chưa.
+        inp.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/verify-serial?serial=${encodeURIComponent(val)}`);
+            const verify = await res.json();
+            if (!res.ok || !verify.ok) {
+                const shortLabel = verify.errorCode === 'cartonLabel.serialAlreadyUsed'
+                    ? t('cartonsn.serialAlreadyUsedShort', 'Already used')
+                    : t('cartonsn.invalidFormatShort', 'Invalid format');
+                markInvalid(inp, badge, shortLabel);
+                showStatus($printStatus, `✗ ${window.SakuraI18n.translateApiError(verify, t('cartonsn.serialCheckFailed', 'Serial check failed.'))}`, 'err');
+                return;
+            }
+        } catch (e) {
+            markInvalid(inp, badge, t('cartonsn.networkErrorShort', 'Network error'));
+            showStatus($printStatus, `✗ ${t('cartonsn.serialCheckNetworkError', 'Could not verify this serial — check the network and try again.')}`, 'err');
+            return;
+        } finally {
+            inp.disabled = false;
+        }
+
+        if (inp.dataset.oldVal) serialList = serialList.filter(s => s !== inp.dataset.oldVal);
+        serialList.push(val);
+        inp.dataset.oldVal = val;
+        markValid(inp, badge);
+        $scannedCount.textContent = serialList.length;
+
+        if (idx < inputs.length - 1) {
+            inputs[idx + 1].focus();
+        } else if (serialList.length === inputs.length) {
+            // Quét đủ số lượng đã đặt → tự động in luôn, không cần bấm nút nào cả.
+            doPrint();
+        }
+    }
+
+    function markValid(inp, badge) {
+        inp.className = 'valid';
+        badge.textContent = '✓';
+        badge.className = 'serial-badge ok';
+    }
+    function markInvalid(inp, badge, msg) {
+        inp.className = 'invalid';
+        badge.textContent = msg;
+        badge.className = 'serial-badge err';
+        setTimeout(() => { inp.value = ''; inp.className = ''; badge.className = 'serial-badge'; }, 1400);
+    }
+
+    // ── Print Carton Label — build ZPL server-side, send to Local Bridge ──────
+    const CARTON_REAL_PRINT_ENABLED = true;
+
+    const $btnPrint  = document.getElementById('btnPrint');
+    const $btnPreviewZpl = document.getElementById('btnPreviewZpl');
+    const $printStatus = document.getElementById('printStatus');
+
+    function isPrinterConfigured() {
+        return printMode === 'usb' ? !!$usbSelect.value : !!$printerIp.value.trim();
+    }
+    function printerNotReadyMessage() {
+        return !bridgeOnline
+            ? t('cartonsn.printerServiceOffline', 'Print Service is offline — cannot print.')
+            : t('cartonsn.printerNotConnected', 'No printer connected — select a printer in Printer Configuration first.');
+    }
+
+    // Browser → local bridge (localhost:8021) → printer, same flow as SN Label / Toast pages.
+    async function sendToBridge(zpl, printerIp, printerPort) {
+        const res = await fetch(`${NODE_SERVICE}/print`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ zpl, printerIp, printerPort })
+        });
+        if (!res.ok) throw new Error(t('cartonsn.bridgeSendFailed', 'Failed to send print job to Local Bridge.'));
+    }
+
+    async function sendToBridgeUsb(zpl, printerName) {
+        const res = await fetch(`${NODE_SERVICE}/print-usb`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ zpl, printerName })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.success === false) {
+            throw new Error((data && data.error) || t('cartonsn.bridgeSendFailedUsb', 'Failed to send print job to Local Bridge (USB).'));
+        }
+    }
+
+    function downloadZplFile(zpl, filename) {
+        const blob = new Blob([zpl], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    // Mảng gửi lên server phải đúng VỊ TRÍ ô SN1..SN10 trên form (khớp {sn1}..{sn10} trong
+    // template) — không dùng serialList (chỉ để đếm/check trùng), vì serialList xếp theo thứ
+    // tự gõ/sửa xong ô nào trước, không phải theo đúng ô. Đọc trực tiếp .value của từng input
+    // theo đúng thứ tự DOM, ô nào đang trống thì giữ nguyên chuỗi rỗng ở đúng vị trí đó.
+    function getOrderedSerials() {
+        return Array.from($serialGrid.querySelectorAll('input')).map(inp => inp.value.trim());
+    }
+
+    // Đọc + validate Work Order/Carton Number trước khi gọi API build ZPL — dùng chung cho cả
+    // Print lẫn Preview ZPL (Preview không cần bridge/máy in, chỉ cần build+xem ZPL). Color giờ
+    // lấy tự động từ Work Order lookup (resolvedColor), Condition tạm cố định "New".
+    function readCartonFormOrNull() {
+        const cartonNumber = $cartonNumber.value.trim();
+
+        if (!woResolvedOk || !resolvedColor) {
+            showStatus($printStatus, `✗ ${t('cartonsn.woLookupRequired', 'Look up a Work Order first.')}`, 'err');
+            $workOrder.focus();
+            return null;
+        }
+        if (!cartonNumber) {
+            showStatus($printStatus, `✗ ${t('cartonsn.cartonNumberRequired', 'Enter a Carton Number first.')}`, 'err');
+            $cartonNumber.focus();
+            return null;
+        }
+        if (serialList.length === 0) {
+            showStatus($printStatus, `✗ ${t('cartonsn.noSerials', 'Scan at least 1 serial number first.')}`, 'err');
+            return null;
+        }
+        return { workOrder: $workOrder.value.trim(), cartonNumber, color: resolvedColor, condition: CARTON_FIXED_CONDITION };
+    }
+
+    // Xem/tải ZPL sau khi đã thay biến — gọi thẳng server build ZPL, KHÔNG cần Local Bridge
+    // hay máy in kết nối (vd đang test ở nhà, không có mạng tới máy in) — chỉ để kiểm tra
+    // nội dung ZPL cuối cùng trước khi in thật.
+    async function previewZpl() {
+        const form = readCartonFormOrNull();
+        if (!form) return;
+
+        $btnPreviewZpl.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...form, serialNumbers: getOrderedSerials() })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printFailed', 'Print failed.')));
+
+            downloadZplFile(body.zpl, `carton-${form.cartonNumber}-preview.zpl`);
+
+            // Theo yêu cầu hiện tại (đang giai đoạn test, chưa in tem thật) — Preview ZPL cũng
+            // tính là đã "in xong": lưu DB + reset Carton Number/Serial Number, y hệt luồng in
+            // thật (doPrint). Nút Print thật đang ẩn nên đây là cách duy nhất để test hết luồng.
+            const result = await finishSuccessfulPrint(form);
+            const reportOk = !!result;
+            let reportWarning = reportOk ? '' : ` ⚠ ${t('cartonsn.reportResultFailed', 'Could not save the scan record to the server.')}`;
+            if (reportOk && result.palletAttachWarning) reportWarning += ` ⚠ ${result.palletAttachWarning}`;
+            showStatus($printStatus, `✓ ${t('cartonsn.zplPreviewReady', 'ZPL preview downloaded — no printer needed to check it.')}${reportWarning}`, reportOk ? 'ok' : 'err');
+        } catch (e) {
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            $btnPreviewZpl.disabled = false;
+        }
+    }
+
+    $btnPreviewZpl.addEventListener('click', previewZpl);
+
+    // Lưu các serial không rỗng vào DB (SM_Sakura_CartonLabel_Data) — CHỈ gọi sau khi ZPL coi
+    // như đã "in xong" (bridge thành công, hoặc Preview theo yêu cầu test hiện tại). Gửi kèm
+    // Pallet ID đang nhập (nếu có) để server gom thẳng carton này vào pallet ngay lúc lưu — xem
+    // RecordCartonScanAsync. Trả về body đầy đủ (thay vì chỉ true/false) để lấy count mới nhất
+    // + cảnh báo khác màu (nếu có).
+    async function reportCartonPrintResult(form, orderedSerials) {
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/report-print-result`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...form, serialNumbers: orderedSerials, palletId: $palletId.value.trim() })
+            });
+            const body = await res.json().catch(() => null);
+            return (res.ok && body && body.ok) ? body : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Sau khi 1 tem coi như đã "in xong" -> lưu DB (kèm gom vào Pallet nếu có Pallet ID), cập
+    // nhật ngay badge "Boxes in Pallet" từ count server trả về, rồi LOOKUP LẠI WO (không tin số
+    // cộng dồn cục bộ — có thể trạm khác cũng đang in cùng WO này) để lấy đúng Qty Print/Remain
+    // thật từ server. lookupWorkOrder() tự lo xóa/khóa Carton Number + Serial Number rồi mở lại +
+    // build đúng số ô cho carton kế tiếp nếu WO còn hàng (xem resetWoState()) — nếu WO đã hết thì
+    // giữ nguyên khóa + hiện thông báo, không cần code gì thêm ở đây. Dùng chung cho cả doPrint
+    // (in thật) lẫn previewZpl (đang test, xem mục đích ở previewZpl()).
+    async function finishSuccessfulPrint(form) {
+        const result = await reportCartonPrintResult(form, getOrderedSerials());
+        if (result && result.pallet) $palletBoxCount.textContent = result.pallet.boxCount;
+        await lookupWorkOrder();
+        return result;
+    }
+
+    let printing = false;
+
+    async function doPrint() {
+        if (printing || !CARTON_REAL_PRINT_ENABLED) return;
+
+        const form = readCartonFormOrNull();
+        if (!form) return;
+        const { cartonNumber, color, condition } = form;
+
+        if (!bridgeOnline || !isPrinterConfigured()) {
+            showStatus($printStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+
+        printing = true;
+        $btnPrint.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cartonNumber, color, condition, serialNumbers: getOrderedSerials() })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printFailed', 'Print failed.')));
+
+            const zpl = body.zpl;
+            const copies = parseInt($copies.value) || 1;
+            let msg = `✓ ${t('cartonsn.generatedLabelMsg', 'Carton label generated ({n} serial(s)).').replace('{n}', serialList.length)}`;
+            let statusType = 'ok';
+            let sentOk = false;
+
+            if (printMode === 'usb') {
+                const printerName = $usbSelect.value;
+                if (printerName) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridgeUsb(zpl, printerName);
+                        msg += t('cartonsn.sentToUsbPrinter', ' Sent to USB printer "{name}" (Local Bridge).').replace('{name}', printerName);
+                        sentOk = true;
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `carton-${cartonNumber}.zpl`);
+                    msg += t('cartonsn.noUsbSelected', ' No USB printer selected — downloaded .zpl file instead.');
+                }
+            } else {
+                const printerIp = $printerIp.value.trim();
+                const printerPort = parseInt($printerPort.value) || 9100;
+                if (printerIp) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridge(zpl, printerIp, printerPort);
+                        msg += t('cartonsn.sentToTcpPrinter', ' Sent to {ip}:{port} (Local Bridge).').replace('{ip}', printerIp).replace('{port}', printerPort);
+                        sentOk = true;
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `carton-${cartonNumber}.zpl`);
+                    msg += t('cartonsn.noIpSet', ' No printer IP set — downloaded .zpl file instead.');
+                }
+            }
+
+            // Chỉ ghi DB khi ZPL thật sự đã gửi tới máy in thành công — tải file .zpl (nhánh
+            // "không có IP/USB") không tính là đã in, không được trừ vào số lượng Work Order.
+            if (sentOk) {
+                const result = await finishSuccessfulPrint(form);
+                if (!result) msg += ` ⚠ ${t('cartonsn.reportResultFailed', 'Could not save the scan record to the server.')}`;
+                else if (result.palletAttachWarning) msg += ` ⚠ ${result.palletAttachWarning}`;
+            }
+            showStatus($printStatus, msg, statusType);
+        } catch (e) {
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            printing = false;
+            $btnPrint.disabled = false;
+        }
+    }
+
+    $btnPrint.addEventListener('click', doPrint);
+
+    // ── Printer Configuration — collapsed by default, same pattern as SN Label ────────────
+    const $printerConfigBody = document.getElementById('printerConfigBody');
+    const $btnTogglePrinterConfig = document.getElementById('btnTogglePrinterConfig');
+    let printerConfigOpen = false;
+    function setPrinterConfigOpen(open) {
+        printerConfigOpen = open;
+        $printerConfigBody.style.display = open ? '' : 'none';
+        $btnTogglePrinterConfig.classList.toggle('open', open);
+        $btnTogglePrinterConfig.setAttribute('aria-expanded', String(open));
+    }
+    $btnTogglePrinterConfig.addEventListener('click', () => setPrinterConfigOpen(!printerConfigOpen));
+
+    // ── Print Label (Work Order) — same collapse pattern, open by default so the operator can
+    // type/scan a Work Order right away; collapse manually once resolved to save space. ──
+    const $printLabelBody = document.getElementById('printLabelBody');
+    const $btnTogglePrintLabel = document.getElementById('btnTogglePrintLabel');
+    let printLabelOpen = true;
+    function setPrintLabelOpen(open) {
+        printLabelOpen = open;
+        $printLabelBody.style.display = open ? '' : 'none';
+        $btnTogglePrintLabel.classList.toggle('open', open);
+        $btnTogglePrintLabel.setAttribute('aria-expanded', String(open));
+    }
+    $btnTogglePrintLabel.addEventListener('click', () => setPrintLabelOpen(!printLabelOpen));
+
+    // ── Printer config — same pattern as SN Label / Toast pages ───────────────
+    const $printerIp   = document.getElementById('printerIp');
+    const $printerPort = document.getElementById('printerPort');
+    const $copies      = document.getElementById('copies');
+    const $btnSavePrinter = document.getElementById('btnSavePrinter');
+    const $printerSavedHint = document.getElementById('printerSavedHint');
+    const $printerHint = document.getElementById('printerHint');
+
+    const $nodeDot = document.getElementById('nodeDot');
+    const $nodeTxt = document.getElementById('nodeTxt');
+    const $lblTcp   = document.getElementById('lblTcp');
+    const $lblUsb   = document.getElementById('lblUsb');
+    const $tcpBlock = document.getElementById('tcpBlock');
+    const $usbBlock = document.getElementById('usbBlock');
+    const $usbSelect = document.getElementById('usbSelect');
+    const $usbStatus = document.getElementById('usbStatus');
+    const $btnRefreshUsb = document.getElementById('btnRefreshUsb');
+
+    let printMode = 'tcp';
+    let bridgeOnline = false;
+
+    const LS = {
+        ip: 'sakura_cartonsn_ip',
+        port: 'sakura_cartonsn_port',
+        copies: 'sakura_cartonsn_copies',
+        mode: 'sakura_cartonsn_print_mode',
+        usbName: 'sakura_cartonsn_usb_name',
+        saved: 'sakura_cartonsn_printer_saved'
+    };
+
+    function loadPrinterConfig() {
+        const v = k => localStorage.getItem(k);
+        if (v(LS.ip)) $printerIp.value = v(LS.ip);
+        if (v(LS.port)) $printerPort.value = v(LS.port);
+        if (v(LS.copies)) $copies.value = v(LS.copies);
+        setPrintMode(v(LS.mode) === 'usb' ? 'usb' : 'tcp');
+
+        // Đã từng Save trước khi F5 -> hiện lại đèn "✓ Saved" ngay (không chờ bấm lại Save).
+        if (v(LS.saved) === '1') {
+            $printerSavedHint.classList.add('show');
+        }
+    }
+
+    $btnSavePrinter.addEventListener('click', () => {
+        localStorage.setItem(LS.ip, $printerIp.value.trim());
+        localStorage.setItem(LS.port, $printerPort.value.trim());
+        localStorage.setItem(LS.copies, $copies.value.trim());
+        localStorage.setItem(LS.usbName, $usbSelect.value || '');
+        localStorage.setItem(LS.saved, '1');
+
+        // Giữ nguyên "✓ Saved" cho tới khi refresh trang — không tự ẩn.
+        $printerSavedHint.classList.add('show');
+    });
+
+    function setPrintMode(mode) {
+        printMode = mode;
+        $lblTcp.classList.toggle('active', mode === 'tcp');
+        $lblUsb.classList.toggle('active', mode === 'usb');
+        $tcpBlock.style.display = mode === 'tcp' ? '' : 'none';
+        $usbBlock.style.display = mode === 'usb' ? '' : 'none';
+        localStorage.setItem(LS.mode, mode);
+        if (mode === 'usb' && $usbSelect.options.length <= 1) loadUsbPrinters();
+    }
+
+    $lblTcp.addEventListener('click', () => setPrintMode('tcp'));
+    $lblUsb.addEventListener('click', () => setPrintMode('usb'));
+
+    async function loadUsbPrinters() {
+        $usbSelect.innerHTML = `<option value="">${t('cartonsn.usbScanning', '⏳ Scanning…')}</option>`;
+        $usbSelect.disabled = true;
+        $usbStatus.textContent = '';
+        $usbStatus.className = 'usb-status';
+
+        try {
+            const r = await fetch(`${NODE_SERVICE}/usb-printers`, { signal: AbortSignal.timeout(6000) });
+            const data = await r.json();
+
+            if (!data.printers || data.printers.length === 0) {
+                $usbSelect.innerHTML = `<option value="">${t('cartonsn.usbNoPrinterFound', '— No printer found —')}</option>`;
+                $usbStatus.textContent = t('cartonsn.usbNoPrinterDetected', 'No USB printer detected.');
+                $usbStatus.className = 'usb-status bad';
+                return;
+            }
+
+            $usbSelect.innerHTML = `<option value="">${t('cartonsn.usbSelectPrinter', '— Select printer —')}</option>` +
+                data.printers.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+            $usbSelect.disabled = false;
+            $usbStatus.textContent = t('cartonsn.usbFoundCount', '✓ Found {n} printer(s).').replace('{n}', data.printers.length);
+            $usbStatus.className = 'usb-status ok';
+
+            // Tự chọn lại máy in USB đã Save trước đó, nếu vẫn có trong danh sách quét được.
+            const savedUsbName = localStorage.getItem(LS.usbName);
+            if (savedUsbName && data.printers.includes(savedUsbName)) {
+                $usbSelect.value = savedUsbName;
+            }
+        } catch (err) {
+            $usbSelect.innerHTML = `<option value="">${t('cartonsn.usbLoadError', '— Load error —')}</option>`;
+            $usbStatus.textContent = t('cartonsn.usbCannotConnect', 'Cannot connect to localhost:8021.');
+            $usbStatus.className = 'usb-status bad';
+        }
+    }
+
+    $btnRefreshUsb.addEventListener('click', () => {
+        $printerSavedHint.classList.remove('show');
+        loadUsbPrinters();
+    });
+
+    async function checkNode() {
+        try {
+            const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
+            if (r.ok) {
+                $nodeDot.className = 'node-dot alive';
+                $nodeTxt.textContent = t('cartonsn.bridgeOnline', 'Service — Online');
+                bridgeOnline = true;
+                return;
+            }
+        } catch { /* offline */ }
+        $nodeDot.className = 'node-dot dead';
+        $nodeTxt.textContent = t('cartonsn.bridgeOffline', 'Service — Offline');
+        bridgeOnline = false;
+    }
+    checkNode();
+    setInterval(checkNode, 8000);
+
+    // Re-render locally-cached dynamic text (Service status, SN placeholders)
+    // when EN/ZH is switched, without hitting any API or rebuilding the grid.
+    document.addEventListener('sakura:lang-changed', () => {
+        $nodeTxt.textContent = bridgeOnline
+            ? t('cartonsn.bridgeOnline', 'Service — Online')
+            : t('cartonsn.bridgeOffline', 'Service — Offline');
+        $serialGrid.querySelectorAll('input').forEach((inp, idx) => {
+            inp.placeholder = t('cartonsn.serialSlotPlaceholder', 'Serial Number {n}').replace('{n}', idx + 1);
+        });
+    });
+
+    // ── init ──────────────────────────────────────────────────────────────────
+    setPrinterConfigOpen(false);
+    loadWoFields();
+    loadPrinterConfig();
+    loadPalletFields();
+    // Chưa lookup WO nào -> Carton Number/Serial Number/Print Pallet khóa sẵn (xem resetWoState()).
+    resetWoState();
+
+    // Khôi phục WO đã Save lần trước (nếu có) và tự lookup lại luôn (giống SN Label).
+    if (localStorage.getItem(LS_WO)) {
+        $btnSaveWo.classList.add('is-saved');
+        lookupWorkOrder();
+    } else {
+        $workOrder.focus();
+    }
+})();
+</script>
+}

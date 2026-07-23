@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@ViewData["Title"] — ZPL Print</title>
+  <link
+  href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+  rel="stylesheet" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+
+<body>
+  @RenderBody()
+  @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+<script>
+  window.APP_BASE = '@Url.Content("~")'.replace(/\/$/, '');
+</script>
+
+</html>

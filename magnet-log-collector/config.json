@@ -1,0 +1,33 @@
+{
+  "sourceDir": "D:\\MagnetLogfile_Summary",
+  "filePattern": "yyyyMMdd",
+  "pollIntervalMs": 30000,
+  "tempDir": "./temp",
+  "logDir": "./logs",
+  "logLevel": "info",
+  "timeZone": "Asia/Bangkok",
+  "table": "[svn_pentaho].[dbo].[SVN_MiddleDimensionCheckResult]",
+  "csvEncoding": "auto",
+  "statusServer": {
+    "enabled": true,
+    "port": 8022,
+    "host": "0.0.0.0"
+  },
+  "db": {
+    "server": "103.121.89.139",
+    "database": "svn_pentaho",
+    "user": "sa",
+    "password": "Admin123a@",
+    "options": {
+      "encrypt": false,
+      "trustServerCertificate": true
+    },
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "idleTimeoutMillis": 30000
+    },
+    "requestTimeoutMs": 15000,
+    "connectionTimeoutMs": 15000
+  }
+}

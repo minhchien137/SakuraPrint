@@ -1,0 +1,445 @@
+@{
+    ViewData["Title"] = "Work Order Summary — Middle";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    :root {
+        --accent:       #C8102E;
+        --accent-dark:  #9B0B22;
+        --accent-mid:   #E63950;
+        --accent-light: #FFE5E9;
+        --accent-xlight:#FFF5F6;
+        --white:        #FFFFFF;
+        --gray-50:      #F9FAFB;
+        --gray-100:     #F3F4F6;
+        --gray-200:     #E5E7EB;
+        --gray-400:     #9CA3AF;
+        --gray-500:     #6B7280;
+        --gray-600:     #4B5563;
+        --gray-700:     #374151;
+        --gray-900:     #111827;
+        --success:      #059669;
+        --danger:       #DC2626;
+        --info:         #2563EB;
+        --shadow-sm:    0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:    0 4px 20px rgba(200,16,46,0.12);
+        --font-body:    'Inter', sans-serif;
+        --font-head:    'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .mid-page { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; padding: 24px 20px 60px; }
+
+    .mid-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+    .mid-header h1 { font-family: var(--font-head); font-size: 24px; font-weight: 800; letter-spacing: -0.3px; color: var(--accent-dark); }
+    .mid-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 10px;
+        background: linear-gradient(90deg, var(--accent-dark), var(--accent-mid));
+    }
+    .mid-badge {
+        background: var(--accent-xlight); color: var(--accent-dark); border: 1px solid var(--accent-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .mid-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
+
+    .m-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 22px 24px 18px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .m-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .m-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .m-grid { display: grid; gap: 14px 18px; grid-template-columns: 1.3fr 1fr 1fr auto; align-items: end; }
+
+    .m-field label {
+        display: block; font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .m-field input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 44px; padding: 9px 12px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .m-field input:hover { border-color: var(--accent-mid); }
+    .m-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+
+    .m-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 44px; padding: 10px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px; white-space: nowrap;
+    }
+    .m-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--white); }
+    .m-btn-primary:hover { filter: brightness(1.08); }
+
+    .m-table-wrap { overflow-x: auto; }
+    .m-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 0.85rem; min-width: 640px; }
+    .m-table th {
+        text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--gray-200); white-space: nowrap;
+        letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--gray-500);
+    }
+    .m-table td { padding: 8px 10px; border-bottom: 1px dashed var(--gray-200); vertical-align: middle; }
+    .m-table tbody tr:hover td { background: var(--gray-50); }
+    .m-table td.mono { font-family: 'Barlow', monospace; font-weight: 600; }
+    .m-table td.num { font-family: 'Barlow', monospace; font-weight: 600; text-align: right; }
+    .m-table th.num { text-align: right; }
+    .m-table td.wo-none { color: var(--gray-500); font-style: italic; }
+
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: var(--font-body); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
+        padding: 5px 14px; border-radius: 8px; text-transform: uppercase; white-space: nowrap;
+    }
+    .status-badge.match { color: #FFFFFF; background: var(--success); }
+    .status-badge.over  { color: #FFFFFF; background: var(--info); }
+    .status-badge.under { color: #FFFFFF; background: var(--danger); }
+    .status-badge.nowo  { color: var(--gray-700); background: var(--gray-100); border: 1px solid var(--gray-200); }
+
+    .gap-value { font-family: 'Barlow', monospace; font-weight: 700; font-size: 0.9rem; }
+    .gap-value.gap-match { color: var(--success); }
+    .gap-value.gap-over  { color: var(--info); }
+    .gap-value.gap-under { color: var(--danger); }
+    .gap-value.gap-none  { color: var(--gray-400); }
+
+    .expand-btn {
+        width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--gray-200); background: var(--white);
+        color: var(--gray-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 11px; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .expand-btn.open { transform: rotate(90deg); }
+    .m-table tbody tr.main-row { cursor: pointer; }
+
+    .detail-row td { background: var(--accent-xlight); padding: 14px 18px; border-bottom: 1px solid var(--accent-light); }
+    .detail-row { display: none; }
+    .detail-row.open { display: table-row; }
+
+    .gap-detail-groups { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    .gap-detail-group h4 {
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.4px;
+        text-transform: uppercase; margin-bottom: 8px;
+    }
+    .gap-detail-group.missing h4 { color: var(--danger); }
+    .gap-detail-group.extra h4 { color: var(--info); }
+    .gap-detail-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .gap-detail-list .sn-chip {
+        font-family: 'Barlow', monospace; font-weight: 600; font-size: 0.78rem;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 6px; padding: 3px 9px;
+    }
+    .gap-detail-empty { font-family: var(--font-body); font-size: 0.78rem; color: var(--gray-500); font-style: italic; }
+
+    @@media (max-width: 700px) {
+        .gap-detail-groups { grid-template-columns: 1fr; }
+    }
+
+    .mid-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
+    .mid-pagination .info { font-family: var(--font-body); font-size: 0.75rem; color: var(--gray-500); letter-spacing: 0.3px; }
+
+    /* ── Language switcher — fixed top-right, shared across all app pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    .mid-links { display: flex; gap: 18px; }
+    .mid-links a {
+        font-family: var(--font-body); font-size: 11px; color: var(--gray-500); letter-spacing: 0.5px;
+        text-decoration: none; border-bottom: 1px solid var(--gray-200);
+    }
+    .mid-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+    @@media (max-width: 900px) {
+        .m-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 560px) {
+        .m-grid { grid-template-columns: 1fr; }
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+
+<div class="mid-page">
+
+    <header class="mid-header">
+        <div>
+            <h1 data-i18n="middleSummary.title">WORK ORDER SUMMARY</h1>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="mid-badge">MIDDLE</div>
+    </header>
+
+    <div class="m-section">
+        <div class="m-section-label" data-i18n="middle.filter">Bộ lọc</div>
+        <div class="m-grid">
+            <div class="m-field">
+                <label data-i18n="middle.workOrder">Work Order</label>
+                <input type="text" id="fWorkOrder" autocomplete="off" data-i18n-placeholder="middle.workOrderPlaceholder" placeholder="Nhập Work Order…" />
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.dateFrom">Từ ngày</label>
+                <input type="date" id="fDateFrom" />
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.dateTo">Đến ngày</label>
+                <input type="date" id="fDateTo" />
+            </div>
+            <button class="m-btn m-btn-primary" id="btnSearch" data-i18n="middle.searchBtn">⌕ Tìm kiếm</button>
+        </div>
+    </div>
+
+    <div class="m-section">
+        <div class="m-section-label" data-i18n="middleSummary.resultSection">Tổng hợp theo Work Order</div>
+        <div class="m-table-wrap">
+            <table class="m-table">
+                <thead>
+                    <tr>
+                        <th style="width:26px"></th>
+                        <th data-i18n="middleSummary.colWorkOrder">Work Order</th>
+                        <th class="num" data-i18n="middleSummary.colMiddleCount">SN Tested at Middle</th>
+                        <th class="num" data-i18n="middleSummary.colEnteredQty">Entered Qty</th>
+                        <th data-i18n="middleSummary.colStatus">Status</th>
+                        <th class="num" data-i18n="middleSummary.colGap">Gap</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryRows">
+                    <tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">—</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mid-pagination">
+            <div class="info" id="summaryInfo">—</div>
+        </div>
+    </div>
+
+    <div class="mid-links">
+        <a href="@Url.Content("~/middle/result")" data-i18n="middleSummary.backResult">← Back to Result</a>
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+<script>
+(function () {
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+
+    function t(key, fallback) {
+        return window.SakuraI18n ? window.SakuraI18n.t(key) : (fallback || key);
+    }
+
+    const $workOrder = document.getElementById('fWorkOrder');
+    const $dateFrom   = document.getElementById('fDateFrom');
+    const $dateTo     = document.getElementById('fDateTo');
+    const $btnSearch  = document.getElementById('btnSearch');
+    const $rows       = document.getElementById('summaryRows');
+    const $info       = document.getElementById('summaryInfo');
+
+    let lastItems = null;
+    let openIdx = new Set();
+    let detailCache = new Map(); // idx -> { missingAtMiddle, extraAtMiddle } | { error }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function snChips(list) {
+        // Nối bằng ', ' (không chỉ dựa vào CSS gap) để khi bôi đen/copy text từ trình duyệt,
+        // các SN không bị dính liền nhau thành 1 chuỗi không đọc được.
+        return list.length
+            ? `<div class="gap-detail-list">${list.map(sn => `<span class="sn-chip">${escapeHtml(sn)}</span>`).join(', ')}</div>`
+            : `<div class="gap-detail-empty">${t('middleSummary.detailEmpty', 'Không có.')}</div>`;
+    }
+
+    function detailBodyHtml(idx) {
+        const row = lastItems[idx];
+        const cached = detailCache.get(idx);
+        if (!cached) return `<div class="gap-detail-empty">${t('middle.loading', 'Đang tải…')}</div>`;
+        if (cached.error) return `<div class="gap-detail-empty">✗ ${escapeHtml(cached.error)}</div>`;
+
+        if (!row.workOrder) {
+            const list = cached.extraAtMiddle;
+            return `
+                <div class="gap-detail-group missing">
+                    <h4>${t('middleSummary.detailNoWoList', 'SN chưa nhập kết quả sản xuất')} (${list.length})</h4>
+                    ${snChips(list)}
+                </div>`;
+        }
+
+        return `
+            <div class="gap-detail-groups">
+                <div class="gap-detail-group missing">
+                    <h4>${t('middleSummary.detailMissing', 'Đã nhập SX, chưa test tại Middle')} (${cached.missingAtMiddle.length})</h4>
+                    ${snChips(cached.missingAtMiddle)}
+                </div>
+                <div class="gap-detail-group extra">
+                    <h4>${t('middleSummary.detailExtra', 'Test tại Middle, chưa thấy nhập SX')} (${cached.extraAtMiddle.length})</h4>
+                    ${snChips(cached.extraAtMiddle)}
+                </div>
+            </div>`;
+    }
+
+    async function fetchDetail(idx) {
+        const row = lastItems[idx];
+        const params = new URLSearchParams();
+        if (row.workOrder) params.set('workOrder', row.workOrder);
+        if ($dateFrom.value) params.set('dateFrom', $dateFrom.value);
+        if ($dateTo.value) params.set('dateTo', $dateTo.value);
+
+        try {
+            const res = await fetch(`${BASE}/api/middle/summary/detail?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(body.error || t('middle.loadFailed', 'Không tải được dữ liệu.'));
+            detailCache.set(idx, body.data);
+        } catch (e) {
+            detailCache.set(idx, { error: e.message });
+        }
+        const detailBody = $rows.querySelector(`td.detail-body[data-idx="${idx}"]`);
+        if (detailBody) detailBody.innerHTML = detailBodyHtml(idx);
+    }
+
+    function toggleDetail(idx) {
+        const detailRow = $rows.querySelector(`tr.detail-row[data-idx="${idx}"]`);
+        const btn = $rows.querySelector(`.expand-btn[data-idx="${idx}"]`);
+        if (!detailRow) return;
+        const nowOpen = !detailRow.classList.contains('open');
+        detailRow.classList.toggle('open', nowOpen);
+        if (btn) btn.classList.toggle('open', nowOpen);
+        if (nowOpen) {
+            openIdx.add(idx);
+            if (!detailCache.has(idx)) fetchDetail(idx);
+        } else {
+            openIdx.delete(idx);
+        }
+    }
+
+    function statusCell(row) {
+        if (!row.workOrder) {
+            return `<span class="status-badge nowo">${t('middleSummary.statusNoWo', 'Chưa nhập')}</span>`;
+        }
+        if (row.diff === 0) {
+            return `<span class="status-badge match">${t('middleSummary.statusMatch', 'Khớp')}</span>`;
+        }
+        if (row.diff > 0) {
+            return `<span class="status-badge over">${t('middleSummary.statusOver', 'Vượt')}</span>`;
+        }
+        return `<span class="status-badge under">${t('middleSummary.statusUnder', 'Thiếu')}</span>`;
+    }
+
+    // Số lệch riêng — dương = Middle test nhiều hơn số đã nhập, âm = còn thiếu so với đã nhập.
+    function gapCell(row) {
+        if (!row.workOrder) return '<span class="gap-value gap-none">—</span>';
+        if (row.diff === 0) return '<span class="gap-value gap-match">0</span>';
+        if (row.diff > 0) return `<span class="gap-value gap-over">+${row.diff}</span>`;
+        return `<span class="gap-value gap-under">${row.diff}</span>`;
+    }
+
+    function renderRows(items) {
+        if (!items.length) {
+            $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">${t('middle.noData', 'Không có dữ liệu.')}</td></tr>`;
+            return;
+        }
+        $rows.innerHTML = items.map((row, idx) => {
+            const woCell = row.workOrder
+                ? `<td class="mono">${escapeHtml(row.workOrder)}</td>`
+                : `<td class="wo-none">${t('middleSummary.noWorkOrder', 'Chưa có Work Order')}</td>`;
+            const enteredQty = row.workOrder ? row.enteredQty : '—';
+            const isOpen = openIdx.has(idx);
+            return `
+                <tr class="main-row" data-idx="${idx}">
+                    <td><button type="button" class="expand-btn ${isOpen ? 'open' : ''}" data-idx="${idx}">▶</button></td>
+                    ${woCell}
+                    <td class="num">${row.middleTestedCount}</td>
+                    <td class="num">${enteredQty}</td>
+                    <td>${statusCell(row)}</td>
+                    <td class="num">${gapCell(row)}</td>
+                </tr>
+                <tr class="detail-row ${isOpen ? 'open' : ''}" data-idx="${idx}">
+                    <td colspan="6" class="detail-body" data-idx="${idx}">${detailBodyHtml(idx)}</td>
+                </tr>`;
+        }).join('');
+
+        $rows.querySelectorAll('.expand-btn').forEach(btn => {
+            btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                toggleDetail(parseInt(btn.dataset.idx, 10));
+            });
+        });
+        $rows.querySelectorAll('tr.main-row').forEach(tr => {
+            tr.addEventListener('click', () => toggleDetail(parseInt(tr.dataset.idx, 10)));
+        });
+    }
+
+    async function loadSummary() {
+        const params = new URLSearchParams();
+        if ($workOrder.value.trim()) params.set('workOrder', $workOrder.value.trim());
+        if ($dateFrom.value) params.set('dateFrom', $dateFrom.value);
+        if ($dateTo.value) params.set('dateTo', $dateTo.value);
+
+        $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">${t('middle.loading', 'Đang tải…')}</td></tr>`;
+        $info.textContent = '—';
+        openIdx = new Set();
+        detailCache = new Map();
+        try {
+            const res = await fetch(`${BASE}/api/middle/summary?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(body.error || t('middle.loadFailed', 'Không tải được dữ liệu.'));
+
+            lastItems = body.data;
+            renderRows(lastItems);
+            $info.textContent = lastItems.length === 0
+                ? t('middle.noData', 'Không có dữ liệu.')
+                : t('middleSummary.workOrderCount', '{n} Work Order').replace('{n}', lastItems.length);
+        } catch (e) {
+            lastItems = null;
+            $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:16px">✗ ${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    $btnSearch.addEventListener('click', loadSummary);
+    $workOrder.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); loadSummary(); } });
+    $dateFrom.addEventListener('change', loadSummary);
+    $dateTo.addEventListener('change', loadSummary);
+
+    document.addEventListener('sakura:lang-changed', () => {
+        if (lastItems) renderRows(lastItems);
+    });
+
+    // Không mặc định ngày = hôm nay: Entered Qty / Production Log Records là số cộng dồn
+    // suốt vòng đời cả Work Order (wo_code là bộ đếm chạy liên tục, không reset theo ngày),
+    // nên mặc định để trống ngày để so sánh đúng phạm vi (toàn bộ WO) — lọc theo ngày chỉ nên
+    // dùng khi cần xem SN nào được test tại Middle trong khoảng đó, không phản ánh đúng
+    // "còn thiếu bao nhiêu" nếu đem so với tổng đã nhập từ trước tới giờ.
+    loadSummary();
+})();
+</script>
+}

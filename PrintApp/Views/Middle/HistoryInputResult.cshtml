@@ -1,0 +1,381 @@
+@{
+    ViewData["Title"] = "Input Result History — Middle";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    /* ── Sigma Red design tokens — shared across all Sakura-family pages ──── */
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .snl-page { max-width: 1040px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .snl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+    .snl-header h1 { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.3px; color: var(--red-dark); }
+    .snl-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 12px;
+        background: linear-gradient(90deg, var(--red-dark), var(--red-mid));
+    }
+    .snl-badge {
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .snl-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+    .t-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 24px 26px 20px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .t-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .t-grid { display: grid; gap: 16px 20px; }
+    .t-grid-auto { grid-template-columns: 1fr 1fr 120px auto; align-items: end; }
+
+    .t-field label {
+        display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .t-field input, .t-field select {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .t-field input:hover, .t-field select:hover { border-color: var(--red-mid); }
+    .t-field input:focus, .t-field select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .t-field select {
+        appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
+    }
+
+    .t-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 46px; padding: 11px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px;
+    }
+    .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+    .t-btn-ghost:disabled:hover { border-color: var(--gray-200); color: var(--gray-500); background: var(--white); }
+
+    .t-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 0.85rem; }
+    .t-table th {
+        text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--gray-200);
+        letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--gray-500);
+    }
+    .t-table td { padding: 8px 10px; border-bottom: 1px dashed var(--gray-200); vertical-align: middle; }
+    .t-table tr:hover td { background: var(--gray-50); }
+
+    /* ── PASS / FAIL status badge ───────────────────────────────────────────── */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px;
+        padding: 3px 10px; border-radius: 10px; text-transform: uppercase;
+    }
+    .status-badge.pass { color: #065F46; background: #ECFDF5; border: 1px solid rgba(5,150,105,0.35); }
+    .status-badge.fail { color: #7F1D1D; background: var(--red-xlight); border: 1px solid rgba(220,38,38,0.35); }
+
+    /* ── Failed-step indicator ──────────────────────────────────────────────── */
+    .failstep-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--red-dark);
+    }
+    .failstep-none { color: var(--gray-400); }
+
+    /* Pagination footer */
+    .hist-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 10px; }
+    .hist-pagination .info { font-family: var(--font-body); font-size: 0.75rem; color: var(--gray-500); letter-spacing: 0.3px; }
+    .hist-pagination .pages { display: flex; align-items: center; gap: 10px; }
+
+    @@media (max-width: 900px) {
+        .t-grid-auto { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 480px) {
+        .t-grid-auto { grid-template-columns: 1fr; }
+    }
+
+    /* ── Language switcher — fixed top-right, shared across all app pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 560px) {
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+
+<div class="snl-page">
+
+    <header class="snl-header">
+        <div>
+            <h1 data-i18n="middleInputHistory.title">INPUT RESULT HISTORY</h1>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="snl-badge">MIDDLE</div>
+    </header>
+
+    <div class="t-section">
+        <div class="t-section-label" data-i18n="middleInputHistory.filter">Filter</div>
+        <div class="t-grid t-grid-auto">
+            <div class="t-field">
+                <label data-i18n="middleInputHistory.filterWorkOrder">Work Order</label>
+                <input type="text" id="histWorkOrder" autocomplete="off" data-i18n-placeholder="middleInputHistory.filterWorkOrderPlaceholder" placeholder="Search Work Order…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="middleInputHistory.filterSerial">Serial Number</label>
+                <input type="text" id="histSerial" autocomplete="off" data-i18n-placeholder="middleInputHistory.filterSerialPlaceholder" placeholder="Search Serial Number…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="middleInputHistory.pageSize">Records / Page</label>
+                <select id="histPageSize">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <button class="t-btn t-btn-ghost" id="btnHistRefresh" data-i18n="middleInputHistory.refresh">↻ Refresh</button>
+        </div>
+    </div>
+
+    <div class="t-section">
+        <div class="t-section-label" data-i18n="middleInputHistory.tableTitle">Scan Log</div>
+        <table class="t-table">
+            <thead>
+                <tr>
+                    <th data-i18n="middleInputHistory.colWorkOrder">Work Order</th>
+                    <th data-i18n="middleInputHistory.colSerial">Serial Number</th>
+                    <th data-i18n="middleInputHistory.colStatus">Status</th>
+                    <th data-i18n="middleInputHistory.colFailedStep">Failed At</th>
+                    <th data-i18n="middleInputHistory.colFailReason">Reason</th>
+                    <th data-i18n="middleInputHistory.colSubName">Sub Name</th>
+                    <th data-i18n="middleInputHistory.colTimeline">Timeline</th>
+                </tr>
+            </thead>
+            <tbody id="histRows">
+                <tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:16px">—</td></tr>
+            </tbody>
+        </table>
+
+        <div class="hist-pagination">
+            <div class="info" id="histPageInfo">—</div>
+            <div class="pages">
+                <button class="t-btn t-btn-ghost" id="btnHistFirst" data-i18n-title="middleInputHistory.firstPage" title="First page">⏮</button>
+                <button class="t-btn t-btn-ghost" id="btnHistPrev" data-i18n="middleInputHistory.prevPage">← Prev</button>
+                <button class="t-btn t-btn-ghost" id="btnHistNext" data-i18n="middleInputHistory.nextPage">Next →</button>
+                <button class="t-btn t-btn-ghost" id="btnHistLast" data-i18n-title="middleInputHistory.lastPage" title="Last page">⏭</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:18px">
+        <a href="@Url.Content("~/middle/inputresult")" data-i18n="middleInputHistory.backInputResult" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
+            letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
+            ← Back to Input Result
+        </a>
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+<script>
+(function () {
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+
+    function t(key, fallback) {
+        return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
+    }
+
+    const $histWorkOrder  = document.getElementById('histWorkOrder');
+    const $histSerial     = document.getElementById('histSerial');
+    const $histPageSize   = document.getElementById('histPageSize');
+    const $btnHistRefresh = document.getElementById('btnHistRefresh');
+    const $histRows       = document.getElementById('histRows');
+    const $histPageInfo   = document.getElementById('histPageInfo');
+    const $btnHistFirst   = document.getElementById('btnHistFirst');
+    const $btnHistPrev    = document.getElementById('btnHistPrev');
+    const $btnHistNext    = document.getElementById('btnHistNext');
+    const $btnHistLast    = document.getElementById('btnHistLast');
+
+    let currentPage = 1;
+    let lastTotalCount = 0;
+    let lastRows = null;
+
+    function pageSize() {
+        return parseInt($histPageSize.value) || 20;
+    }
+
+    async function loadHistory() {
+        const params = new URLSearchParams({ page: currentPage, pageSize: pageSize() });
+        if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
+        if ($histSerial.value.trim()) params.set('serialNumber', $histSerial.value.trim());
+
+        $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:16px">${t('middleInputHistory.loading', 'Loading…')}</td></tr>`;
+        try {
+            const res = await fetch(`${BASE}/api/middle/inputresult/history?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('middleInputHistory.loadFailed', 'Failed to load history.')));
+
+            lastRows = body.data.items;
+            lastTotalCount = body.data.totalCount;
+            currentPage = body.data.page;
+            renderHistory(lastRows);
+            renderPagination();
+        } catch (e) {
+            lastRows = null;
+            lastTotalCount = 0;
+            $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            renderPagination();
+        }
+    }
+
+    function renderPagination() {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / pageSize()));
+        $histPageInfo.textContent = lastTotalCount === 0
+            ? t('middleInputHistory.noData', 'No data yet.')
+            : `${t('middleInputHistory.page', 'Page')} ${currentPage} / ${totalPages} — ${lastTotalCount} ${t('middleInputHistory.records', 'records')}`;
+        $btnHistFirst.disabled = currentPage <= 1;
+        $btnHistPrev.disabled = currentPage <= 1;
+        $btnHistNext.disabled = currentPage >= totalPages;
+        $btnHistLast.disabled = currentPage >= totalPages;
+    }
+
+    $btnHistFirst.addEventListener('click', () => {
+        if (currentPage <= 1) return;
+        currentPage = 1;
+        loadHistory();
+    });
+    $btnHistPrev.addEventListener('click', () => {
+        if (currentPage <= 1) return;
+        currentPage--;
+        loadHistory();
+    });
+    $btnHistNext.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / pageSize()));
+        if (currentPage >= totalPages) return;
+        currentPage++;
+        loadHistory();
+    });
+    $btnHistLast.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / pageSize()));
+        if (currentPage >= totalPages) return;
+        currentPage = totalPages;
+        loadHistory();
+    });
+
+    // Tên/số hiển thị các bước trong quy trình InputResult — dùng chung key i18n với
+    // trang InputResult. Chỉ 3 bước (không có bước in vật lý như trạm Laser).
+    const STEP_DISPLAY_NUMBER = { 1: '1', 2: '2.1', 3: '2.2' };
+
+    function stepLabel(n) {
+        if (n === 1) return t('middleInput.step1Label', 'Scan Color Check');
+        if (n === 2) return t('middleInput.step2Label', 'Check Serial Number Already Entered');
+        if (n === 3) return t('middleInput.step3Label', 'Enter Production Result');
+        return '—';
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderHistory(rows) {
+        if (!rows.length) {
+            $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:16px">${t('middleInputHistory.noData', 'No data yet.')}</td></tr>`;
+            return;
+        }
+        $histRows.innerHTML = rows.map(r => {
+            const statusCls = r.status === 'PASS' ? 'pass' : 'fail';
+            const timeline = new Date(r.timeline).toLocaleString();
+            const failedStepCell = r.failedStep
+                ? `<span class="failstep-badge">✕ ${STEP_DISPLAY_NUMBER[r.failedStep] || r.failedStep} — ${stepLabel(r.failedStep)}</span>`
+                : `<span class="failstep-none">—</span>`;
+            const failReasonCell = r.failReason
+                ? `<span title="${escapeHtml(r.failReason)}" style="color:var(--gray-500);font-size:0.78rem">${escapeHtml(r.failReason.length > 60 ? r.failReason.slice(0, 60) + '…' : r.failReason)}</span>`
+                : `<span class="failstep-none">—</span>`;
+            return `
+                <tr>
+                    <td>${r.workOrder || '—'}</td>
+                    <td>${r.serialNumber}</td>
+                    <td><span class="status-badge ${statusCls}">${r.status}</span></td>
+                    <td>${failedStepCell}</td>
+                    <td>${failReasonCell}</td>
+                    <td>${r.productionResultSubName || '—'}</td>
+                    <td>${timeline}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    $histPageSize.addEventListener('change', () => { currentPage = 1; loadHistory(); });
+    $histWorkOrder.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
+    });
+    $histSerial.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
+    });
+    $btnHistRefresh.addEventListener('click', () => { currentPage = 1; loadHistory(); });
+
+    document.addEventListener('sakura:lang-changed', () => {
+        if (lastRows) renderHistory(lastRows);
+        renderPagination();
+    });
+
+    // ── init ──────────────────────────────────────────────────────────────────
+    loadHistory();
+})();
+</script>
+}

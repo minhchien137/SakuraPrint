@@ -1,0 +1,645 @@
+@model PrintApp.Models.PrinterInfo
+@{
+    ViewData["Title"] = "FQC Scan — Toast";
+}
+
+<style>
+    :root {
+        --ink: #1a1a2e;
+        --paper: #f5f0e8;
+        --cream: #ede8dc;
+        --rule: #c8c0b0;
+        --stamp: #c0392b;
+        --ok: #2c7a5a;
+        --ghost: #8a8070;
+        --mono: 'Azeret Mono', monospace;
+    }
+
+    .fqc-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .fqc-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 18px;
+        margin-bottom: 32px;
+    }
+
+    .fqc-header h1 {
+        font-family: var(--mono);
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -1px;
+    }
+
+    .fqc-header p {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-top: 5px;
+    }
+
+    .fqc-badge {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        padding: 6px 12px;
+        border-radius: 3px;
+        transform: rotate(-2deg);
+        box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .fqc-badge.ok-badge {
+        background: #1a6644;
+        color: #fff;
+    }
+
+    .fqc-badge.ng-badge {
+        background: var(--stamp);
+        color: #fff;
+    }
+
+    .fqc-layout {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+    }
+
+    .fqc-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── Sections ── */
+    .t-section {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 24px 26px 20px;
+        margin-bottom: 18px;
+        box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .t-section-label {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .t-section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--rule);
+    }
+
+    .t-grid {
+        display: grid;
+        gap: 16px 20px;
+    }
+
+    .t-grid-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .t-grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .t-field label {
+        display: block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 6px;
+    }
+
+    .t-field input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-bottom: 1.5px solid var(--rule);
+        padding: 7px 0;
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .t-field input:focus {
+        border-bottom-color: var(--ink);
+    }
+
+    .t-field input::placeholder {
+        color: var(--rule);
+    }
+
+    .serial-field input {
+        font-size: 18px;
+        padding: 10px 0;
+        letter-spacing: 1px;
+    }
+
+    .t-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 4px;
+    }
+
+    .t-btn {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border: none;
+        cursor: pointer;
+        padding: 11px 18px;
+        border-radius: 3px;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .t-btn-primary {
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    .t-btn-primary:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    .t-btn-warn {
+        background: transparent;
+        color: #92400e;
+        border: 1.5px solid #d97706;
+        box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .t-btn-warn:hover {
+        background: #d97706;
+        color: #fff;
+    }
+
+    /* Mode pill */
+    .mode-pill {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 14px;
+    }
+
+    .mode-pill.ok {
+        background: #e8f5ee;
+        color: var(--ok);
+        border: 1px solid #b6dfc9;
+    }
+
+    .mode-pill.ng {
+        background: #fdf0ee;
+        color: var(--stamp);
+        border: 1px solid #f5b8b0;
+    }
+
+    /* Status */
+    .t-status {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 12px 16px;
+        border-radius: 3px;
+        display: none;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 14px;
+        line-height: 1.5;
+    }
+
+    .t-status.show {
+        display: flex;
+    }
+
+    .t-status.ok {
+        background: #e8f5ee;
+        border-left: 3px solid var(--ok);
+        color: #1a4a30;
+    }
+
+    .t-status.err {
+        background: #fdf0ee;
+        border-left: 3px solid var(--stamp);
+        color: #6a1a10;
+    }
+
+    .t-status.big {
+        font-size: 16px;
+        font-weight: 700;
+        padding: 16px 18px;
+    }
+
+    /* ── Indicator ── */
+    .fqc-right {
+        width: 300px;
+        flex-shrink: 0;
+        text-align: center;
+        position: sticky;
+        top: 32px;
+    }
+
+    .indicator-label-top {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 16px;
+    }
+
+    .indicator-circle {
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        margin: 0 auto 16px;
+        transition: background-color 0.2s ease;
+        box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.10),
+            0 0 0 8px rgba(0, 0, 0, 0.04) inset;
+    }
+
+    .ind-ok {
+        background: var(--paper);
+        border: 2px solid var(--rule);
+    }
+
+    .ind-ng {
+        background: var(--stamp);
+        border: 2px solid #a02318;
+    }
+
+    .ind-success {
+        background: var(--ok);
+        border: 2px solid #1a5c3a;
+    }
+
+    .ind-error {
+        background: #c0392b;
+        border: 2px solid #8a1a10;
+    }
+
+    .indicator-text {
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: 2px;
+    }
+
+    @@media (max-width: 720px) {
+        .fqc-layout {
+            flex-direction: column;
+        }
+
+        .fqc-right {
+            width: 100%;
+            position: static;
+        }
+
+        .indicator-circle {
+            width: 180px;
+            height: 180px;
+        }
+
+        .t-grid-2,
+        .t-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="fqc-page">
+
+    <header class="fqc-header">
+        <div>
+            <h1>FQC SCAN</h1>
+            <p>Final Quality Control — Toast</p>
+        </div>
+        <div class="fqc-badge ok-badge" id="headerBadge">OK MODE</div>
+    </header>
+
+    <div class="fqc-layout">
+
+        <!-- ── Left ── -->
+        <div class="fqc-left">
+
+            <!-- Printer config -->
+            <div class="t-section">
+                <div class="t-section-label">Cấu hình máy in</div>
+                <div class="t-grid t-grid-3">
+                    <div class="t-field" style="grid-column: span 2">
+                        <label>IP máy in</label>
+                        <input type="text" id="printerIp" placeholder="192.168.1.100" />
+                    </div>
+                    <div class="t-field">
+                        <label>Port</label>
+                        <input type="number" id="printerPort" value="9100" />
+                    </div>
+                </div>
+                <div class="t-grid t-grid-2" style="margin-top:14px">
+                    <div class="t-field">
+                        <label>Copies</label>
+                        <input type="number" id="copies" value="1" min="1" max="10" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Label info -->
+            <div class="t-section">
+                <div class="t-section-label">Thông tin nhãn</div>
+                <div class="t-grid t-grid-2">
+                    <div class="t-field">
+                        <label>SKU</label>
+                        <input type="text" id="upcNumber" placeholder="HW0032" />
+                    </div>
+                    <div class="t-field">
+                        <label>Lot ID</label>
+                        <input type="text" id="lotId" placeholder="XX-XX-XX" />
+                    </div>
+                </div>
+                <div class="t-actions" style="margin-top:18px">
+                    <button class="t-btn t-btn-primary" id="btnSaveAll">💾 Lưu cấu hình</button>
+                </div>
+            </div>
+
+            <!-- Serial scan -->
+            <div class="t-section">
+                <div class="t-section-label">Quét serial</div>
+
+                <div id="modePill" class="mode-pill ok">Chế độ: OK</div>
+
+                <div class="t-field serial-field">
+                    <label>Serial Number</label>
+                    <input type="text" id="serialNumber"      placeholder="Quét serial 13 ký tự..." autocomplete="off" />
+                </div>
+
+                <div class="t-actions" style="margin-top:16px">
+                    <button class="t-btn t-btn-warn" id="btnReprint">🖨 In lại</button>
+                    <span style="font-family:var(--mono);font-size:10px;color:var(--ghost);letter-spacing:1px">
+                        Quét <strong>NG</strong> để bật/tắt chế độ NG
+                    </span>
+                </div>
+
+                <div id="scanStatus" class="t-status"></div>
+            </div>
+
+            <a href="/toast" style="font-family:var(--mono);font-size:11px;color:var(--ghost);
+                letter-spacing:1px;text-decoration:none;border-bottom:1px solid var(--rule);">
+                ← Về Toast Print
+            </a>
+
+        </div>
+
+        <!-- ── Right — Indicator ── -->
+        <div class="fqc-right">
+            <div class="indicator-label-top">Trạng thái</div>
+            <div id="indicatorCircle" class="indicator-circle ind-ok"></div>
+            <div id="indicatorText" class="indicator-text">OK MODE</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    (function () {
+        const zplTemplate = @Html.Raw(Json.Serialize(Model.ZPL_Temp ?? ""));
+
+        const $serial = document.getElementById('serialNumber');
+        const $lot = document.getElementById('lotId');
+        const $sku = document.getElementById('upcNumber');
+        const $copies = document.getElementById('copies');
+        const $printerIp = document.getElementById('printerIp');
+        const $printerPort = document.getElementById('printerPort');
+        const $status = document.getElementById('scanStatus');
+        const $modePill = document.getElementById('modePill');
+        const $headerBadge = document.getElementById('headerBadge');
+        const $circle = document.getElementById('indicatorCircle');
+        const $indText = document.getElementById('indicatorText');
+
+        let ngMode = localStorage.getItem('fqc_ng_mode') === '1';
+        let flashTimer = null;
+
+        const LS = {
+            lot: 'toast_fqc_lot',
+            sku: 'toast_fqc_sku',
+            ip: 'toast_fqc_ip',
+            port: 'toast_fqc_port',
+            copies: 'toast_fqc_copies'
+        };
+
+        function loadSaved() {
+            const v = k => localStorage.getItem(k);
+            if (v(LS.lot)) $lot.value = v(LS.lot);
+            if (v(LS.sku)) $sku.value = v(LS.sku);
+            if (v(LS.ip)) $printerIp.value = v(LS.ip);
+            if (v(LS.port)) $printerPort.value = v(LS.port);
+            if (v(LS.copies)) $copies.value = v(LS.copies);
+        }
+
+        document.getElementById('btnSaveAll').addEventListener('click', () => {
+            localStorage.setItem(LS.lot, $lot.value.trim());
+            localStorage.setItem(LS.sku, $sku.value.trim());
+            localStorage.setItem(LS.ip, $printerIp.value.trim());
+            localStorage.setItem(LS.port, $printerPort.value.trim());
+            localStorage.setItem(LS.copies, $copies.value.trim());
+            showStatus('✓ Đã lưu cấu hình.', 'ok');
+        });
+
+        loadSaved();
+
+        function setIndicator(type, text) {
+            $circle.className = 'indicator-circle ind-' + type;
+            $indText.textContent = text;
+            $indText.style.color = (type === 'ng' || type === 'error') ? 'var(--stamp)'
+                : type === 'success' ? 'var(--ok)'
+                    : 'var(--ink)';
+        }
+
+        function setModeVisual() {
+            $modePill.textContent = ngMode ? 'Chế độ: NG' : 'Chế độ: OK';
+            $modePill.className = `mode-pill ${ngMode ? 'ng' : 'ok'}`;
+            $headerBadge.textContent = ngMode ? 'NG MODE' : 'OK MODE';
+            $headerBadge.className = `fqc-badge ${ngMode ? 'ng-badge' : 'ok-badge'}`;
+            $serial.style.borderBottomColor = ngMode ? 'var(--stamp)' : 'var(--rule)';
+            setIndicator(ngMode ? 'ng' : 'ok', ngMode ? 'NG MODE' : 'OK MODE');
+        }
+
+        function flashIndicator(type) {
+            if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
+            setIndicator(type, type === 'success' ? '✓ OK' : '✗ LỖI');
+            flashTimer = setTimeout(() => setModeVisual(), 3000);
+        }
+
+        function showStatus(msg, type, big = false) {
+            $status.textContent = msg;
+            $status.className = `t-status show ${type}${big ? ' big' : ''}`;
+        }
+
+        async function updateFqc(serialNumber, status) {
+            const res = await fetch('/UpdateFqcStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serialNumber, status })
+            });
+            let data = null;
+            try { data = await res.json(); } catch { }
+            return { ok: res.ok && data?.ok, message: data?.message };
+        }
+
+        function buildZpl(serial) {
+            const lotId = $lot.value.trim();
+            const upcNumber = $sku.value.trim();
+            let zpl = zplTemplate;
+
+            const result = serial.match(/^([A-Z0-9]{2})(\d{4})([A-Z0-9]{1})(\d{6})$/);
+            if (!result) throw new Error('Serial không đúng định dạng.');
+
+            const upcParts = upcNumber.match(/^([A-Z]+)(\d+)$/);
+            const lotParts = lotId.split('-');
+
+            return zpl
+                .replaceAll('{lotId}', lotId)
+                .replaceAll('{serialNumber}', serial)
+                .replaceAll('{lotId1}', lotParts[0] || '')
+                .replaceAll('{lotId2}', lotParts[1] || '')
+                .replaceAll('{lotId3}', lotParts[2] || '')
+                .replaceAll('{sn1}', result[1])
+                .replaceAll('{sn2}', result[2])
+                .replaceAll('{sn3}', result[3])
+                .replaceAll('{sn4}', result[4])
+                .replaceAll('{upcNumber}', upcNumber)
+                .replaceAll('{upcNumber1}', upcParts ? upcParts[1] : '')
+                .replaceAll('{upcNumber2}', upcParts ? upcParts[2] : '');
+        }
+
+        async function doPrint(serial) {
+            const zpl = buildZpl(serial);
+            const printerIp = $printerIp.value.trim();
+            const printerPort = parseInt($printerPort.value) || 9100;
+            const copies = parseInt($copies.value) || 1;
+
+            if (!printerIp) throw new Error('Chưa nhập IP máy in.');
+
+            for (let i = 0; i < copies; i++) {
+                const res = await fetch('http://localhost:8021/print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ zpl, printerIp, printerPort })
+                });
+                if (!res.ok) throw new Error(`Gửi lệnh in thất bại (copy ${i + 1}).`);
+            }
+        }
+
+        async function handleScan() {
+            const raw = $serial.value.trim();
+            if (!raw) return;
+
+            if (raw.toUpperCase() === 'NG') {
+                ngMode = !ngMode;
+                localStorage.setItem('fqc_ng_mode', ngMode ? '1' : '0');
+                setModeVisual();
+                showStatus(ngMode ? '⚠ Đã bật chế độ NG.' : '✓ Đã tắt chế độ NG.', ngMode ? 'err' : 'ok');
+                $serial.value = '';
+                return;
+            }
+
+            if (raw.length !== 13) {
+                flashIndicator('error');
+                showStatus('✗ Serial không hợp lệ (cần đúng 13 ký tự).', 'err', true);
+                $serial.value = '';
+                return;
+            }
+
+            try {
+                const upd = await updateFqc(raw, ngMode ? 'NG' : 'OK');
+                if (!upd.ok) {
+                    flashIndicator('error');
+                    showStatus(`✗ ${upd.message || 'Cập nhật FQC thất bại.'}`, 'err', true);
+                    $serial.value = '';
+                    return;
+                }
+            } catch {
+                flashIndicator('error');
+                showStatus('✗ Không gọi được API cập nhật FQC.', 'err', true);
+                $serial.value = '';
+                return;
+            }
+
+            if (!ngMode) {
+                try {
+                    await doPrint(raw);
+                    localStorage.setItem('last_fqc_serial', raw);
+                    flashIndicator('success');
+                    showStatus(`✓ FQC OK + In thành công: ${raw}`, 'ok', true);
+                } catch (e) {
+                    flashIndicator('error');
+                    showStatus(`✗ ${e.message || 'In thất bại.'}`, 'err', true);
+                }
+            } else {
+                flashIndicator('success');
+                showStatus(`✓ FQC NG đã ghi: ${raw}`, 'ok', true);
+                ngMode = false;
+                localStorage.setItem('fqc_ng_mode', '0');
+                setTimeout(setModeVisual, 600);
+            }
+
+            $serial.value = '';
+            $serial.focus();
+        }
+
+        document.getElementById('btnReprint').addEventListener('click', async () => {
+            const last = localStorage.getItem('last_fqc_serial');
+            if (!last) { showStatus('✗ Không có serial để in lại.', 'err'); return; }
+            try {
+                await doPrint(last);
+                flashIndicator('success');
+                showStatus(`✓ In lại: ${last}`, 'ok', true);
+            } catch (e) {
+                flashIndicator('error');
+                showStatus(`✗ ${e.message || 'In thất bại.'}`, 'err', true);
+            }
+        });
+
+        $serial.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); handleScan(); }
+        });
+
+        window.addEventListener('load', () => { setModeVisual(); $serial.focus(); });
+    })();
+</script>

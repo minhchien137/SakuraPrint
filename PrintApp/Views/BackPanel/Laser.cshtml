@@ -1,0 +1,835 @@
+@{
+    ViewData["Title"] = "Laser Marking Check — Back Panel";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    /* ── Sigma Red design tokens — shared across all Sakura-family pages ──── */
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+
+        /* SN variant colors — same palette as SN Label */
+        --sn-blue: #2f5ea8;
+        --sn-pink: #c15b83;
+        --sn-green: var(--success);
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .lz-page { max-width: 1220px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .lz-layout { display: flex; gap: 20px; align-items: flex-start; }
+    .lz-left { flex: 1.5; min-width: 0; }
+    .lz-mid { flex: 1; min-width: 0; position: sticky; top: 24px; }
+    .lz-right { flex: 0.7; min-width: 0; position: sticky; top: 24px; }
+    .lz-right .t-section { padding: 20px 16px 16px; }
+    .lz-right .lz-step-label { font-size: 0.76rem; }
+
+    .lz-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+    .lz-header h1 { font-family: var(--font-head); font-size: 24px; font-weight: 800; letter-spacing: -0.3px; color: var(--red-dark); }
+    .lz-header p { font-family: var(--font-body); font-size: 0.85rem; color: var(--gray-500); margin-top: 5px; }
+    .lz-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 12px;
+        background: linear-gradient(90deg, var(--red-dark), var(--red-mid));
+    }
+    .lz-badge {
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .lz-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+    /* ── Reused section/grid/field/button primitives ──────────────────────── */
+    .t-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 24px 26px 20px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .t-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .t-grid { display: grid; gap: 16px 20px; }
+    .t-grid-2 { grid-template-columns: 1fr 1fr; }
+
+    .t-field label {
+        display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .t-field input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .t-field input:hover { border-color: var(--red-mid); }
+    .t-field input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .t-field input:disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
+
+    .t-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .t-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 46px; padding: 11px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px;
+    }
+    .t-btn-primary { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); box-shadow: 0 4px 14px rgba(200,16,46,0.35); }
+    .t-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,16,46,0.4); }
+    .t-btn-outline { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-outline:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+
+    .t-status {
+        font-family: var(--font-body); font-size: 0.85rem; padding: 12px 16px; border-radius: 12px;
+        display: none; align-items: flex-start; gap: 10px; margin-top: 14px; line-height: 1.5;
+        box-shadow: var(--shadow-sm);
+    }
+    .t-status.show { display: flex; }
+    .t-status.ok  { background: #ECFDF5; border-left: 3px solid var(--success); color: #065F46; }
+    .t-status.err { background: var(--red-xlight); border-left: 3px solid var(--danger); color: #7F1D1D; }
+
+    /* ── Readout rows (Color: value) ───────────────────────────────────────── */
+    .lz-readout { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .lz-readout-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        border-bottom: 1px dashed var(--gray-200); padding-bottom: 10px;
+    }
+    .lz-readout-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .lz-readout-row .k {
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-500);
+    }
+    .lz-readout-row .v { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--red-dark); letter-spacing: 0.3px; }
+
+    /* ── WO progress readout (current subName / total quantity) — right of Reset/Save ── */
+    .wo-progress {
+        margin-left: auto; font-family: var(--font-head); font-size: 18px; font-weight: 800;
+        color: var(--red-dark); letter-spacing: 0.3px;
+    }
+
+    /* ── Color result — banner full-width, nổi bật theo đúng màu Work Order ── */
+    .lz-color-result { margin-top: 16px; }
+    .lz-color-label {
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-500); margin-bottom: 8px;
+    }
+    .color-badge {
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        width: 100%; box-sizing: border-box;
+        font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: 0.4px;
+        padding: 16px 20px; border-radius: 14px; border: 2.5px solid var(--gray-300, var(--gray-200));
+        background: var(--gray-100); color: var(--gray-700);
+        box-shadow: var(--shadow-sm);
+    }
+    .color-badge::before { content: ''; width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; background: var(--gray-400); }
+    .color-badge.blue  { color: var(--white); background: var(--sn-blue);  border-color: var(--sn-blue);  box-shadow: 0 4px 14px rgba(47,94,168,0.4); }
+    .color-badge.blue::before  { background: var(--white); }
+    .color-badge.pink  { color: var(--white); background: var(--sn-pink);  border-color: var(--sn-pink);  box-shadow: 0 4px 14px rgba(193,91,131,0.4); }
+    .color-badge.pink::before  { background: var(--white); }
+    .color-badge.green { color: var(--white); background: var(--sn-green); border-color: var(--sn-green); box-shadow: 0 4px 14px rgba(5,150,105,0.4); }
+    .color-badge.green::before { background: var(--white); }
+
+    /* ── Process steps tracker (below Result) ──────────────────────────────── */
+    .lz-steps { display: flex; flex-direction: column; margin-top: 4px; text-align: left; }
+    .lz-step {
+        display: flex; align-items: center; gap: 12px; padding: 12px 2px;
+        border-bottom: 1px dashed var(--gray-200);
+    }
+    .lz-step:last-child { border-bottom: none; }
+    .lz-step-icon {
+        min-width: 28px; height: 28px; padding: 0 5px; border-radius: 14px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-body); font-size: 12px; font-weight: 800;
+        border: 2px solid var(--gray-200); background: var(--white); color: var(--gray-400);
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .lz-step-icon.done { background: var(--success); border-color: #047857; color: var(--white); }
+    .lz-step-icon.fail { background: var(--danger); border-color: #B91C1C; color: var(--white); }
+    .lz-step-label {
+        font-family: var(--font-body); font-size: 0.82rem; font-weight: 600; color: var(--gray-700); flex: 1;
+    }
+    .lz-step.is-done .lz-step-label { color: var(--gray-900); }
+    .lz-step.is-fail .lz-step-label { color: var(--red-dark); }
+
+    /* ── Retry / Skip box — shown when a step from #2 onward fails ─────────── */
+    .lz-retry-box { margin-top: 6px; padding-top: 14px; border-top: 1px dashed var(--gray-200); display: flex; flex-direction: column; }
+    .lz-retry-msg {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; line-height: 1.5;
+        color: var(--red-dark); background: var(--red-xlight); border: 1px solid var(--red-light);
+        border-radius: 10px; padding: 10px 12px; text-align: left;
+    }
+    .lz-skip-link {
+        align-self: flex-end; background: none; border: none; cursor: pointer; margin-top: 8px; padding: 4px 2px;
+        font-family: var(--font-body); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px;
+        color: var(--gray-400); text-decoration: underline;
+    }
+    .lz-skip-link:hover { color: var(--red); }
+
+    /* ── PASS / FAIL indicator circle ──────────────────────────────────────── */
+    .lz-circle-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 0 6px; }
+    .lz-circle {
+        width: 300px; height: 300px; border-radius: 50%; margin-bottom: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-head); font-size: 46px; font-weight: 800; color: var(--white);
+        border: 6px solid transparent; box-shadow: var(--shadow-lg);
+        transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+    .lz-circle.idle { background: var(--gray-200); color: var(--gray-500); border-color: var(--gray-400); }
+    .lz-circle.pass { background: var(--success); border-color: #047857; transform: scale(1.03); }
+    .lz-circle.fail { background: var(--danger);  border-color: #B91C1C; transform: scale(1.03); }
+
+    @@media (max-width: 980px) {
+        .lz-layout { flex-direction: column; }
+        .lz-mid, .lz-right { position: static; width: 100%; }
+    }
+
+    @@media (max-width: 560px) {
+        .t-grid-2 { grid-template-columns: 1fr; }
+        .lz-circle { width: 220px; height: 220px; font-size: 34px; }
+    }
+
+    /* ── Language switcher — fixed top-right, shared across all Sakura pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 560px) {
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+
+<div class="lz-page">
+
+    <header class="lz-header">
+        <div>
+            <h1 data-i18n="laser.title">LASER MARKING CHECK</h1>
+            <p data-i18n="laser.subtitle">Back Panel — Sakura</p>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="lz-badge" data-i18n="laser.badge">BACK PANEL</div>
+    </header>
+
+    <div class="lz-layout">
+
+        <!-- ── Left: Work Order + Serial Number input ── -->
+        <div class="lz-left">
+
+            <div class="t-section">
+                <div class="t-section-label" data-i18n="laser.workOrderSection">Work Order</div>
+
+                <div class="t-grid t-grid-2" style="align-items:end">
+                    <div class="t-field">
+                        <label data-i18n="laser.workOrder">Work Order</label>
+                        <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="laser.workOrderPlaceholder" placeholder="Scan or type Work Order…" />
+                    </div>
+                    <div class="t-actions" style="margin-top:0">
+                        <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" data-i18n="laser.lookupBtn">🔍 Lookup</button>
+                    </div>
+                </div>
+
+                <div id="woStatus" class="t-status"></div>
+
+                <div class="lz-color-result" id="woResolved" style="display:none">
+                    <div class="lz-color-label" data-i18n="laser.color">Color</div>
+                    <div class="color-badge" id="woColor">—</div>
+                </div>
+
+                <div class="t-actions">
+                    <button type="button" class="t-btn t-btn-ghost" id="btnReset" data-i18n="laser.resetBtn">✕ Reset</button>
+                    <button type="button" class="t-btn t-btn-ghost" id="btnSave" data-i18n="laser.saveBtn">Save</button>
+                    <div class="wo-progress" id="woProgress" style="display:none"></div>
+                </div>
+            </div>
+
+            <div class="t-section">
+                <div class="t-section-label" data-i18n="laser.serialSection">Serial Number</div>
+
+                <div class="t-field">
+                    <label data-i18n="laser.serialLabel">Serial Number</label>
+                    <input type="text" id="serialNumber" autocomplete="off" data-i18n-placeholder="laser.serialPlaceholder" placeholder="Scan Serial Number…" />
+                </div>
+
+                <div id="serialStatus" class="t-status"></div>
+            </div>
+
+            <div style="display:flex;gap:18px">
+                <a href="@Url.Content("~/sakura")" data-i18n="laser.backHome" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
+                    letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
+                    ← Sakura Home
+                </a>
+                <a href="@Url.Content("~/backpanel/laser/history")" data-i18n="laser.viewHistory" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
+                    letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
+                    View History →
+                </a>
+            </div>
+
+        </div>
+
+        <!-- ── Middle: PASS / FAIL result ── -->
+        <div class="lz-mid">
+            <div class="t-section" style="text-align:center">
+                <div class="t-section-label" data-i18n="laser.resultSection">Result</div>
+
+                <div class="lz-circle-wrap">
+                    <div class="lz-circle idle" id="laserCircle">
+                        <span id="laserCircleText">—</span>
+                    </div>
+                </div>
+
+                <div class="lz-readout" id="resultResolved" style="display:none">
+                    <div class="lz-readout-row">
+                        <span class="k" data-i18n="laser.scannedColor">Scanned Color</span>
+                        <span class="v" id="resScanned">—</span>
+                    </div>
+                    <div class="lz-readout-row">
+                        <span class="k" data-i18n="laser.expectedColor">Expected Color</span>
+                        <span class="v" id="resExpected">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right: Process steps tracker ── -->
+        <div class="lz-right">
+            <div class="t-section">
+                <div class="t-section-label" data-i18n="laser.stepsSection">Process</div>
+                <div class="lz-steps" id="laserSteps">
+                    <div class="lz-step" id="step1Row">
+                        <div class="lz-step-icon" id="step1Icon">1</div>
+                        <div class="lz-step-label" data-i18n="laser.step1Label">Scan Color Check</div>
+                    </div>
+                    <div class="lz-step" id="step2Row">
+                        <div class="lz-step-icon" id="step2Icon">2.1</div>
+                        <div class="lz-step-label" data-i18n="laser.step2Label">Check Serial Number Already Entered</div>
+                    </div>
+                    <div class="lz-step" id="step3Row">
+                        <div class="lz-step-icon" id="step3Icon">2.2</div>
+                        <div class="lz-step-label" data-i18n="laser.step3Label">Enter Production Result</div>
+                    </div>
+                    <div class="lz-step" id="step4Row">
+                        <div class="lz-step-icon" id="step4Icon">3</div>
+                        <div class="lz-step-label" data-i18n="laser.step4Label">Print Laser</div>
+                    </div>
+                </div>
+
+                <div class="lz-retry-box" id="retryBox" style="display:none">
+                    <div class="lz-retry-msg" id="retryMsg"></div>
+                    <div class="t-actions" style="margin-top:10px">
+                        <button type="button" class="t-btn t-btn-primary" id="btnTryAgain" data-i18n="laser.tryAgainBtn">🔄 Try Again</button>
+                    </div>
+                    <button type="button" class="lz-skip-link" id="btnSkip" data-i18n="laser.skipBtn">Skip →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+<script>
+(function () {
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+    const LS_WO_KEY = 'backpanel_laser_wo';
+
+    // Bridge cục bộ chạy trên máy xưởng (cùng máy đang mở trang này) — server IIS trung
+    // tâm không với tới ổ đĩa máy xưởng nên việc ghi SN.txt phải do trình duyệt tự gọi
+    // bridge này, giống hệt cách in ZPL đang làm (xem wwwroot/js/print.js).
+    const NODE_SERVICE = 'http://localhost:8021';
+
+    function t(key, fallback) {
+        return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
+    }
+
+    const $workOrder   = document.getElementById('workOrder');
+    const $btnLookupWo = document.getElementById('btnLookupWo');
+    const $woStatus    = document.getElementById('woStatus');
+    const $woResolved  = document.getElementById('woResolved');
+    const $woColor     = document.getElementById('woColor');
+    const $btnReset    = document.getElementById('btnReset');
+    const $btnSave     = document.getElementById('btnSave');
+    const $woProgress  = document.getElementById('woProgress');
+
+    const $serialNumber   = document.getElementById('serialNumber');
+    const $serialStatus   = document.getElementById('serialStatus');
+    const $laserCircle    = document.getElementById('laserCircle');
+    const $laserCircleTxt = document.getElementById('laserCircleText');
+    const $resultResolved = document.getElementById('resultResolved');
+    const $resScanned     = document.getElementById('resScanned');
+    const $resExpected    = document.getElementById('resExpected');
+
+    const $retryBox     = document.getElementById('retryBox');
+    const $retryMsg     = document.getElementById('retryMsg');
+    const $btnTryAgain  = document.getElementById('btnTryAgain');
+    const $btnSkip      = document.getElementById('btnSkip');
+
+    let expectedColor = null; // Màu resolve được từ Work Order đang chọn
+    let expectedProductId = null; // product_id (số) của Work Order — dùng cho API bước 3 (CheckLotSerialFG/InputProductionResultLog)
+    let expectedQuantity = null; // Tổng số lượng (SN Label) của Work Order — dùng làm totalQuantity khi gọi API bước 3
+    let currentSubNameSuffix = null; // Số thứ tự subName lớn nhất hiện tại của WO (vd 4718 trong NM/MO/03879-4718) — hiển thị "currentSubNameSuffix/expectedQuantity" cạnh Reset/Save
+    let circleTimer = null; // Hẹn giờ tự tắt (về idle) sau khi hiện PASS/FAIL
+
+    // "{masterWoCode}-4718" -> 4718. Cùng quy tắc parse với BuildNextSubNameAsync ở server
+    // (lấy phần sau dấu '-' cuối cùng, vì workOrder tự nó có thể chứa dấu '-').
+    function parseSubNameSuffix(subName) {
+        if (!subName) return null;
+        const idx = subName.lastIndexOf('-');
+        if (idx < 0 || idx === subName.length - 1) return null;
+        const n = parseInt(subName.slice(idx + 1), 10);
+        return Number.isNaN(n) ? null : n;
+    }
+
+    function updateWoProgress() {
+        if (currentSubNameSuffix == null || expectedQuantity == null) {
+            $woProgress.style.display = 'none';
+            return;
+        }
+        $woProgress.textContent = `${currentSubNameSuffix}/${expectedQuantity}`;
+        $woProgress.style.display = 'block';
+    }
+
+    // SN đang bị khoá chờ Try Again/Skip vì fail từ bước 2 trở đi (bước 1 fail thì
+    // không khoá — cho quét lại serial khác/serial đúng ngay, như hành vi cũ).
+    let pendingSerial = null;
+    let pendingFailedStep = null;
+
+    // ── Process steps tracker: 1) Scan Color Check
+    //    2 (2.1) Check Serial Number Already Entered  3 (2.2) Enter Production Result
+    //    4 (3) Print Laser — in laser để cuối cùng, chỉ in khi check + nhập KQSX đã pass ──
+    const STEP_PENDING_TEXT = { 1: '1', 2: '2.1', 3: '2.2', 4: '3' };
+
+    function setStepState(n, state) {
+        const $icon = document.getElementById(`step${n}Icon`);
+        const $row  = document.getElementById(`step${n}Row`);
+        if (!$icon || !$row) return;
+        $icon.classList.remove('done', 'fail');
+        $row.classList.remove('is-done', 'is-fail');
+        if (state === 'done') {
+            $icon.classList.add('done');
+            $row.classList.add('is-done');
+            $icon.textContent = '✓';
+        } else if (state === 'fail') {
+            $icon.classList.add('fail');
+            $row.classList.add('is-fail');
+            $icon.textContent = '✕';
+        } else {
+            $icon.textContent = STEP_PENDING_TEXT[n] || String(n);
+        }
+    }
+    function resetSteps() {
+        setStepState(1, 'pending'); setStepState(2, 'pending');
+        setStepState(3, 'pending'); setStepState(4, 'pending');
+    }
+
+    function stepLabel(n) {
+        if (n === 1) return t('laser.step1Label', 'Scan Color Check');
+        if (n === 2) return t('laser.step2Label', 'Check Serial Number Already Entered');
+        if (n === 3) return t('laser.step3Label', 'Enter Production Result');
+        if (n === 4) return t('laser.step4Label', 'Print Laser');
+        return '';
+    }
+
+    // Khoá ô Serial Number lại — bắt buộc phải Try Again (pass) hoặc Skip trước khi
+    // được quét serial tiếp theo, vì bước failedStep (>=2) chưa hoàn tất cho serial này.
+    // rawMessage (nếu có, vd từ API CheckLotSerialFG/InputProductionResultLog ở bước 3)
+    // được hiện nguyên văn thay cho câu chung chung, để vận hành viên biết chính xác lý do.
+    function lockForRetry(serial, failedStep, rawMessage) {
+        pendingSerial = serial;
+        pendingFailedStep = failedStep;
+        $serialNumber.disabled = true;
+        $retryMsg.textContent = rawMessage
+            ? `⚠ ${stepLabel(failedStep)} (SN ${serial}) — ${rawMessage}`
+            : `⚠ ${t('laser.stepIncomplete', 'Step not completed')} — ${stepLabel(failedStep)} (SN ${serial})`;
+        $retryBox.style.display = 'flex';
+    }
+
+    function unlockRetry() {
+        pendingSerial = null;
+        pendingFailedStep = null;
+        $serialNumber.disabled = false;
+        $retryBox.style.display = 'none';
+    }
+
+    function showStatus(el, msg, type) {
+        el.textContent = msg;
+        el.className = `t-status show ${type}`;
+    }
+    function hideStatus(el) { el.className = 't-status'; }
+
+    // API bên ngoài (CheckLotSerialFG/InputProductionResultLog) trả message thô bằng tiếng
+    // Anh, không qua i18n của app. Nhận diện các mẫu câu đã biết để dịch lại theo ngôn ngữ
+    // đang chọn (kèm tham số như serial/WO); câu lạ (API đổi format) thì hiện nguyên văn để
+    // không mất thông tin, thay vì cố dịch sai hoặc rơi mất chi tiết.
+    const API_MESSAGE_PATTERNS = [
+        {
+            regex: /Serial\/Lot\s+(\S+)\s+has been used for the WO\s+(\S+?)\.?\s*Please double-check\.?/i,
+            key: 'laser.msgSerialAlreadyUsed',
+            fallback: 'Serial/Lot {serial} has already been entered for WO {wo}. Please double-check.',
+            params: (m) => ({ serial: m[1], wo: m[2] })
+        }
+    ];
+
+    function translateApiRawMessage(rawMessage) {
+        if (!rawMessage) return rawMessage;
+        for (const p of API_MESSAGE_PATTERNS) {
+            const m = rawMessage.match(p.regex);
+            if (!m) continue;
+            let template = t(p.key, p.fallback);
+            const params = p.params(m);
+            Object.keys(params).forEach(k => { template = template.split(`{${k}}`).join(params[k]); });
+            return template;
+        }
+        return rawMessage;
+    }
+
+    // Map tên màu (Blue/Pink/Green) sang class border/background nổi bật của .color-badge.
+    function colorBadgeClass(colorName) {
+        const c = (colorName || '').toLowerCase();
+        if (c.includes('blue')) return 'blue';
+        if (c.includes('pink')) return 'pink';
+        if (c.includes('green')) return 'green';
+        return '';
+    }
+
+    // API luôn trả tên màu tiếng Anh (Blue/Pink/Green) — dịch sang ngôn ngữ đang chọn
+    // (vd. tiếng Trung) để thông báo không bị lẫn tiếng Anh giữa câu.
+    function translateColor(colorName) {
+        const cls = colorBadgeClass(colorName);
+        if (!cls) return colorName || '—';
+        return t(`color.${cls}`, colorName);
+    }
+
+    function setWoColorBadge(colorName) {
+        $woColor.textContent = colorName ? translateColor(colorName) : '—';
+        $woColor.className = 'color-badge ' + colorBadgeClass(colorName);
+    }
+
+    function setCircle(state, text) {
+        $laserCircle.className = 'lz-circle ' + state;
+        $laserCircleTxt.textContent = text;
+    }
+
+    // Hiện PASS/FAIL trong 3 giây rồi tự quay lại trạng thái chờ (idle) —
+    // không đụng tới $resultResolved (Scanned/Expected Color vẫn giữ nguyên để đối chiếu).
+    function flashCircle(state, text) {
+        if (circleTimer) { clearTimeout(circleTimer); circleTimer = null; }
+        setCircle(state, text);
+        circleTimer = setTimeout(() => setCircle('idle', '—'), 3000);
+    }
+
+    function resetResult() {
+        if (circleTimer) { clearTimeout(circleTimer); circleTimer = null; }
+        setCircle('idle', '—');
+        $resultResolved.style.display = 'none';
+        resetSteps();
+        unlockRetry();
+    }
+
+    // ── Work Order lookup ─────────────────────────────────────────────────────
+    async function lookupWorkOrder() {
+        const wo = $workOrder.value.trim();
+        expectedColor = null;
+        expectedProductId = null;
+        expectedQuantity = null;
+        currentSubNameSuffix = null;
+        updateWoProgress();
+        $woResolved.style.display = 'none';
+        resetResult();
+
+        if (!wo) {
+            showStatus($woStatus, `✗ ${t('laser.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+            return;
+        }
+
+        showStatus($woStatus, `⏳ ${t('laser.woLookingUp', 'Looking up…')}`, 'ok');
+        try {
+            const res = await fetch(`${BASE}/api/backpanel/laser/workorder-lookup?workOrder=${encodeURIComponent(wo)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('laser.lookupFailed', 'Lookup failed.')));
+
+            expectedColor = body.data.color;
+            expectedProductId = body.data.productId;
+            expectedQuantity = body.data.quantity;
+            currentSubNameSuffix = typeof body.data.currentSubNameSuffix === 'number' ? body.data.currentSubNameSuffix : null;
+            updateWoProgress();
+            setWoColorBadge(expectedColor);
+            $woResolved.style.display = 'block';
+            showStatus($woStatus, `✓ ${translateColor(expectedColor)}`, 'ok');
+
+            $serialNumber.value = '';
+            $serialNumber.focus();
+        } catch (e) {
+            showStatus($woStatus, `✗ ${e.message}`, 'err');
+        }
+    }
+
+    $btnLookupWo.addEventListener('click', lookupWorkOrder);
+    $workOrder.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); lookupWorkOrder(); }
+    });
+
+    // ── Reset / Save Work Order ──────────────────────────────────────────────
+    $btnReset.addEventListener('click', () => {
+        $workOrder.value = '';
+        expectedColor = null;
+        expectedProductId = null;
+        expectedQuantity = null;
+        currentSubNameSuffix = null;
+        updateWoProgress();
+        $woResolved.style.display = 'none';
+        setWoColorBadge('');
+        localStorage.removeItem(LS_WO_KEY);
+        hideStatus($woStatus);
+        $serialNumber.value = '';
+        hideStatus($serialStatus);
+        resetResult();
+        $workOrder.focus();
+    });
+
+    $btnSave.addEventListener('click', () => {
+        const wo = $workOrder.value.trim();
+        if (!wo) {
+            showStatus($woStatus, `✗ ${t('laser.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+            return;
+        }
+        localStorage.setItem(LS_WO_KEY, wo);
+        showStatus($woStatus, `✓ ${t('laser.savedMsg', 'Work Order saved.')}`, 'ok');
+    });
+
+    // ── Bước 4 (Print Laser) — ghi SN.txt qua bridge cục bộ, KHÔNG qua server ────
+    // Trả { ok: true } nếu bridge ghi thành công; { ok: false, message } nếu fail
+    // (bridge trả lỗi, hoặc không kết nối được localhost:8021).
+    async function writeSnFileViaBridge(serial) {
+        try {
+            const res = await fetch(`${NODE_SERVICE}/write-sn-file`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serial }),
+                signal: AbortSignal.timeout(5000)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) return { ok: false, message: data.error || t('laser.fileWriteFailed', 'Could not write file for laser — SN was not sent to print.') };
+            return { ok: true };
+        } catch (e) {
+            return { ok: false, message: t('laser.bridgeUnreachable', 'Could not connect to localhost:8021 — make sure the print bridge is running on this machine.') };
+        }
+    }
+
+    // Báo kết quả in laser về server để chốt Status/FailedStep của đúng dòng log (logId)
+    // vừa tạo ở verify-serial — best-effort, không chặn UI nếu server không phản hồi được.
+    async function reportPrintResult(logId, success) {
+        try {
+            await fetch(`${BASE}/api/backpanel/laser/report-print-result`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logId, success })
+            });
+        } catch (e) { /* best-effort */ }
+    }
+
+    // ── Serial Number verify ──────────────────────────────────────────────────
+    // Gọi API verify-serial cho 1 serial cụ thể — dùng chung cho lần quét đầu tiên
+    // và cho nút Try Again (retry lại đúng serial đang bị khoá).
+    async function runVerify(serial) {
+        setStepState(1, 'pending');
+        setStepState(2, 'pending');
+        setStepState(3, 'pending');
+        setStepState(4, 'pending');
+
+        try {
+            const res = await fetch(`${BASE}/api/backpanel/laser/verify-serial`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    workOrder: $workOrder.value.trim(), serialNumber: serial, expectedColor,
+                    productId: expectedProductId, totalQuantity: expectedQuantity
+                })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('laser.verifyFailed', 'Verify failed.')));
+
+            // subName chỉ có giá trị khi Check + Nhập KQSX đã pass (kể cả trường hợp dùng lại
+            // priorSubName) — nghĩa là đây chính là subName lớn nhất hiện tại của WO, cập nhật
+            // ngay để text tiến độ (currentSubNameSuffix/expectedQuantity) luôn khớp thực tế.
+            const parsedSuffix = parseSubNameSuffix(body.data.subName);
+            if (parsedSuffix != null) {
+                currentSubNameSuffix = parsedSuffix;
+                updateWoProgress();
+            }
+
+            $resScanned.textContent = translateColor(body.data.color);
+            $resExpected.textContent = translateColor(body.data.expectedColor);
+            $resultResolved.style.display = 'flex';
+
+            if (body.data.match) {
+                // Result (vòng tròn PASS/FAIL) phản ánh KẾT QUẢ TOÀN BỘ quy trình (4 bước),
+                // không chỉ riêng bước 1 — dù màu khớp, hễ còn 1 bước sau chưa qua thì vẫn là FAIL.
+                // Thứ tự: 1 Scan Color Check → 2 Check Already Entered → 3 Enter Production
+                // Result → 4 Print Laser (in laser để cuối, chỉ in khi 2+3 đã pass hết).
+                setStepState(1, 'done');
+                if (body.data.checkResultOk === false) {
+                    // Serial đã được nhập KQSX trước đó (trùng) hoặc thiếu Product ID — đây là
+                    // trạng thái vĩnh viễn với serial này (Try Again lại sẽ luôn ra kết quả y hệt),
+                    // nên KHÔNG khoá — dịch message theo mẫu đã biết rồi cho quét Serial tiếp theo luôn.
+                    setStepState(2, 'fail');
+                    flashCircle('fail', t('laser.fail', 'FAIL'));
+                    const checkMsg = translateApiRawMessage(body.data.checkResultMessage) || t('laser.step2Failed', 'Could not check production result status.');
+                    showStatus($serialStatus, `✗ ${t('laser.fail', 'FAIL')} — ${translateColor(body.data.color)} — ${checkMsg}`, 'err');
+                    unlockRetry();
+                } else {
+                    setStepState(2, 'done');
+                    if (body.data.inputResultOk === false) {
+                        // API nhập kết quả sản xuất lỗi — dịch message theo mẫu đã biết.
+                        // Có thể thử lại (transient) nên khoá + cho Try Again.
+                        setStepState(3, 'fail');
+                        flashCircle('fail', t('laser.fail', 'FAIL'));
+                        const inputMsg = translateApiRawMessage(body.data.inputResultMessage) || t('laser.step3Failed', 'Could not enter production result.');
+                        showStatus($serialStatus, `✗ ${t('laser.fail', 'FAIL')} — ${translateColor(body.data.color)} — ${inputMsg}`, 'err');
+                        lockForRetry(serial, 3, inputMsg);
+                    } else {
+                        setStepState(3, 'done');
+                        // Check + Nhập KQSX đã pass ở server — bước 4 (Print Laser) giờ do
+                        // TRÌNH DUYỆT (chạy trên máy xưởng) tự gọi bridge cục bộ để ghi SN.txt,
+                        // server IIS trung tâm không với tới ổ đĩa máy xưởng nên không tự ghi được.
+                        const printResult = await writeSnFileViaBridge(serial);
+                        await reportPrintResult(body.data.logId, printResult.ok);
+
+                        if (!printResult.ok) {
+                            // Check + Nhập KQSX đã pass, chỉ In Laser lỗi — khoá + cho Try Again
+                            // (server sẽ tự nhận diện, không nhập KQSX trùng lần nữa khi retry).
+                            setStepState(4, 'fail');
+                            flashCircle('fail', t('laser.fail', 'FAIL'));
+                            showStatus($serialStatus, `✗ ${t('laser.fail', 'FAIL')} — ${translateColor(body.data.color)} — ${printResult.message}`, 'err');
+                            lockForRetry(serial, 4, printResult.message);
+                        } else {
+                            setStepState(4, 'done');
+                            flashCircle('pass', t('laser.pass', 'PASS'));
+                            const subNameSuffix = body.data.subName ? ` (${body.data.subName})` : '';
+                            showStatus($serialStatus, `✓ ${t('laser.pass', 'PASS')} — ${translateColor(body.data.color)}${subNameSuffix}`, 'ok');
+                            unlockRetry();
+                        }
+                    }
+                }
+            } else {
+                flashCircle('fail', t('laser.fail', 'FAIL'));
+                setStepState(1, 'fail');
+                showStatus($serialStatus, `✗ ${t('laser.fail', 'FAIL')} — ${t('laser.scannedColor', 'Scanned Color')}: ${translateColor(body.data.color)}, ${t('laser.expectedColor', 'Expected Color')}: ${translateColor(body.data.expectedColor)}`, 'err');
+                unlockRetry(); // Fail ở bước 1 không khoá — cho quét lại ngay.
+            }
+        } catch (e) {
+            flashCircle('fail', t('laser.fail', 'FAIL'));
+            setStepState(1, 'fail');
+            showStatus($serialStatus, `✗ ${e.message}`, 'err');
+            unlockRetry();
+        } finally {
+            $serialNumber.value = '';
+            $serialNumber.focus();
+        }
+    }
+
+    async function verifySerial() {
+        if (pendingSerial) return; // Đang khoá chờ Try Again/Skip.
+
+        const serial = $serialNumber.value.trim();
+
+        if (!serial) {
+            showStatus($serialStatus, `✗ ${t('laser.serialEnterFirst', 'Enter a Serial Number first.')}`, 'err');
+            return;
+        }
+        if (!expectedColor) {
+            showStatus($serialStatus, `✗ ${t('laser.scanWoFirst', 'Scan a Work Order first.')}`, 'err');
+            $serialNumber.value = '';
+            return;
+        }
+
+        await runVerify(serial);
+    }
+
+    $serialNumber.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); verifySerial(); }
+    });
+
+    // ── Try Again / Skip (khi fail từ bước 2 trở đi) ─────────────────────────
+    $btnTryAgain.addEventListener('click', async () => {
+        if (!pendingSerial || !pendingFailedStep) return;
+        const serial = pendingSerial;
+
+        $btnTryAgain.disabled = true;
+        showStatus($serialStatus, `⏳ ${t('laser.retryInProgress', 'Retrying…')}`, 'ok');
+
+        // Bước 2 (Print Laser) và bước 3 (Enter Production Result) đều là 1 phần của
+        // chuỗi verify-serial — gọi lại nguyên chuỗi cũng đồng thời retry các bước
+        // trước đó (luôn pass lại vì tất định/đã ghi file) rồi thử lại đúng bước đang fail.
+        await runVerify(serial);
+
+        $btnTryAgain.disabled = false;
+    });
+
+    $btnSkip.addEventListener('click', () => {
+        if (!pendingSerial) return;
+        unlockRetry();
+        showStatus($serialStatus, `⚠ ${t('laser.skippedMsg', 'Skipped — you can scan the next Serial Number.')}`, 'err');
+        $serialNumber.value = '';
+        $serialNumber.focus();
+    });
+
+    // ── Restore saved Work Order on page load ────────────────────────────────
+    (function init() {
+        resetResult();
+        const savedWo = localStorage.getItem(LS_WO_KEY);
+        if (savedWo) {
+            $workOrder.value = savedWo;
+            lookupWorkOrder();
+        } else {
+            $workOrder.focus();
+        }
+    })();
+})();
+</script>
+}

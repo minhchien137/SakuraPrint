@@ -1,0 +1,100 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EntryPointFilePath = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = ZplPrinter
+build_property.RootNamespace = ZplPrinter
+build_property.ProjectDir = D:\PrintService\PrintApp\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\PrintService\PrintApp
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[D:/PrintService/PrintApp/Views/BackPanel/HistoryLaser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja1BhbmVsXEhpc3RvcnlMYXNlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/BackPanel/Laser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja1BhbmVsXExhc2VyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Middle/HistoryInputResult.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWlkZGxlXEhpc3RvcnlJbnB1dFJlc3VsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Middle/InputResult.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWlkZGxlXElucHV0UmVzdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Middle/Result.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWlkZGxlXFJlc3VsdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Middle/Summary.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWlkZGxlXFN1bW1hcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Print/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJpbnRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/CartonSN.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXENhcnRvblNOLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/CartonSnHistory.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXENhcnRvblNuSGlzdG9yeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/History.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXEhpc3RvcnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/SnLabel.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXFNuTGFiZWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Sakura/_LangSwitcher.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXF9MYW5nU3dpdGNoZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Toast/FctScan.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG9hc3RcRmN0U2Nhbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Toast/FqcScan.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG9hc3RcRnFjU2Nhbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/Toast/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG9hc3RcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService/PrintApp/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 

@@ -1,0 +1,425 @@
+@{
+    ViewData["Title"] = "TEST RESULTS AT MIDDLE STATION";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    :root {
+        --accent:       #C8102E;
+        --accent-dark:  #9B0B22;
+        --accent-mid:   #E63950;
+        --accent-light: #FFE5E9;
+        --accent-xlight:#FFF5F6;
+        --white:        #FFFFFF;
+        --gray-50:      #F9FAFB;
+        --gray-100:     #F3F4F6;
+        --gray-200:     #E5E7EB;
+        --gray-400:     #9CA3AF;
+        --gray-500:     #6B7280;
+        --gray-600:     #4B5563;
+        --gray-700:     #374151;
+        --gray-900:     #111827;
+        --success:      #059669;
+        --danger:       #DC2626;
+        --shadow-sm:    0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:    0 4px 20px rgba(200,16,46,0.12);
+        --font-body:    'Inter', sans-serif;
+        --font-head:    'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .mid-page { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; padding: 24px 20px 60px; }
+
+    .mid-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+    .mid-header h1 { font-family: var(--font-head); font-size: 24px; font-weight: 800; letter-spacing: -0.3px; color: var(--accent-dark); }
+    .mid-header p { font-family: var(--font-body); font-size: 0.82rem; color: var(--gray-500); margin-top: 5px; }
+    .mid-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 10px;
+        background: linear-gradient(90deg, var(--accent-dark), var(--accent-mid));
+    }
+    .mid-badge {
+        background: var(--accent-xlight); color: var(--accent-dark); border: 1px solid var(--accent-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .mid-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
+
+    .m-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 22px 24px 18px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .m-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .m-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .m-grid { display: grid; gap: 14px 18px; grid-template-columns: 1.2fr 1fr 0.8fr 1fr 1fr auto; align-items: end; }
+
+    .m-field label {
+        display: block; font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .m-field input, .m-field select {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 44px; padding: 9px 12px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .m-field input:hover, .m-field select:hover { border-color: var(--accent-mid); }
+    .m-field input:focus, .m-field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .m-field select {
+        appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px;
+    }
+    .m-daterange { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .m-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 44px; padding: 10px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px; white-space: nowrap;
+    }
+    .m-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--white); }
+    .m-btn-primary:hover { filter: brightness(1.08); }
+    .m-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .m-btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-xlight); }
+    .m-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+    .m-btn-ghost:disabled:hover { border-color: var(--gray-200); color: var(--gray-500); background: var(--white); }
+
+    .m-table-wrap { overflow-x: auto; }
+    .m-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 0.85rem; min-width: 760px; }
+    .m-table th {
+        text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--gray-200); white-space: nowrap;
+        letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--gray-500);
+    }
+    .m-table td { padding: 8px 10px; border-bottom: 1px dashed var(--gray-200); vertical-align: middle; }
+    .m-table tbody tr.main-row:hover td { background: var(--gray-50); }
+    .m-table tbody tr.main-row { cursor: pointer; }
+    .m-table td.mono { font-family: 'Barlow', monospace; font-weight: 600; }
+
+    .expand-btn {
+        width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--gray-200); background: var(--white);
+        color: var(--gray-500); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 11px; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .expand-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .expand-btn.open { transform: rotate(90deg); }
+
+    /* ── PASS / FAIL status badge — to, rõ, nhìn được từ xa ─────────────────── */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: var(--font-body); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
+        padding: 5px 14px; border-radius: 8px; text-transform: uppercase;
+    }
+    .status-badge.pass { color: #FFFFFF; background: var(--success); }
+    .status-badge.fail { color: #FFFFFF; background: var(--danger); }
+    .status-badge.other { color: var(--gray-700); background: var(--gray-100); border: 1px solid var(--gray-200); }
+
+    .detail-row td { background: var(--accent-xlight); padding: 14px 18px; border-bottom: 1px solid var(--accent-light); }
+    .detail-row { display: none; }
+    .detail-row.open { display: table-row; }
+
+    .chan-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .chan-table th {
+        text-align: left; padding: 5px 8px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.4px;
+        text-transform: uppercase; color: var(--accent-dark); border-bottom: 1px solid var(--accent-light);
+    }
+    .chan-table td { padding: 5px 8px; color: var(--gray-700); border-bottom: 1px dashed rgba(200,16,46,0.12); }
+    .chan-table td.chan-name { font-weight: 700; color: var(--accent-dark); }
+
+    .mid-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
+    .mid-pagination .info { font-family: var(--font-body); font-size: 0.75rem; color: var(--gray-500); letter-spacing: 0.3px; }
+    .mid-pagination .pages { display: flex; align-items: center; gap: 10px; }
+
+    /* ── Language switcher — fixed top-right, shared across all app pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 1000px) {
+        .m-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 560px) {
+        .m-grid { grid-template-columns: 1fr; }
+        .m-daterange { grid-template-columns: 1fr 1fr; }
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+
+<div class="mid-page">
+
+    <header class="mid-header">
+        <div>
+            <h1 data-i18n="middle.title">TEST RESULTS AT MIDDLE STATION</h1>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="mid-badge">MIDDLE</div>
+    </header>
+
+    <div class="m-section">
+        <div class="m-section-label" data-i18n="middle.filter">Bộ lọc</div>
+        <div class="m-grid">
+            <div class="m-field">
+                <label data-i18n="middle.unitSn">Unit S/N</label>
+                <input type="text" id="fUnitSn" autocomplete="off" data-i18n-placeholder="middle.unitSnPlaceholder" placeholder="Nhập / quét Unit S/N…" />
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.workOrder">Work Order</label>
+                <input type="text" id="fWorkOrder" autocomplete="off" data-i18n-placeholder="middle.workOrderPlaceholder" placeholder="Nhập Work Order…" />
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.status">Status</label>
+                <select id="fStatus">
+                    <option value="All" data-i18n="middle.statusAll">Tất cả</option>
+                    <option value="PASS">PASS</option>
+                    <option value="FAIL">FAIL</option>
+                </select>
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.dateFrom">Từ ngày</label>
+                <div class="m-daterange">
+                    <input type="date" id="fDateFrom" />
+                </div>
+            </div>
+            <div class="m-field">
+                <label data-i18n="middle.dateTo">Đến ngày</label>
+                <div class="m-daterange">
+                    <input type="date" id="fDateTo" />
+                </div>
+            </div>
+            <button class="m-btn m-btn-primary" id="btnSearch" data-i18n="middle.searchBtn">⌕ Tìm kiếm</button>
+        </div>
+    </div>
+
+    <div class="m-section">
+        <div class="m-section-label" data-i18n="middle.resultSection">Kết quả kiểm tra</div>
+        <div class="m-table-wrap">
+            <table class="m-table">
+                <thead>
+                    <tr>
+                        <th style="width:26px"></th>
+                        <th data-i18n="middle.colUnitSn">Unit S/N</th>
+                        <th data-i18n="middle.colBarcode">Work Order</th>
+                        <th data-i18n="middle.colStatus">Status</th>
+                        <th data-i18n="middle.colDateTime">Date Time</th>
+                        <th data-i18n="middle.colUt">UT</th>
+                    </tr>
+                </thead>
+                <tbody id="resultRows">
+                    <tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">—</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mid-pagination">
+            <div class="info" id="pageInfo">—</div>
+            <div class="pages">
+                <button class="m-btn m-btn-ghost" id="btnFirst" data-i18n-title="middle.firstPage" title="Trang đầu">⏮</button>
+                <button class="m-btn m-btn-ghost" id="btnPrev" data-i18n="middle.prevPage">← Trước</button>
+                <button class="m-btn m-btn-ghost" id="btnNext" data-i18n="middle.nextPage">Sau →</button>
+                <button class="m-btn m-btn-ghost" id="btnLast" data-i18n-title="middle.lastPage" title="Trang cuối">⏭</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+<script>
+(function () {
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+    const PAGE_SIZE = 50;
+
+    function t(key, fallback) {
+        return window.SakuraI18n ? window.SakuraI18n.t(key) : (fallback || key);
+    }
+
+    const $unitSn    = document.getElementById('fUnitSn');
+    const $workOrder = document.getElementById('fWorkOrder');
+    const $status    = document.getElementById('fStatus');
+    const $dateFrom  = document.getElementById('fDateFrom');
+    const $dateTo    = document.getElementById('fDateTo');
+    const $btnSearch = document.getElementById('btnSearch');
+    const $rows      = document.getElementById('resultRows');
+    const $pageInfo  = document.getElementById('pageInfo');
+    const $btnFirst  = document.getElementById('btnFirst');
+    const $btnPrev   = document.getElementById('btnPrev');
+    const $btnNext   = document.getElementById('btnNext');
+    const $btnLast   = document.getElementById('btnLast');
+
+    let currentPage = 1;
+    let lastTotalCount = 0;
+    let lastItems = null;
+    let openDetailIds = new Set();
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function formatDateTime(iso) {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return escapeHtml(iso);
+        return d.toLocaleString('vi-VN');
+    }
+
+    async function loadResults() {
+        const params = new URLSearchParams({ page: currentPage, pageSize: PAGE_SIZE });
+        if ($unitSn.value.trim()) params.set('unitSn', $unitSn.value.trim());
+        if ($workOrder.value.trim()) params.set('workOrder', $workOrder.value.trim());
+        if ($status.value && $status.value !== 'All') params.set('status', $status.value);
+        if ($dateFrom.value) params.set('dateFrom', $dateFrom.value);
+        if ($dateTo.value) params.set('dateTo', $dateTo.value);
+
+        $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">${t('middle.loading', 'Đang tải…')}</td></tr>`;
+        try {
+            const res = await fetch(`${BASE}/api/middle/result?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(body.error || t('middle.loadFailed', 'Không tải được dữ liệu.'));
+
+            lastTotalCount = body.data.totalCount;
+            currentPage = body.data.page;
+            lastItems = body.data.items;
+            renderRows(lastItems);
+            renderPagination();
+        } catch (e) {
+            lastTotalCount = 0;
+            lastItems = null;
+            $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:16px">✗ ${escapeHtml(e.message)}</td></tr>`;
+            renderPagination();
+        }
+    }
+
+    function renderPagination() {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / PAGE_SIZE));
+        $pageInfo.textContent = lastTotalCount === 0
+            ? t('middle.noData', 'Không có dữ liệu.')
+            : `${t('middle.page', 'Trang')} ${currentPage} / ${totalPages} — ${lastTotalCount} ${t('middle.records', 'dòng')}`;
+        $btnFirst.disabled = currentPage <= 1;
+        $btnPrev.disabled = currentPage <= 1;
+        $btnNext.disabled = currentPage >= totalPages;
+        $btnLast.disabled = currentPage >= totalPages;
+    }
+
+    function channelRowsHtml(channels) {
+        return channels.map(c => {
+            return `
+                <tr>
+                    <td class="chan-name">${escapeHtml(c.channel) || '—'}</td>
+                    <td>${escapeHtml(c.polarity) || '—'}</td>
+                    <td>${escapeHtml(c.testValue) || '—'}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function renderRows(items) {
+        if (!items.length) {
+            $rows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:16px">${t('middle.noData', 'Không có dữ liệu.')}</td></tr>`;
+            return;
+        }
+
+        $rows.innerHTML = items.map(r => {
+            const statusUpper = (r.status || '').toUpperCase();
+            const statusCls = statusUpper === 'PASS' ? 'pass' : (statusUpper === 'FAIL' || statusUpper === 'NG' ? 'fail' : 'other');
+            const isOpen = openDetailIds.has(r.id);
+            return `
+                <tr class="main-row" data-id="${r.id}">
+                    <td><button type="button" class="expand-btn ${isOpen ? 'open' : ''}" data-id="${r.id}">▶</button></td>
+                    <td class="mono">${escapeHtml(r.unitSn)}</td>
+                    <td>${escapeHtml(r.workOrder) || '—'}</td>
+                    <td><span class="status-badge ${statusCls}">${escapeHtml(r.status)}</span></td>
+                    <td>${formatDateTime(r.dateTime)}</td>
+                    <td>${escapeHtml(r.ut) || '—'}</td>
+                </tr>
+                <tr class="detail-row ${isOpen ? 'open' : ''}" data-detail-id="${r.id}">
+                    <td colspan="6">
+                        <table class="chan-table">
+                            <thead>
+                                <tr>
+                                    <th>${t('middle.detailPolarity', 'Polarity')}</th>
+                                    <th>${t('middle.detailResult', 'Result')}</th>
+                                    <th>${t('middle.detailTestResult', 'Test Result')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>${channelRowsHtml(r.channels)}</tbody>
+                        </table>
+                    </td>
+                </tr>`;
+        }).join('');
+
+        $rows.querySelectorAll('.expand-btn').forEach(btn => {
+            btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                toggleDetail(btn.dataset.id);
+            });
+        });
+        $rows.querySelectorAll('tr.main-row').forEach(tr => {
+            tr.addEventListener('click', () => toggleDetail(tr.dataset.id));
+        });
+    }
+
+    function toggleDetail(id) {
+        const detailRow = $rows.querySelector(`tr.detail-row[data-detail-id="${id}"]`);
+        const btn = $rows.querySelector(`.expand-btn[data-id="${id}"]`);
+        if (!detailRow) return;
+        const nowOpen = !detailRow.classList.contains('open');
+        detailRow.classList.toggle('open', nowOpen);
+        if (btn) btn.classList.toggle('open', nowOpen);
+        if (nowOpen) openDetailIds.add(id); else openDetailIds.delete(id);
+    }
+
+    $btnSearch.addEventListener('click', () => { currentPage = 1; loadResults(); });
+    $unitSn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadResults(); } });
+    $workOrder.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadResults(); } });
+    $status.addEventListener('change', () => { currentPage = 1; loadResults(); });
+    $dateFrom.addEventListener('change', () => { currentPage = 1; loadResults(); });
+    $dateTo.addEventListener('change', () => { currentPage = 1; loadResults(); });
+
+    $btnFirst.addEventListener('click', () => { if (currentPage > 1) { currentPage = 1; loadResults(); } });
+    $btnPrev.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadResults(); } });
+    $btnNext.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / PAGE_SIZE));
+        if (currentPage < totalPages) { currentPage++; loadResults(); }
+    });
+    $btnLast.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(lastTotalCount / PAGE_SIZE));
+        if (currentPage < totalPages) { currentPage = totalPages; loadResults(); }
+    });
+
+    // Re-render dynamic text (loading/empty states, table rows) when EN/ZH is switched.
+    document.addEventListener('sakura:lang-changed', () => {
+        if (lastItems) renderRows(lastItems);
+        renderPagination();
+    });
+
+    loadResults();
+})();
+</script>
+}

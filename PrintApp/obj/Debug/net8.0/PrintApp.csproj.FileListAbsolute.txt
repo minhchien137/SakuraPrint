@@ -1,0 +1,472 @@
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/appsettings.json
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.runtime.json
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.endpoints.json
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.exe
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.deps.json
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.runtimeconfig.json
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.pdb
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/rpswa.dswa.cache.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfoInputs.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfo.cs
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.CoreCompileInputs.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.MvcApplicationPartsAssemblyInfo.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cs
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/rjimswa.dswa.cache.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmrazor.dswa.cache.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmcshtml.dswa.cache.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/scopedcss/bundle/PrintApp.styles.css
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.development.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.endpoints.json
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/swae.build.ex.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.dll
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/refint/PrintApp.dll
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.pdb
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.genruntimeconfig.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/ref/PrintApp.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Core.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Identity.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Drawing.Common.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Memory.Data.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Runtime.Caching.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Permissions.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/System.Windows.Extensions.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
+D:/Sigma/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.AssemblyReference.cache
+D:/Sigma/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.Up2Date
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/appsettings.json
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.endpoints.json
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.runtime.json
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.exe
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.deps.json
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.runtimeconfig.json
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.pdb
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Core.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Identity.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Drawing.Common.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Memory.Data.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Runtime.Caching.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Permissions.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Windows.Extensions.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
+C:/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.AssemblyReference.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rpswa.dswa.cache.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfoInputs.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfo.cs
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.CoreCompileInputs.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.MvcApplicationPartsAssemblyInfo.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cs
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjimswa.dswa.cache.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmrazor.dswa.cache.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmcshtml.dswa.cache.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/scopedcss/bundle/PrintApp.styles.css
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.development.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.endpoints.json
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/swae.build.ex.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.Up2Date
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.dll
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/refint/PrintApp.dll
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.pdb
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.genruntimeconfig.cache
+C:/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/ref/PrintApp.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/appsettings.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.endpoints.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.staticwebassets.runtime.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.deps.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.runtimeconfig.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/PrintApp.pdb
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Core.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Azure.Identity.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Drawing.Common.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Memory.Data.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Runtime.Caching.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Security.Permissions.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/System.Windows.Extensions.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.AssemblyReference.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rpswa.dswa.cache.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfoInputs.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.AssemblyInfo.cs
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.CoreCompileInputs.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.MvcApplicationPartsAssemblyInfo.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.RazorAssemblyInfo.cs
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.sourcelink.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjimswa.dswa.cache.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmrazor.dswa.cache.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/rjsmcshtml.dswa.cache.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/scopedcss/bundle/PrintApp.styles.css
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.json.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.development.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/staticwebassets.build.endpoints.json
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/swae.build.ex.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.csproj.Up2Date
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/refint/PrintApp.dll
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.pdb
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/PrintApp.genruntimeconfig.cache
+/Users/pm/Coldzy/InternetPrint/InternetPrint/PrintApp/obj/Debug/net8.0/ref/PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-PrintApp\1d831727-38e8-4a98-90e7-650d9a6eb4c9\scratchpad\buildcheck\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck2\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck3\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck4\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck5\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck6\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\buildcheck7\PrintApp.pdb
+D:\PrintService\PrintApp\bin\Debug\net8.0\appsettings.json
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.exe
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.deps.json
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.runtimeconfig.json
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\PrintApp.pdb
+D:\PrintService\PrintApp\bin\Debug\net8.0\Azure.Core.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Azure.Identity.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Drawing.Common.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Memory.Data.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Runtime.Caching.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Security.Permissions.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\System.Windows.Extensions.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.csproj.AssemblyReference.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\rpswa.dswa.cache.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfoInputs.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfo.cs
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.csproj.CoreCompileInputs.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.MvcApplicationPartsAssemblyInfo.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cs
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.sourcelink.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\scopedcss\bundle\PrintApp.styles.css
+D:\PrintService\PrintApp\obj\Debug\net8.0\staticwebassets.build.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\staticwebassets.build.json.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\staticwebassets.development.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+D:\PrintService\PrintApp\obj\Debug\net8.0\swae.build.ex.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.csproj.Up2Date
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.dll
+D:\PrintService\PrintApp\obj\Debug\net8.0\refint\PrintApp.dll
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.pdb
+D:\PrintService\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
+D:\PrintService\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\pa_build_check2\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check2\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check3\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check4\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.exe
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.deps.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.runtimeconfig.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Core.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Identity.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Memory.Data.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Runtime.Caching.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Permissions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Windows.Extensions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.AssemblyReference.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rpswa.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfoInputs.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfo.cs
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.CoreCompileInputs.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.MvcApplicationPartsAssemblyInfo.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cs
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\scopedcss\bundle\PrintApp.styles.css
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.development.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\swae.build.ex.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.Up2Date
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll

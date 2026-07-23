@@ -1,0 +1,15 @@
+{
+  "name": "magnet-log-collector",
+  "version": "1.0.0",
+  "description": "Background service: doc file Excel ket qua kiem tra kich thuoc magnet moi ngay, luu dong moi vao SQL Server (SVN_MiddleDimensionCheckResult)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "check": "node src/check.js"
+  },
+  "dependencies": {
+    "iconv-lite": "^0.6.3",
+    "mssql": "^10.0.2",
+    "xlsx": "^0.18.5"
+  }
+}

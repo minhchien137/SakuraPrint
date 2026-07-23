@@ -1,0 +1,146 @@
+@{
+    ViewData["Title"] = "In nhãn ZPL";
+}
+
+<div class="page">
+
+    <header>
+        <div class="header-left">
+            <h1>ZPL PRINT</h1>
+            <p>Zebra Label Printer Interface</p>
+        </div>
+        <div class="stamp-badge">ONLINE</div>
+    </header>
+
+    <!-- Nội dung nhãn -->
+    <div class="section">
+        <div class="section-label">Nội dung nhãn</div>
+        <div class="field">
+            <div class="field-header">
+                <label>Scan / Nhập nội dung</label>
+                <div class="scan-pill" id="scan-pill">
+                    <div class="scan-dot" id="scan-dot"></div>
+                    <span id="scan-txt">Sẵn sàng</span>
+                </div>
+            </div>
+            <textarea id="content" placeholder="Quét barcode hoặc nhập nội dung nhãn...&#10;Nhấn Enter để in ngay"
+                      autofocus></textarea>
+        </div>
+    </div>
+
+    <!-- Cấu hình máy in -->
+    <div class="section" style="position:relative">
+        <div class="section-label">Cấu hình máy in</div>
+
+        <div class="node-indicator">
+            <div class="node-dot" id="node-dot"></div>
+            <span id="node-txt">localhost:8021 …</span>
+        </div>
+
+        <!-- Toggle TCP / USB -->
+        <div class="mode-toggle" id="mode-toggle">
+            <label id="lbl-tcp" class="active" onclick="setMode('tcp')">
+                <input type="radio" name="print-mode" value="tcp" checked />
+                <span class="mode-icon">🌐</span>
+                <span>TCP / IP</span>
+            </label>
+            <label id="lbl-usb" onclick="setMode('usb')">
+                <input type="radio" name="print-mode" value="usb" />
+                <span class="mode-icon">🔌</span>
+                <span>USB</span>
+            </label>
+        </div>
+
+        <!-- TCP block -->
+        <div id="tcp-block">
+            <div class="field">
+                <label>Địa chỉ IP máy in</label>
+                <input type="text" id="printer-ip" placeholder="192.168.1.100" />
+                <div class="ip-status" id="ip-status"></div>
+            </div>
+
+            <div class="row-2">
+                <div class="field">
+                    <label>Cổng TCP</label>
+                    <input type="text" id="printer-port" value="9100" />
+                </div>
+                <div class="field">
+                    <label>Kích thước nhãn (inch)</label>
+                    <input type="text" id="label-size" value="4x2" />
+                </div>
+            </div>
+        </div>
+
+        <!-- USB block -->
+        <div id="usb-block" style="display:none">
+            <div class="usb-row">
+                <div class="field">
+                    <label>Máy in USB</label>
+                    <select id="usb-select" disabled>
+                        <option value="">— Nhấn 🔄 để tìm máy in —</option>
+                    </select>
+                    <div class="usb-status" id="usb-status"></div>
+                </div>
+                <button class="btn-icon" id="btn-refresh-usb" type="button" title="Tìm lại máy in">
+                    🔄 Làm mới
+                </button>
+            </div>
+
+            <div class="field" style="margin-top:18px">
+                <label>Kích thước nhãn (inch)</label>
+                <input type="text" id="label-size-usb" value="4x2" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút bấm -->
+    <div class="section">
+        <div class="action-row">
+            <button id="btn-preview" onclick="doPreview()">👁 Xem ZPL</button>
+            <button id="btn-print" onclick="doPrint()">
+                <div class="spin" id="spinner"></div>
+                <span id="btn-txt">🖨 Gửi lệnh in</span>
+            </button>
+        </div>
+        <div id="status-box"></div>
+    </div>
+
+    <!-- ZPL preview -->
+    <div class="section" id="zpl-section">
+        <div class="section-label">ZPL Output</div>
+        <div class="zpl-pre" id="zpl-out">—</div>
+    </div>
+
+    <footer>ASP.NET (cloud) → Browser → localhost:8021 → TCP/IP or USB → Zebra</footer>
+</div>
+
+@section Scripts {
+    <script>
+            window.APP_URLS = {
+    generateZpl: '@Url.Action("GenerateZpl", "Print")'
+};
+    </script>
+    <script>
+            // Inline mode helper so onclick works before print.js loads
+            function setMode(mode) {
+                document.getElementById('lbl-tcp').classList.toggle('active', mode === 'tcp');
+                document.getElementById('lbl-usb').classList.toggle('active', mode === 'usb');
+                document.getElementById('tcp-block').style.display = mode === 'tcp' ? '' : 'none';
+                document.getElementById('usb-block').style.display = mode === 'usb' ? '' : 'none';
+                // Sync radio
+                document.querySelectorAll('input[name="print-mode"]').forEach(r => {
+                    r.checked = r.value === mode;
+                });
+                if (mode === 'usb' && typeof loadUsbPrinters === 'function') loadUsbPrinters();
+            }
+
+            // Sync label-size giữa 2 tab
+            document.addEventListener('DOMContentLoaded', () => {
+                const $s1 = document.getElementById('label-size');
+                const $s2 = document.getElementById('label-size-usb');
+                $s1.addEventListener('input', () => $s2.value = $s1.value);
+                $s2.addEventListener('input', () => $s1.value = $s2.value);
+            });
+    </script>
+    <script src="~/js/print.js"></script>
+}

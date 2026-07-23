@@ -1,0 +1,473 @@
+@{
+    ViewData["Title"] = "FCT Scan — Toast";
+}
+
+<style>
+    :root {
+        --ink: #1a1a2e;
+        --paper: #f5f0e8;
+        --cream: #ede8dc;
+        --rule: #c8c0b0;
+        --stamp: #c0392b;
+        --ok: #2c7a5a;
+        --ghost: #8a8070;
+        --mono: 'Azeret Mono', monospace;
+    }
+
+    .fct-page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .fct-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 18px;
+        margin-bottom: 32px;
+    }
+
+    .fct-header h1 {
+        font-family: var(--mono);
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -1px;
+    }
+
+    .fct-header p {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-top: 5px;
+    }
+
+    .fct-badge {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        padding: 6px 12px;
+        border-radius: 3px;
+        transform: rotate(-2deg);
+        box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .fct-badge.ok-badge {
+        background: #1a6644;
+        color: #fff;
+    }
+
+    .fct-badge.ng-badge {
+        background: var(--stamp);
+        color: #fff;
+    }
+
+    .fct-layout {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+    }
+
+    .fct-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── Sections ── */
+    .t-section {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 24px 26px 20px;
+        margin-bottom: 18px;
+        box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .t-section-label {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .t-section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--rule);
+    }
+
+    .t-field label {
+        display: block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 6px;
+    }
+
+    .t-field input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-bottom: 1.5px solid var(--rule);
+        padding: 7px 0;
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .t-field input:focus {
+        border-bottom-color: var(--ink);
+    }
+
+    .t-field input::placeholder {
+        color: var(--rule);
+    }
+
+    .serial-field input {
+        font-size: 18px;
+        padding: 10px 0;
+        letter-spacing: 1px;
+    }
+
+    /* Mode pill */
+    .mode-pill {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 14px;
+    }
+
+    .mode-pill.ok {
+        background: #e8f5ee;
+        color: var(--ok);
+        border: 1px solid #b6dfc9;
+    }
+
+    .mode-pill.ng {
+        background: #fdf0ee;
+        color: var(--stamp);
+        border: 1px solid #f5b8b0;
+    }
+
+    /* Notice box */
+    .notice-box {
+        background: #fef9c3;
+        border: 1.5px solid #d97706;
+        border-radius: 4px;
+        padding: 16px 20px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: #78350f;
+        font-weight: 600;
+        margin-top: 16px;
+        box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    /* Status */
+    .t-status {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 12px 16px;
+        border-radius: 3px;
+        display: none;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 14px;
+        line-height: 1.5;
+    }
+
+    .t-status.show {
+        display: flex;
+    }
+
+    .t-status.ok {
+        background: #e8f5ee;
+        border-left: 3px solid var(--ok);
+        color: #1a4a30;
+    }
+
+    .t-status.err {
+        background: #fdf0ee;
+        border-left: 3px solid var(--stamp);
+        color: #6a1a10;
+    }
+
+    .t-status.big {
+        font-size: 16px;
+        font-weight: 700;
+        padding: 16px 18px;
+    }
+
+    /* ── Indicator ── */
+    .fct-right {
+        width: 300px;
+        flex-shrink: 0;
+        text-align: center;
+        position: sticky;
+        top: 32px;
+    }
+
+    .indicator-label-top {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ghost);
+        margin-bottom: 16px;
+    }
+
+    .indicator-circle {
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        margin: 0 auto 16px;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+        box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.10),
+            0 0 0 8px rgba(0, 0, 0, 0.04) inset;
+    }
+
+    .ind-ok {
+        background: #d1d5db;
+        border: 2px solid #9ca3af;
+    }
+
+    .ind-ng {
+        background: #c0392b;
+        border: 2px solid #8a1a10;
+    }
+
+    .ind-success {
+        background: #16a34a;
+        border: 2px solid #14532d;
+    }
+
+    .ind-error {
+        background: #c0392b;
+        border: 2px solid #8a1a10;
+    }
+
+    .indicator-text {
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: 2px;
+    }
+
+    @@media (max-width: 720px) {
+        .fct-layout {
+            flex-direction: column;
+        }
+
+        .fct-right {
+            width: 100%;
+            position: static;
+        }
+
+        .indicator-circle {
+            width: 180px;
+            height: 180px;
+        }
+    }
+</style>
+
+<div class="fct-page">
+
+    <header class="fct-header">
+        <div>
+            <h1>FCT SCAN</h1>
+            <p>Functional Circuit Test — Toast</p>
+        </div>
+        <div class="fct-badge ok-badge" id="headerBadge">OK MODE</div>
+    </header>
+
+    <div class="fct-layout">
+
+        <!-- ── Left ── -->
+        <div class="fct-left">
+
+            <div class="t-section">
+                <div class="t-section-label">Quét serial</div>
+
+                <div id="modePill" class="mode-pill ok">Chế độ: OK</div>
+
+                <form id="scanForm" onsubmit="return false">
+                    @Html.AntiForgeryToken()
+                    <div class="t-field serial-field">
+                        <label>Serial Number</label>
+                        <input id="code" type="text" autocomplete="off" placeholder="Quét serial 13 ký tự hoặc NG..." />
+                    </div>
+                </form>
+
+                <div class="notice-box">
+                    ⚠️ Vui lòng kiểm tra <strong>5 đèn trên sản phẩm</strong>
+                    rồi <strong>scan trạng thái</strong>.
+                </div>
+
+                <div id="scanStatus" class="t-status"></div>
+
+                <p style="font-family:var(--mono);font-size:10px;color:var(--ghost);
+                    letter-spacing:1px;margin-top:16px">
+                    Quét <strong style="color:var(--ink)">NG</strong> để bật/tắt chế độ NG.
+                    Khi đang NG, quét serial sẽ ghi NG rồi tự về OK.
+                </p>
+            </div>
+
+            <a href="@Url.Content("~/toast")" style="font-family:var(--mono);font-size:11px;color:var(--ghost);
+                letter-spacing:1px;text-decoration:none;border-bottom:1px solid var(--rule);">
+                ← Về Toast Print
+            </a>
+
+        </div>
+
+        <!-- ── Right — Indicator ── -->
+        <div class="fct-right">
+            <div class="indicator-label-top">Trạng thái</div>
+            <div id="indicatorCircle" class="indicator-circle ind-ok"></div>
+            <div id="indicatorText" class="indicator-text">OK MODE</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    (function () {
+        const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+
+        const input = document.getElementById('code');
+        const $status = document.getElementById('scanStatus');
+        const $modePill = document.getElementById('modePill');
+        const $headerBadge = document.getElementById('headerBadge');
+        const $circle = document.getElementById('indicatorCircle');
+        const $indText = document.getElementById('indicatorText');
+
+        let ngMode = localStorage.getItem('fct_ng_mode') === '1';
+        let flashTimer = null;
+
+        function getToken() {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : null;
+        }
+
+        function setIndicator(type, text) {
+            $circle.className = 'indicator-circle ind-' + type;
+            $indText.textContent = text;
+            $indText.style.color = (type === 'ng' || type === 'error') ? 'var(--stamp)'
+                : type === 'success' ? 'var(--ok)'
+                    : 'var(--ink)';
+        }
+
+        function setModeVisual() {
+            $modePill.textContent = ngMode ? 'Chế độ: NG' : 'Chế độ: OK';
+            $modePill.className = `mode-pill ${ngMode ? 'ng' : 'ok'}`;
+            $headerBadge.textContent = ngMode ? 'NG MODE' : 'OK MODE';
+            $headerBadge.className = `fct-badge ${ngMode ? 'ng-badge' : 'ok-badge'}`;
+            input.style.borderBottomColor = ngMode ? 'var(--stamp)' : 'var(--rule)';
+            setIndicator(ngMode ? 'ng' : 'ok', ngMode ? 'NG MODE' : 'OK MODE');
+        }
+
+        function flashIndicator(type) {
+            if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
+            setIndicator(type, type === 'success' ? '✓ OK' : '✗ LỖI');
+            flashTimer = setTimeout(() => setModeVisual(), 2000);
+        }
+
+        function showStatus(msg, type, big = false) {
+            $status.textContent = msg;
+            $status.className = `t-status show ${type}${big ? ' big' : ''}`;
+        }
+
+        async function submitSerial(serial, status) {
+            const token = getToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            try {
+                const res = await fetch(BASE + '/FctScanToast/Submit', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ serial, status })
+                });
+                let data = null;
+                try { data = await res.json(); } catch { }
+
+                if (!res.ok || !data?.ok) {
+                    const txt = res.status === 409
+                        ? (data?.message || `Serial đã tồn tại: ${serial}`)
+                        : (data?.message || 'Gửi thất bại.');
+                    showStatus(`✗ ${txt}`, 'err', true);
+                    flashIndicator('error');
+                    return false;
+                }
+
+                showStatus(`✓ Serial: ${data.serial} | FCT: ${data.status}`, 'ok', true);
+                flashIndicator('success');
+                return true;
+            } catch (e) {
+                showStatus(`✗ ${e.message || 'Lỗi không xác định.'}`, 'err', true);
+                flashIndicator('error');
+                return false;
+            }
+        }
+
+        async function handleScan(raw) {
+            let v = (raw || '').trim().replace(/[\r\n]+/g, '').toUpperCase();
+            if (!v) return;
+
+            if (v === 'NG') {
+                ngMode = !ngMode;
+                localStorage.setItem('fct_ng_mode', ngMode ? '1' : '0');
+                setModeVisual();
+                showStatus(ngMode ? '⚠ Đã bật chế độ NG.' : '✓ Đã tắt chế độ NG, trở về OK.', ngMode ? 'err' : 'ok');
+                input.value = '';
+                input.focus();
+                return;
+            }
+
+            if (v.length !== 13) {
+                showStatus('✗ Mã không hợp lệ. Quét "NG" hoặc serial 13 ký tự.', 'err', true);
+                flashIndicator('error');
+                input.select();
+                return;
+            }
+
+            const status = ngMode ? 'NG' : 'OK';
+            const ok = await submitSerial(v, status);
+
+            if (ok && ngMode) {
+                ngMode = false;
+                localStorage.setItem('fct_ng_mode', '0');
+                setTimeout(() => setModeVisual(), 2100);
+            }
+            input.value = '';
+            input.focus();
+        }
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); handleScan(input.value); }
+        });
+
+        window.addEventListener('load', () => { setModeVisual(); input.focus(); });
+    })();
+</script>
