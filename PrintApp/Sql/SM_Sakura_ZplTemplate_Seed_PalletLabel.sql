@@ -1,0 +1,142 @@
+-- Seed/update ZPL template cho tem Main Pallet Label (TemplateKey = 'PalletLabel') trong bảng
+-- SM_Sakura_ZplTemplate — khớp đúng semantics SakuraService.UpsertZplTemplateAsync (update nếu
+-- đã có row với TemplateKey này, insert mới nếu chưa có). Run against svn_pentaho.
+-- Placeholder trong ZPL bên dưới được SakuraService.BuildPalletLabelZplAsync thay giá trị:
+-- {skuPvId} {cartonQty} {unitQty} {poNumber} {inboundReference} {warehouseReference}
+-- {vendorCode} {palletNumber} {deliveryTo} {ean}
+IF EXISTS (SELECT 1 FROM dbo.SM_Sakura_ZplTemplate WHERE TemplateKey = 'PalletLabel')
+BEGIN
+    UPDATE dbo.SM_Sakura_ZplTemplate
+    SET ZplContent = N'^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD15
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW2400
+^LL3600
+^LS0
+^FO92,91^GB2215,3386,9^FS
+^FO99,476^GB2207,0,9^FS
+^FO99,2827^GB2207,0,9^FS
+^FO92,1948^GB2207,0,9^FS
+^FO92,1699^GB2207,0,9^FS
+^FO99,1504^GB2207,0,9^FS
+^FO99,1304^GB2207,0,9^FS
+^FO99,1101^GB2207,0,9^FS
+^FO99,901^GB2207,0,9^FS
+^FO99,279^GB2207,0,9^FS
+^FO99,711^GB2207,0,9^FS
+^FO1192,91^GB0,1609,9^FS
+^FPH,2^FT147,216^A0N,75,76^FH\^CI28^FDSKU/PV ID:^FS^CI27
+^FPH,2^FT147,403^A0N,75,76^FH\^CI28^FDQuantity of cartons on pallet^FS^CI27
+^FPH,2^FT147,623^A0N,75,76^FH\^CI28^FDQuantity of units on pallet^FS^CI27
+^FPH,2^FT147,835^A0N,75,76^FH\^CI28^FDrM PO number^FS^CI27
+^FPH,2^FT147,1027^A0N,75,76^FH\^CI28^FDrM inbound reference^FS^CI27
+^FPH,2^FT147,1234^A0N,75,76^FH\^CI28^FDWarehouse reference^FS^CI27
+^FPH,2^FT147,1433^A0N,75,76^FH\^CI28^FDVendor code^FS^CI27
+^FPH,2^FT147,1633^A0N,75,76^FH\^CI28^FDPallet number^FS^CI27
+^FPH,2^FT147,2077^A0N,75,76^FH\^CI28^FDDELIVERY TO:^FS^CI27
+^FPH,2^FT147,2939^A0N,75,76^FH\^CI28^FDEAN^FS^CI27
+^FPH,2^FT1288,216^A0N,75,76^FH\^CI28^FD{skuPvId}^FS^CI27
+^FPH,2^FT1288,403^A0N,75,76^FH\^CI28^FD{cartonQty}^FS^CI27
+^FPH,2^FT1288,623^A0N,75,76^FH\^CI28^FD{unitQty}^FS^CI27
+^FPH,2^FT1288,835^A0N,75,76^FH\^CI28^FD{poNumber}^FS^CI27
+^FPH,2^FT1288,1027^A0N,75,76^FH\^CI28^FD{inboundReference}^FS^CI27
+^FPH,2^FT1288,1234^A0N,75,76^FH\^CI28^FD{warehouseReference}^FS^CI27
+^FPH,2^FT1288,1433^A0N,75,76^FH\^CI28^FD{vendorCode}^FS^CI27
+^FPH,2^FT1288,1633^A0N,75,76^FH\^CI28^FD{palletNumber}^FS^CI27
+^BY8,3,145^FT1460,669^BCN,,N,N,N,A
+^FH\^FD{unitQty}^FS
+^BY8,3,171^FT147,1914^BCN,,N,N,N,A
+^FH\^FD{palletNumber}^FS
+^FO400,2984^BY4^BEN,250,Y,N
+^FD{ean}^FS
+^FPH,2^FT279,2225^A0N,75,76^FB2000,6,0,L,0^FH\^CI28^FD{deliveryTo}^FS^CI27
+^PQ1,0,1,Y
+^XZ
+',
+        UpdatedAt = GETDATE(),
+        UpdatedBy = N'claude-code'
+    WHERE TemplateKey = 'PalletLabel';
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.SM_Sakura_ZplTemplate (TemplateKey, Name, ZplContent, IsActive, UpdatedAt, UpdatedBy)
+    VALUES (N'PalletLabel', N'PalletLabel', N'^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD15
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW2400
+^LL3600
+^LS0
+^FO92,91^GB2215,3386,9^FS
+^FO99,476^GB2207,0,9^FS
+^FO99,2827^GB2207,0,9^FS
+^FO92,1948^GB2207,0,9^FS
+^FO92,1699^GB2207,0,9^FS
+^FO99,1504^GB2207,0,9^FS
+^FO99,1304^GB2207,0,9^FS
+^FO99,1101^GB2207,0,9^FS
+^FO99,901^GB2207,0,9^FS
+^FO99,279^GB2207,0,9^FS
+^FO99,711^GB2207,0,9^FS
+^FO1192,91^GB0,1609,9^FS
+^FPH,2^FT147,216^A0N,75,76^FH\^CI28^FDSKU/PV ID:^FS^CI27
+^FPH,2^FT147,403^A0N,75,76^FH\^CI28^FDQuantity of cartons on pallet^FS^CI27
+^FPH,2^FT147,623^A0N,75,76^FH\^CI28^FDQuantity of units on pallet^FS^CI27
+^FPH,2^FT147,835^A0N,75,76^FH\^CI28^FDrM PO number^FS^CI27
+^FPH,2^FT147,1027^A0N,75,76^FH\^CI28^FDrM inbound reference^FS^CI27
+^FPH,2^FT147,1234^A0N,75,76^FH\^CI28^FDWarehouse reference^FS^CI27
+^FPH,2^FT147,1433^A0N,75,76^FH\^CI28^FDVendor code^FS^CI27
+^FPH,2^FT147,1633^A0N,75,76^FH\^CI28^FDPallet number^FS^CI27
+^FPH,2^FT147,2077^A0N,75,76^FH\^CI28^FDDELIVERY TO:^FS^CI27
+^FPH,2^FT147,2939^A0N,75,76^FH\^CI28^FDEAN^FS^CI27
+^FPH,2^FT1288,216^A0N,75,76^FH\^CI28^FD{skuPvId}^FS^CI27
+^FPH,2^FT1288,403^A0N,75,76^FH\^CI28^FD{cartonQty}^FS^CI27
+^FPH,2^FT1288,623^A0N,75,76^FH\^CI28^FD{unitQty}^FS^CI27
+^FPH,2^FT1288,835^A0N,75,76^FH\^CI28^FD{poNumber}^FS^CI27
+^FPH,2^FT1288,1027^A0N,75,76^FH\^CI28^FD{inboundReference}^FS^CI27
+^FPH,2^FT1288,1234^A0N,75,76^FH\^CI28^FD{warehouseReference}^FS^CI27
+^FPH,2^FT1288,1433^A0N,75,76^FH\^CI28^FD{vendorCode}^FS^CI27
+^FPH,2^FT1288,1633^A0N,75,76^FH\^CI28^FD{palletNumber}^FS^CI27
+^BY8,3,145^FT1460,669^BCN,,N,N,N,A
+^FH\^FD{unitQty}^FS
+^BY8,3,171^FT147,1914^BCN,,N,N,N,A
+^FH\^FD{palletNumber}^FS
+^FO400,2984^BY4^BEN,250,Y,N
+^FD{ean}^FS
+^FPH,2^FT279,2225^A0N,75,76^FB2000,6,0,L,0^FH\^CI28^FD{deliveryTo}^FS^CI27
+^PQ1,0,1,Y
+^XZ
+', 1, GETDATE(), N'claude-code');
+END
+GO

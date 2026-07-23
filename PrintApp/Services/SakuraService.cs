@@ -597,16 +597,30 @@ public class SakuraService
         string zpl = template
             .Replace("{skuPvId}", meta.SkuPvId)
             .Replace("{ean}", meta.Ean)
-            .Replace("{quantityCartons}", quantityCartons.ToString())
-            .Replace("{quantityUnits}", quantityUnits.ToString())
+            .Replace("{cartonQty}", quantityCartons.ToString())
+            .Replace("{unitQty}", quantityUnits.ToString())
             .Replace("{poNumber}", poNumber ?? "")
             .Replace("{inboundReference}", inboundReference ?? "")
             .Replace("{warehouseReference}", warehouseReference ?? "")
             .Replace("{vendorCode}", "CN50")
             .Replace("{palletNumber}", palletNumber)
-            .Replace("{deliveryTo}", deliveryAddress ?? "");
+            .Replace("{deliveryTo}", FormatZplDeliveryAddress(deliveryAddress ?? ""));
 
         return (zpl, palletNumber, quantityCartons, quantityUnits, color);
+    }
+
+    // Chuẩn bị {deliveryTo} cho field ^FH\...^FD...^FS trong template PalletLabel — field này
+    // dùng "\" làm hex indicator (^FH\), nên: ký tự đặc biệt ZPL ^ và ~ (nếu người dùng gõ vào
+    // địa chỉ) phải escape thành \5E/\7E (mã hex ASCII) để không bị hiểu nhầm thành lệnh ZPL;
+    // xuống dòng (\r\n hoặc \n) phải đổi thành "\&" — cú pháp ép xuống dòng của ^FB khi hex
+    // indicator là "\". Escape ký tự đặc biệt TRƯỚC khi đổi xuống dòng vì "\&" không chứa ^/~.
+    private static string FormatZplDeliveryAddress(string address)
+    {
+        if (string.IsNullOrEmpty(address)) return "";
+
+        string escaped = address.Replace("^", "\\5E").Replace("~", "\\7E");
+        string normalized = escaped.Replace("\r\n", "\n").Replace("\r", "\n");
+        return normalized.Replace("\n", "\\&");
     }
 
     // Trang History của Carton SN Label — 1 dòng lịch sử = 1 carton đã in (khớp 1-1 với
