@@ -863,7 +863,7 @@ public class SakuraController : Controller
 
         try
         {
-            string zpl = await _snLabel.BuildCartonLabelZplAsync(req.CartonNumber, req.Color, req.Condition, req.SerialNumbers);
+            string zpl = await _snLabel.BuildCartonLabelZplAsync(req.CartonNumber, req.Color, req.Condition, req.SerialNumbers, req.WorkOrder, req.PalletId);
             return Ok(new { ok = true, zpl });
         }
         catch (ArgumentException ex)
@@ -908,6 +908,72 @@ public class SakuraController : Controller
         catch (Exception ex)
         {
             return StatusCode(500, BuildError(ex));
+        }
+    }
+
+    // ── API: Pallet Info Template — preset Inbound Reference/Warehouse Reference/Delivery
+    // Address để chọn nhanh ở vùng Print Pallet (PO Number không nằm trong template). ──────────
+
+    [HttpGet("/api/sakura/cartonsn/pallet-template")]
+    public async Task<IActionResult> GetPalletInfoTemplates()
+    {
+        var list = await _snLabel.GetPalletInfoTemplatesAsync();
+        return Ok(new { ok = true, data = list });
+    }
+
+    [HttpPost("/api/sakura/cartonsn/pallet-template")]
+    public async Task<IActionResult> CreatePalletInfoTemplate([FromBody] PalletInfoTemplateUpsertRequest req)
+    {
+        if (req == null)
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+
+        try
+        {
+            var row = await _snLabel.CreatePalletInfoTemplateAsync(req);
+            return Ok(new { ok = true, data = row });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
+    }
+
+    [HttpPut("/api/sakura/cartonsn/pallet-template/{id:int}")]
+    public async Task<IActionResult> UpdatePalletInfoTemplate(int id, [FromBody] PalletInfoTemplateUpsertRequest req)
+    {
+        if (req == null)
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+
+        try
+        {
+            var row = await _snLabel.UpdatePalletInfoTemplateAsync(id, req);
+            return Ok(new { ok = true, data = row });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
+    }
+
+    [HttpDelete("/api/sakura/cartonsn/pallet-template/{id:int}")]
+    public async Task<IActionResult> DeletePalletInfoTemplate(int id)
+    {
+        try
+        {
+            await _snLabel.DeletePalletInfoTemplateAsync(id);
+            return Ok(new { ok = true });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
         }
     }
 

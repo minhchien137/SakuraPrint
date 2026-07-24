@@ -400,6 +400,14 @@ C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check5\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
@@ -455,6 +463,7 @@ D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.Co
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.MvcApplicationPartsAssemblyInfo.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cs
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.sourcelink.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
@@ -470,12 +479,3 @@ D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dl
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\appsettings.json
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.staticwebassets.runtime.json
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.staticwebassets.endpoints.json
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.exe
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.deps.json
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.runtimeconfig.json
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.dll
-C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.pdb
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.sourcelink.json

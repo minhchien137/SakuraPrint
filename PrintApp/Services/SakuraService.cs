@@ -367,13 +367,21 @@ public class SakuraService
         string? attachWarning = null;
         if (trimmedPalletId != null)
         {
-            string? existingColor = await _context.CartonSnScanLogs
+            // 1 Pallet ID chỉ được chứa carton của ĐÚNG 1 Work Order (Work Order đi liền với PO
+            // Number — gộp 2 Work Order vào chung 1 pallet sẽ làm sai lệch PO Number trên tem
+            // Pallet Label) — kiểm tra y hệt cách đang chặn khác màu bên dưới.
+            var existing = await _context.CartonSnScanLogs
                 .Where(x => x.PalletId == trimmedPalletId)
-                .Select(x => x.Color)
+                .Select(x => new { x.Color, x.WorkOrder })
                 .FirstOrDefaultAsync();
-            if (existingColor != null && !string.Equals(existingColor, color, StringComparison.OrdinalIgnoreCase))
+            if (existing != null && !string.Equals(existing.WorkOrder, workOrder, StringComparison.OrdinalIgnoreCase))
             {
-                attachWarning = $"Carton '{cartonNumber}' đã lưu nhưng KHÔNG được gom vào Pallet '{trimmedPalletId}' vì khác màu ({color} so với {existingColor}).";
+                attachWarning = $"Carton '{cartonNumber}' đã lưu nhưng KHÔNG được gom vào Pallet '{trimmedPalletId}' vì khác Work Order ({workOrder} so với {existing.WorkOrder}).";
+                trimmedPalletId = null;
+            }
+            else if (existing != null && !string.Equals(existing.Color, color, StringComparison.OrdinalIgnoreCase))
+            {
+                attachWarning = $"Carton '{cartonNumber}' đã lưu nhưng KHÔNG được gom vào Pallet '{trimmedPalletId}' vì khác màu ({color} so với {existing.Color}).";
                 trimmedPalletId = null;
             }
         }
@@ -440,8 +448,9 @@ public class SakuraService
     }
 
     // Quét/thêm 1 Carton Number (đã in trước đó) vào 1 Pallet ID. Tự chặn: carton không tồn
-    // tại, carton đã thuộc pallet khác, carton khác màu với pallet đang gom. Idempotent nếu
-    // carton đã thuộc đúng pallet này rồi (bấm/quét lại không báo lỗi).
+    // tại, carton đã thuộc pallet khác, carton khác màu HOẶC khác Work Order với pallet đang gom
+    // (1 Pallet ID chỉ được chứa carton của đúng 1 Work Order — Work Order đi liền với PO Number).
+    // Idempotent nếu carton đã thuộc đúng pallet này rồi (bấm/quét lại không báo lỗi).
     public async Task<(int BoxCount, int UnitCount, List<CartonSnScanLog> Boxes)> ScanCartonIntoPalletAsync(string palletId, string cartonNumber, string color)
     {
         if (string.IsNullOrWhiteSpace(palletId))
@@ -459,6 +468,13 @@ public class SakuraService
 
         if (!string.Equals(row.Color ?? "", color ?? "", StringComparison.OrdinalIgnoreCase))
             throw new SakuraValidationException("cartonLabel.pallet.colorMismatch", $"Carton Number '{trimmedCarton}' khác màu ({row.Color}) với Pallet đang gom ({color}).", new { cartonNumber = trimmedCarton, cartonColor = row.Color, palletColor = color });
+
+        string? existingWorkOrder = await _context.CartonSnScanLogs
+            .Where(x => x.PalletId == palletId && x.CartonNumber != trimmedCarton)
+            .Select(x => x.WorkOrder)
+            .FirstOrDefaultAsync();
+        if (existingWorkOrder != null && !string.Equals(existingWorkOrder, row.WorkOrder, StringComparison.OrdinalIgnoreCase))
+            throw new SakuraValidationException("cartonLabel.pallet.workOrderMismatch", $"Carton Number '{trimmedCarton}' thuộc Work Order '{row.WorkOrder}', khác với Work Order '{existingWorkOrder}' đang gom vào Pallet này.", new { cartonNumber = trimmedCarton, cartonWorkOrder = row.WorkOrder, palletWorkOrder = existingWorkOrder });
 
         if (row.PalletId != palletId)
         {
@@ -487,7 +503,9 @@ public class SakuraService
     }
 
     // Gỡ 1 carton khỏi pallet (xoá 1 dòng trong bảng "Quản lý Pallet") — chỉ gỡ nếu carton đó
-    // thực sự đang thuộc đúng Pallet ID này.
+    // thực sự đang thuộc đúng Pallet ID này. Đánh dấu thêm IsDeleted = true để biết dòng nào đã
+    // bị gỡ qua nút Delete này (CHỈ để tra cứu/audit — không đổi logic đếm số lượng/chặn trùng
+    // Carton Number-Serial/History ở nơi khác, những chỗ đó vẫn không lọc theo cột này).
     public async Task<(int BoxCount, int UnitCount, List<CartonSnScanLog> Boxes)> UnscanCartonFromPalletAsync(string palletId, string cartonNumber)
     {
         if (string.IsNullOrWhiteSpace(palletId))
@@ -501,6 +519,7 @@ public class SakuraService
             throw new SakuraValidationException("cartonLabel.pallet.cartonNotFound", $"Carton Number '{trimmedCarton}' không thuộc Pallet ID '{palletId}'.", new { cartonNumber = trimmedCarton, palletId });
 
         row.PalletId = null;
+        row.IsDeleted = true;
         await _context.SaveChangesAsync();
 
         return await GetPalletBoxesAsync(palletId);
@@ -607,6 +626,69 @@ public class SakuraService
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(deliveryAddress ?? ""));
 
         return (zpl, palletNumber, quantityCartons, quantityUnits, color);
+    }
+
+    // ── Pallet Info Template — preset Inbound Reference/Warehouse Reference/Delivery Address
+    // để chọn nhanh ở vùng Print Pallet, khỏi gõ tay mỗi lần in (PO Number không nằm trong
+    // template, luôn nhập tay riêng vì đổi theo từng pallet/lô hàng). ─────────────────────────
+
+    public async Task<List<PalletInfoTemplate>> GetPalletInfoTemplatesAsync() =>
+        await _context.PalletInfoTemplates.AsNoTracking().OrderBy(x => x.TemplateName).ToListAsync();
+
+    public async Task<PalletInfoTemplate> CreatePalletInfoTemplateAsync(PalletInfoTemplateUpsertRequest req)
+    {
+        string name = req.TemplateName?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(name))
+            throw new SakuraValidationException("palletTemplate.nameMissing", "Thiếu tên Template.");
+
+        if (await _context.PalletInfoTemplates.AnyAsync(x => x.TemplateName == name))
+            throw new SakuraConflictException("palletTemplate.nameAlreadyExists", $"Template '{name}' đã tồn tại.", new { name });
+
+        var row = new PalletInfoTemplate
+        {
+            TemplateName = name,
+            PoNumber = req.PoNumber?.Trim() ?? "",
+            InboundReference = req.InboundReference?.Trim() ?? "",
+            WarehouseReference = req.WarehouseReference?.Trim() ?? "",
+            DeliveryAddress = req.DeliveryAddress?.Trim() ?? "",
+            UpdatedAt = VietnamNow()
+        };
+        _context.PalletInfoTemplates.Add(row);
+        await _context.SaveChangesAsync();
+        return row;
+    }
+
+    public async Task<PalletInfoTemplate> UpdatePalletInfoTemplateAsync(int id, PalletInfoTemplateUpsertRequest req)
+    {
+        var row = await _context.PalletInfoTemplates.FindAsync(id);
+        if (row == null)
+            throw new SakuraValidationException("palletTemplate.notFound", $"Không tìm thấy Template Id={id}.");
+
+        string name = req.TemplateName?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(name))
+            throw new SakuraValidationException("palletTemplate.nameMissing", "Thiếu tên Template.");
+
+        if (await _context.PalletInfoTemplates.AnyAsync(x => x.Id != id && x.TemplateName == name))
+            throw new SakuraConflictException("palletTemplate.nameAlreadyExists", $"Template '{name}' đã tồn tại.", new { name });
+
+        row.TemplateName = name;
+        row.PoNumber = req.PoNumber?.Trim() ?? "";
+        row.InboundReference = req.InboundReference?.Trim() ?? "";
+        row.WarehouseReference = req.WarehouseReference?.Trim() ?? "";
+        row.DeliveryAddress = req.DeliveryAddress?.Trim() ?? "";
+        row.UpdatedAt = VietnamNow();
+        await _context.SaveChangesAsync();
+        return row;
+    }
+
+    public async Task DeletePalletInfoTemplateAsync(int id)
+    {
+        var row = await _context.PalletInfoTemplates.FindAsync(id);
+        if (row == null)
+            throw new SakuraValidationException("palletTemplate.notFound", $"Không tìm thấy Template Id={id}.");
+
+        _context.PalletInfoTemplates.Remove(row);
+        await _context.SaveChangesAsync();
     }
 
     // Chuẩn bị {deliveryTo} cho field ^FH\...^FD...^FS trong template PalletLabel — field này
@@ -940,7 +1022,7 @@ public class SakuraService
     // {serialNumber}): tra màu → SKU/PV ID + mô tả, rồi thay từng {sn1}..{sn10} theo ĐÚNG VỊ
     // TRÍ ô SN tương ứng trên form. Tọa độ/cỡ chữ/barcode của từng ô đã có sẵn trong template
     // (DB) — code không tự tính toạ độ nữa, chỉ truyền giá trị vào đúng placeholder.
-    public async Task<string> BuildCartonLabelZplAsync(string cartonNumber, string color, string condition, IReadOnlyList<string> serialNumbers)
+    public async Task<string> BuildCartonLabelZplAsync(string cartonNumber, string color, string condition, IReadOnlyList<string> serialNumbers, string? workOrder = null, string? palletId = null)
     {
         if (string.IsNullOrWhiteSpace(cartonNumber))
             throw new SakuraValidationException("cartonLabel.cartonNumberMissing", "Thiếu Carton Number.");
@@ -954,6 +1036,20 @@ public class SakuraService
 
         if (condition != "New" && condition != "Refurb")
             throw new SakuraValidationException("cartonLabel.invalidCondition", $"Condition '{condition}' không hợp lệ (chỉ New hoặc Refurb).", new { condition });
+
+        // 1 Pallet ID chỉ được chứa carton của ĐÚNG 1 Work Order — chặn NGAY TỪ LÚC IN (trước khi
+        // build ZPL/gửi máy in), không đợi tới lúc lưu kết quả in mới phát hiện (RecordCartonScanAsync)
+        // để tránh in ra tem carton rồi mới báo lỗi không gộp được vào pallet.
+        if (!string.IsNullOrWhiteSpace(palletId))
+        {
+            string trimmedPalletId = palletId.Trim();
+            string? existingWorkOrder = await _context.CartonSnScanLogs
+                .Where(x => x.PalletId == trimmedPalletId)
+                .Select(x => x.WorkOrder)
+                .FirstOrDefaultAsync();
+            if (existingWorkOrder != null && !string.Equals(existingWorkOrder, workOrder ?? "", StringComparison.OrdinalIgnoreCase))
+                throw new SakuraConflictException("cartonLabel.pallet.workOrderMismatch", $"Pallet ID '{trimmedPalletId}' đang thuộc Work Order '{existingWorkOrder}', khác với Work Order '{workOrder}' hiện tại. Đổi Pallet ID hoặc Work Order trước khi in.", new { cartonNumber = trimmedCartonNumber, cartonWorkOrder = workOrder, palletWorkOrder = existingWorkOrder });
+        }
 
         // QUAN TRỌNG: giữ nguyên vị trí — slots[i] LUÔN ứng với ô SN(i+1) trên form, kể cả khi
         // ô đó đang bỏ trống (chuỗi rỗng). KHÔNG được lọc bỏ ô trống rồi dồn mảng lại, nếu

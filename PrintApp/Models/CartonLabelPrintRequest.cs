@@ -8,6 +8,10 @@ public class CartonLabelPrintRequest
     public string Color { get; set; } = "";
     public string Condition { get; set; } = "";
     public List<string> SerialNumbers { get; set; } = new();
+    // Work Order + Pallet ID hiện đang nhập trên UI — chỉ dùng để chặn SỚM (trước khi build ZPL)
+    // nếu Pallet ID này đã thuộc 1 Work Order khác (xem BuildCartonLabelZplAsync). Không bắt buộc.
+    public string? WorkOrder { get; set; }
+    public string? PalletId { get; set; }
 }
 
 // Trả về từ workorder-lookup — Color/TotalQuantity lấy từ Odoo (giống SnLabel), PrintedQuantity/

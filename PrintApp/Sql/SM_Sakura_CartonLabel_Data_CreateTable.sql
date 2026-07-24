@@ -72,3 +72,11 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_SM_Sakura_CartonLabel_Data_PalletNumber' AND object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data'))
     CREATE INDEX IX_SM_Sakura_CartonLabel_Data_PalletNumber ON dbo.SM_Sakura_CartonLabel_Data (PalletNumber) WHERE PalletNumber IS NOT NULL;
 GO
+
+-- IsDeleted — CHỈ đánh dấu/audit trail (bấm nút Delete trong modal Manage Pallet -> gỡ khỏi
+-- pallet NHƯ CŨ, PalletId = NULL, cộng thêm đánh dấu IsDeleted = 1 để biết dòng nào đã bị gỡ qua
+-- nút này). KHÔNG lọc theo cột này ở bất kỳ chỗ nào khác (số lượng đã in của Work Order, chặn
+-- trùng Carton Number/Serial, trang History) — cố ý giữ nguyên các logic đó như trước.
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'IsDeleted')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD IsDeleted BIT NOT NULL DEFAULT 0;
+GO

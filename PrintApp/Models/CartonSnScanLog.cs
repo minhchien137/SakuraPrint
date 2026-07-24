@@ -54,4 +54,9 @@ public class CartonSnScanLog
 
     // YYYYMMDD lấy từ ScanDate — chỉ để tiện truy vấn sau này, không có logic nghiệp vụ khác.
     public int? Date { get; set; }
+
+    // CHỈ đánh dấu/audit trail — bấm nút Delete trong modal Manage Pallet set cột này = true
+    // (song song với gỡ PalletId = null NHƯ CŨ). KHÔNG lọc theo cột này ở bất kỳ query nghiệp vụ
+    // nào khác (số lượng đã in của Work Order, chặn trùng Carton Number/Serial, trang History).
+    public bool IsDeleted { get; set; }
 }

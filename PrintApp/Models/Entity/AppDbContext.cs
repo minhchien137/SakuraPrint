@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<MiddleLog> MiddleLogs { get; set; }
     public DbSet<CartonSnScanLog> CartonSnScanLogs { get; set; }
     public DbSet<SmPrinterInfo> SmPrinterInfos { get; set; }
+    public DbSet<PalletInfoTemplate> PalletInfoTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +44,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SakuraZplTemplate>(e =>
         {
             e.HasIndex(x => x.TemplateKey).IsUnique();
+        });
+
+        modelBuilder.Entity<PalletInfoTemplate>(e =>
+        {
+            e.HasIndex(x => x.TemplateName).IsUnique();
         });
     }
 }
