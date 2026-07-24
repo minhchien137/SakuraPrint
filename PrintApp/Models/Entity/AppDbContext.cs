@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductionInputLog> ProductionInputLogs { get; set; }
     public DbSet<MiddleLog> MiddleLogs { get; set; }
     public DbSet<CartonSnScanLog> CartonSnScanLogs { get; set; }
+    public DbSet<SmPrinterInfo> SmPrinterInfos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
