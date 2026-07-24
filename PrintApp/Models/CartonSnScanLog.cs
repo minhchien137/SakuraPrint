@@ -59,4 +59,29 @@ public class CartonSnScanLog
     // (song song với gỡ PalletId = null NHƯ CŨ). KHÔNG lọc theo cột này ở bất kỳ query nghiệp vụ
     // nào khác (số lượng đã in của Work Order, chặn trùng Carton Number/Serial, trang History).
     public bool IsDeleted { get; set; }
+
+    // Set = true khi bấm Reprint carton này ở trang /sakura/cartonsn/reprint (xem
+    // SakuraService.ReprintCartonLabelAsync). Chỉ audit — không ảnh hưởng số lượng WO/chặn trùng.
+    public bool IsReprint { get; set; }
+
+    // Set = true trên MỌI carton cùng PalletNumber khi bấm Reprint pallet (xem
+    // SakuraService.ReprintPalletLabelAsync) — không có bảng Pallet riêng nên đánh dấu theo cách
+    // denormalize giống PalletId/PalletNumber ở trên.
+    public bool IsPalletReprint { get; set; }
+
+    // Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address dùng lúc build ZPL
+    // tem Pallet gần nhất (ghi/cập nhật ở BuildPalletLabelZplAsync mỗi lần build tem Pallet cho
+    // Pallet ID này) — cho phép ReprintPalletLabelAsync build lại ĐÚNG tem cũ mà không cần người
+    // dùng gõ lại 4 field này.
+    [StringLength(100)]
+    public string? PoNumber { get; set; }
+
+    [StringLength(100)]
+    public string? InboundReference { get; set; }
+
+    [StringLength(100)]
+    public string? WarehouseReference { get; set; }
+
+    [StringLength(500)]
+    public string? DeliveryAddress { get; set; }
 }

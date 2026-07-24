@@ -80,3 +80,37 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'IsDeleted')
     ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD IsDeleted BIT NOT NULL DEFAULT 0;
 GO
+
+-- ── Reprint (trang /sakura/cartonsn/reprint) ────────────────────────────────────────────────
+-- IsReprint: đánh dấu carton NÀY đã được in lại (qua nút Reprint carton trong trang Reprint).
+-- IsPalletReprint: đánh dấu TOÀN BỘ carton của pallet này đã được in lại tem Pallet (gán cho mọi
+-- dòng cùng PalletNumber khi bấm Reprint pallet — không có bảng Pallet riêng nên đánh dấu theo
+-- cách denormalize giống PalletId/PalletNumber ở trên).
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'IsReprint')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD IsReprint BIT NOT NULL DEFAULT 0;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'IsPalletReprint')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD IsPalletReprint BIT NOT NULL DEFAULT 0;
+GO
+
+-- Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address dùng lúc build ZPL
+-- tem Pallet (BuildPalletLabelZplAsync) — trước đây các field này chỉ tồn tại tạm trên form UI,
+-- không lưu DB, nên không có cách build lại ĐÚNG tem Pallet cũ để Reprint. Từ giờ ghi/cập nhật
+-- vào MỌI carton của Pallet ID đó mỗi lần build tem Pallet (in lần đầu hay reprint đều ghi lại),
+-- để ReprintPalletLabelAsync có đủ dữ liệu build lại ZPL giống tem gốc.
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'PoNumber')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD PoNumber NVARCHAR(100) NULL;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'InboundReference')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD InboundReference NVARCHAR(100) NULL;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'WarehouseReference')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD WarehouseReference NVARCHAR(100) NULL;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'DeliveryAddress')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD DeliveryAddress NVARCHAR(500) NULL;
+GO

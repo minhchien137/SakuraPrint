@@ -40,6 +40,8 @@
             'tile.cartonsn.desc': 'Print carton SN labels',
             'tile.cartonsnhistory.title': 'History',
             'tile.cartonsnhistory.desc': 'Carton SN Label print history',
+            'tile.cartonsnreprint.title': 'Reprint',
+            'tile.cartonsnreprint.desc': 'Reprint damaged/misprinted carton or pallet labels',
             'tile.laserstation.title': 'Back Panel Station',
             'tile.laserstation.desc': 'Back Panel laser marking check',
             'tile.laser.title': 'Enter Production Result & Print Laser',
@@ -608,6 +610,7 @@
 
             'cartonsn.backHome': '← Sakura Home',
             'cartonsn.viewHistory': 'View History →',
+            'cartonsn.goReprint': '↺ Reprint →',
 
             'cartonHistory.title': 'CARTON SN LABEL HISTORY',
             'cartonHistory.subtitle': 'Carton Serial Number Print — Sakura',
@@ -648,7 +651,33 @@
             'cartonHistory.nextPage': 'Next →',
             'cartonHistory.lastPage': 'Last page',
             'cartonHistory.backHome': '← Sakura Home',
-            'cartonHistory.backCartonSn': '← Back to Carton SN Label Print'
+            'cartonHistory.backCartonSn': '← Back to Carton SN Label Print',
+            'cartonHistory.goReprint': '↺ Reprint →',
+
+            'cartonReprint.title': 'CARTON SN LABEL REPRINT',
+            'cartonReprint.subtitle': 'Reprint damaged/misprinted carton or pallet labels — Sakura',
+            'cartonReprint.cartonSectionTitle': 'Carton Labels',
+            'cartonReprint.palletSectionTitle': 'Pallet Labels',
+            'cartonReprint.toggleSectionTitle': 'Show/hide',
+            'cartonReprint.filterReprintStatus': 'Reprint Status',
+            'cartonReprint.filterAll': 'All',
+            'cartonReprint.filterReprintedOnly': 'Reprinted',
+            'cartonReprint.filterNotReprintedOnly': 'Not reprinted yet',
+            'cartonReprint.selectAll': 'Select all (this page)',
+            'cartonReprint.selectedSuffix': 'selected',
+            'cartonReprint.reprintSelectedBtn': '🖨️ Reprint Selected',
+            'cartonReprint.colReprintStatus': 'Reprint Status',
+            'cartonReprint.colCartonCount': 'Cartons',
+            'cartonReprint.colUnitCount': 'Units',
+            'cartonReprint.statusReprinted': 'Reprinted',
+            'cartonReprint.statusNotYet': 'Not yet',
+            'cartonReprint.reprintCartonFailed': 'Reprint failed.',
+            'cartonReprint.reprintPalletFailed': 'Reprint failed.',
+            'cartonReprint.reprintSummary': '✓ Reprinted {ok}/{total}.',
+            'cartonReprint.reprintFailedCount': '{n} failed.',
+            'cartonReprint.backHome': '← Sakura Home',
+            'cartonReprint.backCartonSn': '← Back to Carton SN Label Print',
+            'cartonReprint.goHistory': 'View History →'
         }},
         zh: { translation: {
             'color.blue': '蓝色',
@@ -673,6 +702,8 @@
             'tile.cartonsn.desc': '打印纸箱序列号标签',
             'tile.cartonsnhistory.title': '历史记录',
             'tile.cartonsnhistory.desc': '纸箱 SN 标签打印历史',
+            'tile.cartonsnreprint.title': '补打',
+            'tile.cartonsnreprint.desc': '补打损坏/印刷不良的纸箱或托盘标签',
             'tile.laserstation.title': 'Back Panel 站',
             'tile.laserstation.desc': '背板镭射打码检验',
             'tile.laser.title': '录入生产结果并镭射打印',
@@ -1241,6 +1272,7 @@
 
             'cartonsn.backHome': '← Sakura 首页',
             'cartonsn.viewHistory': '查看历史 →',
+            'cartonsn.goReprint': '↺ 补打 →',
 
             'cartonHistory.title': 'CARTON SN 标签历史',
             'cartonHistory.subtitle': '纸箱序列号打印 — Sakura',
@@ -1281,7 +1313,33 @@
             'cartonHistory.nextPage': '下一页 →',
             'cartonHistory.lastPage': '末页',
             'cartonHistory.backHome': '← Sakura 首页',
-            'cartonHistory.backCartonSn': '← 返回纸箱标签打印'
+            'cartonHistory.backCartonSn': '← 返回纸箱标签打印',
+            'cartonHistory.goReprint': '↺ 补打 →',
+
+            'cartonReprint.title': 'CARTON SN 标签补打',
+            'cartonReprint.subtitle': '补打损坏/印刷不良的纸箱或托盘标签 — Sakura',
+            'cartonReprint.cartonSectionTitle': '纸箱标签',
+            'cartonReprint.palletSectionTitle': '托盘标签',
+            'cartonReprint.toggleSectionTitle': '显示/隐藏',
+            'cartonReprint.filterReprintStatus': '补打状态',
+            'cartonReprint.filterAll': '全部',
+            'cartonReprint.filterReprintedOnly': '已补打',
+            'cartonReprint.filterNotReprintedOnly': '尚未补打',
+            'cartonReprint.selectAll': '全选（本页）',
+            'cartonReprint.selectedSuffix': '已选择',
+            'cartonReprint.reprintSelectedBtn': '🖨️ 补打所选',
+            'cartonReprint.colReprintStatus': '补打状态',
+            'cartonReprint.colCartonCount': '纸箱数',
+            'cartonReprint.colUnitCount': '数量',
+            'cartonReprint.statusReprinted': '已补打',
+            'cartonReprint.statusNotYet': '尚未',
+            'cartonReprint.reprintCartonFailed': '补打失败。',
+            'cartonReprint.reprintPalletFailed': '补打失败。',
+            'cartonReprint.reprintSummary': '✓ 已补打 {ok}/{total}。',
+            'cartonReprint.reprintFailedCount': '{n} 个失败。',
+            'cartonReprint.backHome': '← Sakura 首页',
+            'cartonReprint.backCartonSn': '← 返回纸箱标签打印',
+            'cartonReprint.goHistory': '查看历史 →'
         }}
     };
 

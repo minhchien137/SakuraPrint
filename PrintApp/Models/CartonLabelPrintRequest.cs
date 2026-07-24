@@ -60,6 +60,7 @@ public class CartonSnHistoryItemDto
     public DateTime ScanDate { get; set; }
     public string? PalletId { get; set; }
     public string? PalletNumber { get; set; }
+    public bool IsReprint { get; set; }
 }
 
 public class CartonSnHistoryPageDto
@@ -68,4 +69,52 @@ public class CartonSnHistoryPageDto
     public int TotalCount { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
+}
+
+// 1 dòng = 1 Pallet Number đã in tem (nhóm nhiều carton của SM_Sakura_CartonLabel_Data theo
+// PalletNumber) — dùng cho tab "Pallet Labels" ở trang Reprint.
+public class CartonSnPalletReprintItemDto
+{
+    public string PalletNumber { get; set; } = "";
+    public string PalletId { get; set; } = "";
+    public string WorkOrder { get; set; } = "";
+    public string Color { get; set; } = "";
+    public int CartonCount { get; set; }
+    public int UnitCount { get; set; }
+    public bool IsPalletReprint { get; set; }
+    public DateTime LastScanDate { get; set; }
+}
+
+public class CartonSnPalletReprintPageDto
+{
+    public List<CartonSnPalletReprintItemDto> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+}
+
+public class CartonReprintRequest
+{
+    public int Id { get; set; }
+}
+
+public class PalletReprintRequest
+{
+    public string PalletNumber { get; set; } = "";
+}
+
+// Kết quả build lại ZPL cho Reprint (carton lẫn pallet) — trả về cho client để gửi tới Local
+// Bridge, giống hệt luồng in thật (bridge cục bộ, không gửi trực tiếp từ server).
+public class CartonReprintZplResponse
+{
+    public string Zpl { get; set; } = "";
+    public string CartonNumber { get; set; } = "";
+}
+
+public class PalletReprintZplResponse
+{
+    public string Zpl { get; set; } = "";
+    public string PalletNumber { get; set; } = "";
+    public int QuantityCartons { get; set; }
+    public int QuantityUnits { get; set; }
 }

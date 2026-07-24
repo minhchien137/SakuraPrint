@@ -612,6 +612,18 @@ public class SakuraService
         if (palletNumber == null)
             palletNumber = await GenerateAndAssignPalletNumberAsync(rows);
 
+        // Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address vào MỌI carton
+        // của pallet này (ghi lại mỗi lần build tem, kể cả in lần đầu) — không có bảng Pallet riêng
+        // để lưu, và cần dữ liệu này sau này cho ReprintPalletLabelAsync build lại đúng tem cũ.
+        foreach (var row in rows)
+        {
+            row.PoNumber = poNumber?.Trim() ?? "";
+            row.InboundReference = inboundReference?.Trim() ?? "";
+            row.WarehouseReference = warehouseReference?.Trim() ?? "";
+            row.DeliveryAddress = deliveryAddress?.Trim() ?? "";
+        }
+        await _context.SaveChangesAsync();
+
         string template = await GetZplTemplateAsync("PalletLabel");
         string zpl = template
             .Replace("{skuPvId}", meta.SkuPvId)
@@ -709,7 +721,7 @@ public class SakuraService
     // SM_Sakura_CartonLabel_Data, không phải 1 dòng/serial). Filter theo ngày (ScanDate), Work
     // Order/Carton Number/Serial (tìm theo substring, Serial search luôn trong cả chuỗi CSV),
     // và Color (khớp chính xác).
-    public async Task<CartonSnHistoryPageDto> GetCartonHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? cartonNumber, string? serial, string? color, string? palletId, string? palletNumber, int page, int pageSize)
+    public async Task<CartonSnHistoryPageDto> GetCartonHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? cartonNumber, string? serial, string? color, string? palletId, string? palletNumber, int page, int pageSize, bool? isReprint = null)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 200);
@@ -762,6 +774,9 @@ public class SakuraService
             query = query.Where(x => x.PalletNumber != null && x.PalletNumber.Contains(pn));
         }
 
+        if (isReprint.HasValue)
+            query = query.Where(x => x.IsReprint == isReprint.Value);
+
         int totalCount = await query.CountAsync();
 
         var rows = await query
@@ -783,12 +798,153 @@ public class SakuraService
                 Serial = x.Serial,
                 ScanDate = x.ScanDate,
                 PalletId = x.PalletId,
-                PalletNumber = x.PalletNumber
+                PalletNumber = x.PalletNumber,
+                IsReprint = x.IsReprint
             }).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    // ── Reprint (trang /sakura/cartonsn/reprint) ────────────────────────────────────────────
+    // Danh sách Pallet đã "chốt"/in tem (nhóm theo PalletNumber, mỗi PalletNumber gán chung cho
+    // nhiều carton — xem RecordCartonScanAsync/BuildPalletLabelZplAsync). Group + filter theo
+    // IsPalletReprint (aggregate) trong memory — số dòng sau khi lọc theo ngày/WO/PalletId/Number
+    // đủ nhỏ để làm vậy an toàn hơn là ép EF dịch GROUP BY + HAVING trên aggregate boolean.
+    public async Task<CartonSnPalletReprintPageDto> GetPalletReprintListAsync(
+        DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? palletId, string? palletNumber, int page, int pageSize, bool? isPalletReprint = null)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
+
+        var query = _context.CartonSnScanLogs.AsNoTracking().Where(x => x.PalletNumber != null).AsQueryable();
+
+        if (dateFrom.HasValue)
+            query = query.Where(x => x.ScanDate >= dateFrom.Value.Date);
+
+        if (dateTo.HasValue)
+        {
+            DateTime dateToEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.ScanDate < dateToEnd);
+        }
+
+        if (!string.IsNullOrWhiteSpace(workOrder))
+        {
+            string wo = workOrder.Trim();
+            query = query.Where(x => x.WorkOrder.Contains(wo));
+        }
+
+        if (!string.IsNullOrWhiteSpace(palletId))
+        {
+            string pid = palletId.Trim();
+            query = query.Where(x => x.PalletId != null && x.PalletId.Contains(pid));
+        }
+
+        if (!string.IsNullOrWhiteSpace(palletNumber))
+        {
+            string pn = palletNumber.Trim();
+            query = query.Where(x => x.PalletNumber!.Contains(pn));
+        }
+
+        var rows = await query.ToListAsync();
+
+        var grouped = rows
+            .GroupBy(x => x.PalletNumber)
+            .Select(g => new CartonSnPalletReprintItemDto
+            {
+                PalletNumber = g.Key!,
+                PalletId = g.Select(x => x.PalletId).FirstOrDefault() ?? "",
+                WorkOrder = g.Select(x => x.WorkOrder).FirstOrDefault() ?? "",
+                Color = g.Select(x => x.Color).FirstOrDefault() ?? "",
+                CartonCount = g.Count(),
+                UnitCount = g.Sum(x => x.CountSerial),
+                IsPalletReprint = g.Any(x => x.IsPalletReprint),
+                LastScanDate = g.Max(x => x.ScanDate)
+            });
+
+        if (isPalletReprint.HasValue)
+            grouped = grouped.Where(x => x.IsPalletReprint == isPalletReprint.Value);
+
+        var ordered = grouped.OrderByDescending(x => x.LastScanDate).ToList();
+
+        int totalCount = ordered.Count;
+        var items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        return new CartonSnPalletReprintPageDto
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    // In lại ĐÚNG dữ liệu cũ đã lưu (Work Order/Carton Number/Serial/Color/Condition) cho 1 carton
+    // đã in trước đó — KHÔNG check "đã in trước đó" (chắc chắn đã in — đó là lý do reprint),
+    // KHÔNG tính lại số lượng WO, KHÔNG cho sửa serial. Đánh dấu IsReprint = true để trang Reprint/
+    // History biết carton nào đã từng in lại.
+    public async Task<CartonReprintZplResponse> ReprintCartonLabelAsync(int id)
+    {
+        var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.Id == id);
+        if (row == null)
+            throw new SakuraValidationException("cartonLabel.reprint.notFound", $"Không tìm thấy Carton Id={id}.", new { id });
+
+        if (!ZplTemplates.CartonColorMeta.TryGetValue(row.Color ?? "", out var meta))
+            throw new SakuraValidationException("cartonLabel.unknownColor", $"Không nhận diện được màu '{row.Color}'.", new { color = row.Color });
+
+        var slots = (row.Serial ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        if (slots.Count == 0)
+            throw new SakuraValidationException("cartonLabel.reprint.noSerials", $"Carton '{row.CartonNumber}' không có serial để in lại.", new { cartonNumber = row.CartonNumber });
+
+        string zpl = await RenderCartonZplAsync(row.CartonNumber, meta, row.Condition ?? "New", slots, slots);
+
+        row.IsReprint = true;
+        await _context.SaveChangesAsync();
+
+        return new CartonReprintZplResponse { Zpl = zpl, CartonNumber = row.CartonNumber };
+    }
+
+    // In lại tem Pallet ĐÚNG dữ liệu cũ (PO Number/Inbound/Warehouse/Delivery Address snapshot
+    // lúc build tem gần nhất — xem BuildPalletLabelZplAsync) cho 1 Pallet Number đã "chốt"/in tem
+    // trước đó. Đánh dấu IsPalletReprint = true trên MỌI carton của pallet này.
+    public async Task<PalletReprintZplResponse> ReprintPalletLabelAsync(string palletNumber)
+    {
+        if (string.IsNullOrWhiteSpace(palletNumber))
+            throw new SakuraValidationException("cartonLabel.pallet.palletNumberMissing", "Thiếu Pallet Number.");
+
+        string trimmed = palletNumber.Trim();
+        var rows = await _context.CartonSnScanLogs.Where(x => x.PalletNumber == trimmed).ToListAsync();
+        if (rows.Count == 0)
+            throw new SakuraValidationException("cartonLabel.pallet.notFound", $"Không tìm thấy Pallet Number '{trimmed}'.", new { palletNumber = trimmed });
+
+        string color = rows[0].Color ?? "";
+        if (!ZplTemplates.CartonColorMeta.TryGetValue(color, out var meta))
+            throw new SakuraValidationException("cartonLabel.unknownColor", $"Không nhận diện được màu '{color}'.", new { color });
+
+        int quantityCartons = rows.Count;
+        int quantityUnits = rows.Sum(x => x.CountSerial);
+
+        string template = await GetZplTemplateAsync("PalletLabel");
+        string zpl = template
+            .Replace("{skuPvId}", meta.SkuPvId)
+            .Replace("{ean}", meta.Ean)
+            .Replace("{cartonQty}", quantityCartons.ToString())
+            .Replace("{unitQty}", quantityUnits.ToString())
+            .Replace("{poNumber}", rows[0].PoNumber ?? "")
+            .Replace("{inboundReference}", rows[0].InboundReference ?? "")
+            .Replace("{warehouseReference}", rows[0].WarehouseReference ?? "")
+            .Replace("{vendorCode}", "CN50")
+            .Replace("{palletNumber}", trimmed)
+            .Replace("{deliveryTo}", FormatZplDeliveryAddress(rows[0].DeliveryAddress ?? ""));
+
+        foreach (var row in rows)
+            row.IsPalletReprint = true;
+        await _context.SaveChangesAsync();
+
+        return new PalletReprintZplResponse { Zpl = zpl, PalletNumber = trimmed, QuantityCartons = quantityCartons, QuantityUnits = quantityUnits };
     }
 
     // Ngày sản xuất của lần in đầu tiên cho Work Order này (null nếu chưa in lần nào).

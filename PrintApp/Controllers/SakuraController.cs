@@ -102,6 +102,15 @@ public class SakuraController : Controller
                         Subtitle = "Carton SN Label print history",
                         Href = Url.Content("~/sakura/cartonsn/history"),
                         Enabled = true
+                    },
+                    new SakuraAppTile
+                    {
+                        Key = "cartonsnreprint",
+                        Icon = "↺",
+                        Title = "Reprint",
+                        Subtitle = "Reprint damaged/misprinted carton or pallet labels",
+                        Href = Url.Content("~/sakura/cartonsn/reprint"),
+                        Enabled = true
                     }
                 }
             },
@@ -248,6 +257,12 @@ public class SakuraController : Controller
     public IActionResult CartonSnHistory()
     {
         return View("~/Views/Sakura/CartonSnHistory.cshtml");
+    }
+
+    [HttpGet("/sakura/cartonsn/reprint")]
+    public IActionResult CartonSnReprint()
+    {
+        return View("~/Views/Sakura/CartonSnReprint.cshtml");
     }
 
     // ── API: printer list (for other Sakura pages that need it) ────────────────
@@ -1082,10 +1097,64 @@ public class SakuraController : Controller
     public async Task<IActionResult> CartonSnHistoryApi(
         [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder, [FromQuery] string? cartonNumber,
         [FromQuery] string? serial, [FromQuery] string? color, [FromQuery] string? palletId, [FromQuery] string? palletNumber,
+        [FromQuery] bool? isReprint, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _snLabel.GetCartonHistoryAsync(dateFrom, dateTo, workOrder, cartonNumber, serial, color, palletId, palletNumber, page, pageSize, isReprint);
+        return Ok(new { ok = true, data = result });
+    }
+
+    // ── API: Reprint (trang /sakura/cartonsn/reprint) ───────────────────────────
+
+    [HttpGet("/api/sakura/cartonsn/reprint/pallets")]
+    public async Task<IActionResult> CartonSnPalletReprintListApi(
+        [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder,
+        [FromQuery] string? palletId, [FromQuery] string? palletNumber, [FromQuery] bool? isPalletReprint,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await _snLabel.GetCartonHistoryAsync(dateFrom, dateTo, workOrder, cartonNumber, serial, color, palletId, palletNumber, page, pageSize);
+        var result = await _snLabel.GetPalletReprintListAsync(dateFrom, dateTo, workOrder, palletId, palletNumber, page, pageSize, isPalletReprint);
         return Ok(new { ok = true, data = result });
+    }
+
+    [HttpPost("/api/sakura/cartonsn/reprint/carton")]
+    public async Task<IActionResult> ReprintCartonLabel([FromBody] CartonReprintRequest req)
+    {
+        if (req == null || req.Id <= 0)
+            return BadRequest(new { ok = false, error = "Thiếu Id carton cần in lại.", errorCode = "common.missingData" });
+
+        try
+        {
+            var result = await _snLabel.ReprintCartonLabelAsync(req.Id);
+            return Ok(new { ok = true, data = result });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
+    }
+
+    [HttpPost("/api/sakura/cartonsn/reprint/pallet")]
+    public async Task<IActionResult> ReprintPalletLabel([FromBody] PalletReprintRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.PalletNumber))
+            return BadRequest(new { ok = false, error = "Thiếu Pallet Number cần in lại.", errorCode = "common.missingData" });
+
+        try
+        {
+            var result = await _snLabel.ReprintPalletLabelAsync(req.PalletNumber);
+            return Ok(new { ok = true, data = result });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
     }
 
     // ── API: ZPL template CRUD (edit template content without touching code) ──
