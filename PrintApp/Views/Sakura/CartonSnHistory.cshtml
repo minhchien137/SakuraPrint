@@ -80,7 +80,10 @@
     .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
 
     .t-grid { display: grid; gap: 16px 20px; }
-    .t-grid-auto { grid-template-columns: 150px 150px 1fr 1fr 1fr 130px 120px auto; align-items: end; }
+    /* auto-fit tự bọc xuống hàng 2/3 khi hết chỗ, thay vì bóp 5 ô text search 1fr chung 1 hàng
+       (co rúm lại khi màn hình không đủ rộng cho hết filter). */
+    .t-grid-auto { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); align-items: end; }
+    .t-grid-auto > .t-btn { justify-self: start; }
 
     .t-field label {
         display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
@@ -109,7 +112,7 @@
 
     /* Bảng rộng hơn khung trang, cuộn ngang thay vì bóp chữ xuống dòng. */
     .t-table-wrap { overflow-x: auto; }
-    .t-table { width: 100%; min-width: 980px; border-collapse: collapse; font-family: var(--font-body); font-size: 0.85rem; }
+    .t-table { width: 100%; min-width: 1180px; border-collapse: collapse; font-family: var(--font-body); font-size: 0.85rem; }
     .t-table th {
         text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--gray-200);
         letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--gray-500);
@@ -150,9 +153,6 @@
     .t-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
     .t-btn-ghost:disabled:hover { border-color: var(--gray-200); color: var(--gray-500); background: var(--white); }
 
-    @@media (max-width: 900px) {
-        .t-grid-auto { grid-template-columns: 1fr 1fr; }
-    }
     @@media (max-width: 480px) {
         .t-grid-auto { grid-template-columns: 1fr; }
     }
@@ -205,6 +205,14 @@
                 <input type="date" id="histDateTo" />
             </div>
             <div class="t-field">
+                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
+                <input type="text" id="histPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
+                <input type="text" id="histPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
+            </div>
+            <div class="t-field">
                 <label data-i18n="cartonHistory.filterCartonNumber">Carton Number</label>
                 <input type="text" id="histCartonNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterCartonNumberPlaceholder" placeholder="Search Carton Number…" />
             </div>
@@ -244,8 +252,10 @@
             <table class="t-table">
                 <thead>
                     <tr>
-                        <th data-i18n="cartonHistory.colCartonNumber">Carton Number</th>
+                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
+                        <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
                         <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
+                        <th data-i18n="cartonHistory.colCartonNumber">Carton Number</th>
                         <th data-i18n="cartonHistory.colColor">Color</th>
                         <th data-i18n="cartonHistory.colCondition">Condition</th>
                         <th data-i18n="cartonHistory.colQuantity">Quantity</th>
@@ -254,7 +264,7 @@
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -304,6 +314,8 @@
 
     const $histDateFrom = document.getElementById('histDateFrom');
     const $histDateTo = document.getElementById('histDateTo');
+    const $histPalletId = document.getElementById('histPalletId');
+    const $histPalletNumber = document.getElementById('histPalletNumber');
     const $histCartonNumber = document.getElementById('histCartonNumber');
     const $histWorkOrder = document.getElementById('histWorkOrder');
     const $histSerial = document.getElementById('histSerial');
@@ -329,12 +341,14 @@
         const params = new URLSearchParams({ page: currentPage, pageSize: pageSize() });
         if ($histDateFrom.value) params.set('dateFrom', $histDateFrom.value);
         if ($histDateTo.value) params.set('dateTo', $histDateTo.value);
+        if ($histPalletId.value.trim()) params.set('palletId', $histPalletId.value.trim());
+        if ($histPalletNumber.value.trim()) params.set('palletNumber', $histPalletNumber.value.trim());
         if ($histCartonNumber.value.trim()) params.set('cartonNumber', $histCartonNumber.value.trim());
         if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
         if ($histSerial.value.trim()) params.set('serial', $histSerial.value.trim());
         if ($histColor.value) params.set('color', $histColor.value);
 
-        $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -347,7 +361,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -388,7 +402,7 @@
 
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => {
@@ -397,8 +411,10 @@
             const serialsDisplay = r.serial ? escHtml(r.serial.split(',').join(', ')) : '—';
             return `
                 <tr>
-                    <td>${escHtml(r.cartonNumber) || '—'}</td>
+                    <td>${r.palletId ? escHtml(r.palletId) : '—'}</td>
+                    <td>${r.palletNumber ? escHtml(r.palletNumber) : '—'}</td>
                     <td>${escHtml(r.workOrder) || '—'}</td>
+                    <td>${escHtml(r.cartonNumber) || '—'}</td>
                     <td>${r.color ? `<span class="swatch-dot ${colorCls}"></span>${escHtml(r.color)}` : '—'}</td>
                     <td>${escHtml(r.condition) || '—'}</td>
                     <td><span class="count-pill">${r.countSerial}</span></td>
@@ -412,6 +428,12 @@
     $histDateTo.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histColor.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histPageSize.addEventListener('change', () => { currentPage = 1; loadHistory(); });
+    $histPalletId.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
+    });
+    $histPalletNumber.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
+    });
     $histCartonNumber.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
     });

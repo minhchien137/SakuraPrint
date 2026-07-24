@@ -494,11 +494,16 @@
                         </div>
                     </div>
 
-                    <div class="t-actions" style="margin-top:14px">
-                        <button type="button" class="t-btn t-btn-ghost" id="btnSavePalletInfo" data-i18n="cartonsn.savePalletInfoBtn" style="min-height:40px">💾 Save Info</button>
+                    <div class="t-actions" style="margin-top:14px;align-items:flex-end">
+                        <button type="button" class="t-btn t-btn-ghost" id="btnSavePalletInfo" data-i18n="cartonsn.savePalletInfoBtn" style="min-height:40px">💾 Save</button>
+                        <button type="button" class="t-btn t-btn-ghost" id="btnResetPalletInfo" data-i18n="cartonsn.resetPalletInfoBtn" style="min-height:40px">↺ Reset</button>
                         <span class="count-pill" id="palletBoxBadge" style="min-height:40px">
                             <span data-i18n="cartonsn.boxesInPalletLabel">📦 Boxes in Pallet:</span>&nbsp;<strong id="palletBoxCount">0</strong>
                         </span>
+                        <div class="t-field" style="max-width:150px;margin-bottom:0">
+                            <label data-i18n="cartonsn.palletAutoPrintLabel" style="margin-bottom:2px">🎯 Auto Print At</label>
+                            <input type="number" id="palletAutoPrintTarget" min="1" step="1" data-i18n-placeholder="cartonsn.palletAutoPrintPlaceholder" placeholder="e.g. 64" style="min-height:40px" />
+                        </div>
                         <button type="button" class="t-btn t-btn-outline" id="btnManagePallet" data-i18n="cartonsn.managePalletBtn" style="min-height:40px">⚙️ Pallet Manage</button>
                         <button type="button" class="t-btn t-btn-primary" id="btnPrintPalletLabel" data-i18n="cartonsn.printPalletLabelBtn" style="min-height:40px">🖨️ Print Pallet Label</button>
                         <!-- TEMP TEST — gọi thẳng API /pallet/print, bỏ qua check bridge/máy in,
@@ -804,8 +809,8 @@
             // WO hợp lệ + còn hàng -> mở lại Carton Number/Serial Number cho quét (resetWoState()
             // ở đầu hàm đã khóa lại từ trước). Tự áp dụng số lượng serial cần quét cho carton
             // hiện tại (đủ hộp hoặc lẻ hộp).
-            $cartonNumber.disabled = false;
             buildSerialGrid(expectedQuantityThisCarton);
+            updateCartonNumberLock();
             setPalletUnlocked(true);
 
             const lookupMsg = t('cartonsn.woLookupSuccess', '{color} — this carton needs {qty} serial(s).')
@@ -881,9 +886,11 @@
     const $warehouseReference = document.getElementById('warehouseReference');
     const $deliveryAddress = document.getElementById('deliveryAddress');
     const $btnSavePalletInfo = document.getElementById('btnSavePalletInfo');
+    const $btnResetPalletInfo = document.getElementById('btnResetPalletInfo');
     const $palletBoxCount = document.getElementById('palletBoxCount');
     const $btnManagePallet = document.getElementById('btnManagePallet');
     const $btnPrintPalletLabel = document.getElementById('btnPrintPalletLabel');
+    const $palletAutoPrintTarget = document.getElementById('palletAutoPrintTarget');
     const $palletStatus = document.getElementById('palletStatus');
 
     const LS_PALLET = {
@@ -892,20 +899,54 @@
         manualPoNumber: 'sakura_cartonsn_pallet_manual_po',
         manualInbound: 'sakura_cartonsn_pallet_manual_inbound',
         manualWarehouse: 'sakura_cartonsn_pallet_manual_warehouse',
-        manualAddress: 'sakura_cartonsn_pallet_manual_address'
+        manualAddress: 'sakura_cartonsn_pallet_manual_address',
+        autoPrintTarget: 'sakura_cartonsn_pallet_autoprint_target',
+        savedFlag: 'sakura_cartonsn_pallet_saved_flag'
     };
 
     function setPalletUnlocked(unlocked) {
         $palletFieldset.disabled = !unlocked;
         $palletLockedHint.style.display = unlocked ? 'none' : '';
+        updatePrintPalletButtonState();
         if (unlocked) refreshPalletBadge();
     }
 
     function loadPalletFields() {
         const v = k => localStorage.getItem(k);
         if (v(LS_PALLET.id)) $palletId.value = v(LS_PALLET.id);
+        if (v(LS_PALLET.autoPrintTarget)) $palletAutoPrintTarget.value = v(LS_PALLET.autoPrintTarget);
+        if (v(LS_PALLET.savedFlag) === '1') $btnSavePalletInfo.classList.add('is-saved');
+        updatePrintPalletButtonState();
     }
 
+    // "Auto Print At" (tùy chọn) — set 1 số VD 64 thì cứ mỗi Pallet ID quét đủ tới đúng số đó là
+    // tự động in tem Pallet ngay (không cần bấm Print Pallet Label), và nút Print Pallet Label bị
+    // khóa (tối) khi Boxes in Pallet CHƯA đạt số này. Không set gì -> giữ hành vi cũ (in lúc nào
+    // cũng được, không tự in). Setting này áp dụng chung cho các Pallet ID kế tiếp trong phiên
+    // làm việc (không reset theo từng pallet) — lưu localStorage riêng, không nằm trong Save/Reset
+    // Pallet Info (những field đó là dữ liệu CỦA 1 pallet, còn số này là CẤU HÌNH của cả quy trình).
+    function getPalletTargetBoxCount() {
+        const n = parseInt($palletAutoPrintTarget.value);
+        return (Number.isFinite(n) && n > 0) ? n : null;
+    }
+    function updatePrintPalletButtonState() {
+        const target = getPalletTargetBoxCount();
+        const boxCount = parseInt($palletBoxCount.textContent) || 0;
+        $btnPrintPalletLabel.disabled = !!target && boxCount < target;
+    }
+    function setPalletBoxCount(n) {
+        $palletBoxCount.textContent = String(n);
+        updatePrintPalletButtonState();
+    }
+    $palletAutoPrintTarget.addEventListener('input', () => {
+        const raw = $palletAutoPrintTarget.value.trim();
+        if (raw) localStorage.setItem(LS_PALLET.autoPrintTarget, raw);
+        else localStorage.removeItem(LS_PALLET.autoPrintTarget);
+        updatePrintPalletButtonState();
+    });
+
+    // Save/Reset Pallet Info — cùng pattern với Save/Reset Work Order: bấm Save thì nút chuyển
+    // xanh (is-saved) và giữ nguyên tới khi có field nào đổi hoặc bấm Reset.
     $btnSavePalletInfo.addEventListener('click', () => {
         localStorage.setItem(LS_PALLET.id, $palletId.value.trim());
         localStorage.setItem(LS_PALLET.templateSelection, $palletTemplateSelect.value);
@@ -915,9 +956,46 @@
             localStorage.setItem(LS_PALLET.manualWarehouse, $warehouseReference.value.trim());
             localStorage.setItem(LS_PALLET.manualAddress, $deliveryAddress.value.trim());
         }
+        localStorage.setItem(LS_PALLET.savedFlag, '1');
         showStatus($palletStatus, `✓ ${t('cartonsn.savedMsg', '✓ Saved.')}`, 'ok');
         setTimeout(() => hideStatus($palletStatus), 3000);
+        $btnSavePalletInfo.classList.add('is-saved');
     });
+
+    $btnResetPalletInfo.addEventListener('click', () => {
+        $palletId.value = '';
+        $palletTemplateSelect.value = '';
+        applyTemplateSelection('');
+        $poNumber.value = '';
+        $inboundReference.value = '';
+        $warehouseReference.value = '';
+        $deliveryAddress.value = '';
+        $palletAutoPrintTarget.value = '';
+        localStorage.removeItem(LS_PALLET.id);
+        localStorage.removeItem(LS_PALLET.templateSelection);
+        localStorage.removeItem(LS_PALLET.manualPoNumber);
+        localStorage.removeItem(LS_PALLET.manualInbound);
+        localStorage.removeItem(LS_PALLET.manualWarehouse);
+        localStorage.removeItem(LS_PALLET.manualAddress);
+        localStorage.removeItem(LS_PALLET.autoPrintTarget);
+        localStorage.removeItem(LS_PALLET.savedFlag);
+        setPalletBoxCount(0);
+        hideStatus($palletStatus);
+        $btnSavePalletInfo.classList.remove('is-saved');
+        updateCartonNumberLock(); // Pallet ID vừa xoá -> khoá lại Carton Number/Serial Number
+        $palletId.focus();
+    });
+
+    // Field nào trong Pallet Info đổi so với lần Save gần nhất -> đèn "đã save" không còn đúng —
+    // xoá luôn cờ đã lưu (savedFlag) để F5 lại trang không hiện xanh nhầm nữa.
+    function clearPalletSavedFlag() {
+        $btnSavePalletInfo.classList.remove('is-saved');
+        localStorage.removeItem(LS_PALLET.savedFlag);
+    }
+    [$palletId, $poNumber, $inboundReference, $warehouseReference, $deliveryAddress].forEach(el => {
+        el.addEventListener('input', clearPalletSavedFlag);
+    });
+    $palletTemplateSelect.addEventListener('change', clearPalletSavedFlag);
 
     // ── Pallet Info Template — preset PO Number/Inbound Reference/Warehouse Reference/Delivery
     // Address. Chọn 1 template có sẵn -> 4 field này ẨN hẳn đi (dữ liệu đã xem được trong modal
@@ -1129,11 +1207,11 @@
     // đổi (debounce), sau khi thêm/xoá thùng trong modal Quản lý, và lúc mở khoá vùng này.
     async function refreshPalletBadge() {
         const palletId = $palletId.value.trim();
-        if (!palletId) { $palletBoxCount.textContent = '0'; return; }
+        if (!palletId) { setPalletBoxCount(0); return; }
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/boxes?palletId=${encodeURIComponent(palletId)}`);
             const body = await res.json();
-            if (res.ok && body.ok) $palletBoxCount.textContent = body.data.boxCount;
+            if (res.ok && body.ok) setPalletBoxCount(body.data.boxCount);
         } catch (e) { /* chỉ là badge hiển thị — im lặng bỏ qua lỗi mạng, không chặn thao tác khác */ }
     }
 
@@ -1141,7 +1219,25 @@
     $palletId.addEventListener('input', () => {
         clearTimeout(palletIdDebounce);
         palletIdDebounce = setTimeout(refreshPalletBadge, 300);
+        updateCartonNumberLock();
     });
+
+    // Carton Number chỉ mở khi WO đã resolve VÀ Pallet ID đã có giá trị — luồng tuần tự bắt
+    // buộc Work Order -> Pallet ID -> Carton Number, không cho nhảy cóc xuống quét Carton
+    // Number/Serial Number khi chưa xác định Pallet ID (1 Pallet ID = 1 Work Order riêng).
+    function cartonNumberPrereqOk() {
+        return woResolvedOk && $palletId.value.trim() !== '';
+    }
+    function updateCartonNumberLock() {
+        const unlocked = cartonNumberPrereqOk();
+        if (!unlocked) {
+            $cartonNumber.value = '';
+            $cartonNumber.classList.remove('invalid');
+            hideStatus($cartonNumberStatus);
+            lockSerialGrid();
+        }
+        $cartonNumber.disabled = !unlocked;
+    }
 
     // ── Modal "Quản lý Pallet" — xem danh sách Carton Number đã gán vào Pallet ID hiện tại, xoá
     // từng dòng để gỡ carton khỏi pallet (trừ lại số đếm). Không còn ô thêm tay ở đây — carton
@@ -1193,7 +1289,7 @@
             const body = await res.json();
             if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.managePalletLoadFailed', 'Could not load pallet boxes.')));
             renderManageTable(body.data.boxes);
-            $palletBoxCount.textContent = body.data.boxCount;
+            setPalletBoxCount(body.data.boxCount);
         } catch (e) {
             showStatus($manageStatus, `✗ ${e.message}`, 'err');
         }
@@ -1210,7 +1306,7 @@
             const body = await res.json();
             if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.manageUnscanFailed', 'Could not remove this box from the pallet.')));
             renderManageTable(body.data.boxes);
-            $palletBoxCount.textContent = body.data.boxCount;
+            setPalletBoxCount(body.data.boxCount);
         } catch (e) {
             showStatus($manageStatus, `✗ ${e.message}`, 'err');
         }
@@ -1278,7 +1374,7 @@
         openPalletPrintConfirm(palletId);
     }
 
-    async function executePalletPrint(palletId) {
+    async function executePalletPrint(palletId, notice) {
         $btnConfirmPrintPalletLabel.disabled = true;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/print`, {
@@ -1297,7 +1393,7 @@
 
             const zpl = body.zpl;
             const copies = parseInt($copies.value) || 1;
-            let msg = `✓ ${t('cartonsn.printPalletGeneratedMsg', 'Pallet label generated ({pallet}, {cartons} carton(s) / {units} unit(s)).')
+            let msg = (notice ? `${notice} ` : '') + `✓ ${t('cartonsn.printPalletGeneratedMsg', 'Pallet label generated ({pallet}, {cartons} carton(s) / {units} unit(s)).')
                 .replace('{pallet}', body.palletNumber).replace('{cartons}', body.quantityCartons).replace('{units}', body.quantityUnits)}`;
             let statusType = 'ok';
 
@@ -1338,7 +1434,8 @@
             if (statusType === 'ok') {
                 $palletId.value = '';
                 localStorage.removeItem(LS_PALLET.id);
-                $palletBoxCount.textContent = '0';
+                setPalletBoxCount(0);
+                updateCartonNumberLock(); // Pallet ID vừa xoá -> khoá lại Carton Number/Serial Number
             }
             showStatus($palletStatus, msg, statusType);
         } catch (e) {
@@ -1397,6 +1494,7 @@
             $palletId.value = '';
             localStorage.removeItem(LS_PALLET.id);
             $palletBoxCount.textContent = '0';
+            updateCartonNumberLock(); // Pallet ID vừa xoá -> khoá lại Carton Number/Serial Number
             showStatus($palletStatus, `✓ [TEST] Pallet label generated (${body.palletNumber}, ${body.quantityCartons} carton(s) / ${body.quantityUnits} unit(s)) — no printer used, downloaded .zpl instead.`, 'ok');
         } catch (e) {
             showStatus($palletStatus, `✗ ${e.message}`, 'err');
@@ -1443,7 +1541,12 @@
     async function checkCartonNumberAndAdvance() {
         clearTimeout(cartonNumberDebounce);
         const ok = await verifyCartonNumber();
-        if (ok) document.querySelector('#serialGrid input')?.focus();
+        if (ok) {
+            unlockSerialGrid();
+            document.querySelector('#serialGrid input')?.focus();
+        } else {
+            lockSerialGrid();
+        }
     }
 
     $cartonNumber.addEventListener('keydown', (e) => {
@@ -1454,6 +1557,9 @@
     $cartonNumber.addEventListener('input', () => {
         $cartonNumber.classList.remove('invalid');
         hideStatus($cartonNumberStatus);
+        // Carton Number đang đổi -> Serial Number của carton cũ không còn hợp lệ nữa, khóa +
+        // xóa lại ngay (không chờ debounce network) để không lỡ in serial dưới carton sai.
+        lockSerialGrid();
         clearTimeout(cartonNumberDebounce);
         cartonNumberDebounce = setTimeout(checkCartonNumberAndAdvance, 200);
     });
@@ -1498,7 +1604,29 @@
                 timers[idx] = setTimeout(() => handleSerialInput(inp, idx, inputs), 200);
             });
         });
-        inputs[0]?.focus();
+
+        // Vừa build xong -> chưa có Carton Number nào được xác nhận cho carton này -> khóa
+        // toàn bộ ô Serial Number lại (mở lại trong checkCartonNumberAndAdvance() khi Carton
+        // Number hợp lệ — xem unlockSerialGrid()).
+        lockSerialGrid();
+    }
+
+    // Serial Number chỉ mở khi Carton Number hiện tại đã được xác nhận hợp lệ (verifyCartonNumber
+    // trả true) — tránh quét/nhập Serial Number khi chưa rõ carton nào. Khóa lại thì xóa sạch
+    // luôn (giá trị Serial cũ không còn gắn với Carton Number hiện tại nữa).
+    function lockSerialGrid() {
+        serialList = [];
+        $scannedCount.textContent = '0';
+        $serialGrid.querySelectorAll('input').forEach(inp => {
+            inp.disabled = true;
+            inp.value = '';
+            inp.className = '';
+            inp.dataset.oldVal = '';
+        });
+        $serialGrid.querySelectorAll('.serial-badge').forEach(b => { b.className = 'serial-badge'; });
+    }
+    function unlockSerialGrid() {
+        $serialGrid.querySelectorAll('input').forEach(inp => { inp.disabled = false; });
     }
 
     // 3 điều kiện check khi quét 1 SN vào carton (tránh in nhầm): (1) định dạng Serial Number,
@@ -1718,9 +1846,47 @@
     // (in thật) lẫn previewZpl (đang test, xem mục đích ở previewZpl()).
     async function finishSuccessfulPrint(form) {
         const result = await reportCartonPrintResult(form, getOrderedSerials());
-        if (result && result.pallet) $palletBoxCount.textContent = result.pallet.boxCount;
+        if (result && result.pallet) setPalletBoxCount(result.pallet.boxCount);
         await lookupWorkOrder();
+        if (result && result.pallet && form.palletId) await maybeAutoPrintPallet(form.palletId, result.pallet.boxCount);
         return result;
+    }
+
+    // "Auto Print At" đã set VÀ pallet vừa đạt/vượt số đó -> tự in tem Pallet ngay, không cần bấm
+    // Print Pallet Label/xác nhận modal (xem executePalletPrint()). Nếu WO vừa hết carton để quét
+    // tiếp (lookupWorkOrder() ở trên fail -> woResolvedOk = false) NHƯNG pallet chưa đạt đủ số đã
+    // set (VD set 64, WO chỉ còn dư 56 thùng cho pallet cuối) -> không thể chờ đủ 64 được nữa vì
+    // hết carton rồi, nên in luôn với đúng số thùng thực tế đang có + báo rõ thiếu bao nhiêu.
+    async function maybeAutoPrintPallet(palletId, boxCount) {
+        const target = getPalletTargetBoxCount();
+        if (!target || boxCount <= 0) return;
+
+        if (boxCount >= target) {
+            await autoExecutePalletPrint(palletId, '');
+            return;
+        }
+
+        if (!woResolvedOk) {
+            const notice = `⚠ ${t('cartonsn.palletTargetShortfall', 'Work Order is out of cartons — this pallet only reached {count}/{target} boxes. Printing with the remaining {count} box(es) instead.')
+                .replace(/{count}/g, boxCount).replace('{target}', target)}`;
+            await autoExecutePalletPrint(palletId, notice);
+        }
+    }
+
+    // Check tối thiểu (bỏ qua check WO/Color — lúc gọi từ nhánh "WO đã hết carton" ở trên,
+    // woResolvedOk/resolvedColor CHẮC CHẮN đang null, đó là điều kiện gọi, không phải lỗi) trước
+    // khi tự in — vẫn cần Info Template hợp lệ + bridge/máy in sẵn sàng như in tay.
+    async function autoExecutePalletPrint(palletId, notice) {
+        const palletInfoError = validatePalletInfoFields();
+        if (palletInfoError) {
+            showStatus($palletStatus, `✗ ${palletInfoError}`, 'err');
+            return;
+        }
+        if (!bridgeOnline || !isPrinterConfigured()) {
+            showStatus($palletStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+        await executePalletPrint(palletId, notice);
     }
 
     let printing = false;

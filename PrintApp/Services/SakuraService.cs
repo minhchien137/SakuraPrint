@@ -709,7 +709,7 @@ public class SakuraService
     // SM_Sakura_CartonLabel_Data, không phải 1 dòng/serial). Filter theo ngày (ScanDate), Work
     // Order/Carton Number/Serial (tìm theo substring, Serial search luôn trong cả chuỗi CSV),
     // và Color (khớp chính xác).
-    public async Task<CartonSnHistoryPageDto> GetCartonHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? cartonNumber, string? serial, string? color, int page, int pageSize)
+    public async Task<CartonSnHistoryPageDto> GetCartonHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? cartonNumber, string? serial, string? color, string? palletId, string? palletNumber, int page, int pageSize)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 200);
@@ -750,6 +750,18 @@ public class SakuraService
             query = query.Where(x => x.Color == c);
         }
 
+        if (!string.IsNullOrWhiteSpace(palletId))
+        {
+            string pid = palletId.Trim();
+            query = query.Where(x => x.PalletId != null && x.PalletId.Contains(pid));
+        }
+
+        if (!string.IsNullOrWhiteSpace(palletNumber))
+        {
+            string pn = palletNumber.Trim();
+            query = query.Where(x => x.PalletNumber != null && x.PalletNumber.Contains(pn));
+        }
+
         int totalCount = await query.CountAsync();
 
         var rows = await query
@@ -769,7 +781,9 @@ public class SakuraService
                 Condition = x.Condition ?? "",
                 CountSerial = x.CountSerial,
                 Serial = x.Serial,
-                ScanDate = x.ScanDate
+                ScanDate = x.ScanDate,
+                PalletId = x.PalletId,
+                PalletNumber = x.PalletNumber
             }).ToList(),
             TotalCount = totalCount,
             Page = page,

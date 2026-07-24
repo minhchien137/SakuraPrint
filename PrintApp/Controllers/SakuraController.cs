@@ -1081,9 +1081,10 @@ public class SakuraController : Controller
     [HttpGet("/api/sakura/cartonsn/history")]
     public async Task<IActionResult> CartonSnHistoryApi(
         [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder, [FromQuery] string? cartonNumber,
-        [FromQuery] string? serial, [FromQuery] string? color, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        [FromQuery] string? serial, [FromQuery] string? color, [FromQuery] string? palletId, [FromQuery] string? palletNumber,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await _snLabel.GetCartonHistoryAsync(dateFrom, dateTo, workOrder, cartonNumber, serial, color, page, pageSize);
+        var result = await _snLabel.GetCartonHistoryAsync(dateFrom, dateTo, workOrder, cartonNumber, serial, color, palletId, palletNumber, page, pageSize);
         return Ok(new { ok = true, data = result });
     }
 

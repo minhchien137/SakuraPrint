@@ -58,6 +58,8 @@ public class CartonSnHistoryItemDto
     public int CountSerial { get; set; }
     public string Serial { get; set; } = ""; // CSV toàn bộ serial của carton này
     public DateTime ScanDate { get; set; }
+    public string? PalletId { get; set; }
+    public string? PalletNumber { get; set; }
 }
 
 public class CartonSnHistoryPageDto
