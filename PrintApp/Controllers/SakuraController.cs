@@ -51,7 +51,7 @@ public class SakuraController : Controller
             {
                 Key = "snlabelgroup",
                 Icon = "🏷️",
-                Title = "SN Label",
+                Title = "SN label on Gift box",
                 Subtitle = "Serial number label printing",
                 Enabled = true,
                 Items = new List<SakuraAppTile>
@@ -80,7 +80,7 @@ public class SakuraController : Controller
             {
                 Key = "cartonsngroup",
                 Icon = "📦",
-                Title = "Carton SN Label",
+                Title = "Carton SN & Pallet Label Print",
                 Subtitle = "Carton serial number label printing",
                 Enabled = true,
                 Items = new List<SakuraAppTile>
@@ -90,7 +90,7 @@ public class SakuraController : Controller
                         Key = "cartonsn",
                         Icon = "🖨️",
                         Title = "Print",
-                        Subtitle = "Print carton SN labels",
+                        Subtitle = "Print Carton SN & Pallet Label",
                         Href = Url.Content("~/sakura/cartonsn"),
                         Enabled = true
                     },
@@ -147,7 +147,7 @@ public class SakuraController : Controller
             {
                 Key = "fqcgroup",
                 Icon = "✅",
-                Title = "FQC",
+                Title = "FQC Station",
                 Subtitle = "Final QC scan stations",
                 Enabled = true,
                 Items = new List<SakuraAppTile>
