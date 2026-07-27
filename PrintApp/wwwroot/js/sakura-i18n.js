@@ -459,7 +459,7 @@
             'middleInputHistory.records': 'records',
             'middleInputHistory.backInputResult': '← Back to Input Result',
 
-            'cartonsn.title': 'CARTON SN LABEL PRINT',
+            'cartonsn.title': 'CARTON SN & PALLET LABEL PRINT',
             'cartonsn.subtitle': 'Carton Serial Number Print — Sakura',
             'cartonsn.printerConfig': 'Printer Configuration',
             'cartonsn.serviceChecking': 'Service …',
