@@ -1,5 +1,10 @@
 {
   "allowedOrigins": [
     "https://ds.sigmaworldwide.io"
-  ]
+  ],
+  "externalPrintQueue": {
+    "enabled": true,
+    "baseUrl": "https://ds.sigmaworldwide.io/print",
+    "pollIntervalMs": 3000
+  }
 }

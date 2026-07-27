@@ -30,6 +30,7 @@ const SN_TXT_PATH = 'D:\\LOG\\SN.txt'; // Trạm Laser (Back Panel) — máy las
 //   2. Access-Control-Allow-Private-Network: true khi preflight yêu cầu
 // Danh sách origin cho phép nằm ở config.json (cùng thư mục), không hardcode.
 const ALLOWED_ORIGINS = loadAllowedOrigins();
+const EXTERNAL_PRINT_QUEUE = loadExternalPrintQueueConfig();
 
 function loadAllowedOrigins() {
   const configPath = path.join(__dirname, 'config.json');
@@ -44,6 +45,27 @@ function loadAllowedOrigins() {
     console.warn(`[CORS] Khong doc duoc config.json (${err.message}) - moi origin se bi tu choi.`);
   }
   return [];
+}
+
+// ── Hang doi lenh in tu ExternalPrintController (xem Program.cs/ExternalPrintController.cs) ──
+// Server PrintApp (ds.sigmaworldwide.io) khong co route mang that toi LAN nha may nen khong
+// tu gui ZPL duoc - no chi ghi lenh in vao DB (SM_ExternalPrint_Queue). May nay (cung LAN voi
+// may in) tu dinh ky hoi API /api/external/print/queue/pending de lay lenh in ve roi tu in
+// qua TCP (dung lai printViaTcp da co san), xong bao ket qua qua /queue/{id}/complete.
+function loadExternalPrintQueueConfig() {
+  const configPath = path.join(__dirname, 'config.json');
+  const fallback = { enabled: false, baseUrl: '', pollIntervalMs: 3000 };
+  try {
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    if (raw.externalPrintQueue && typeof raw.externalPrintQueue === 'object') {
+      const cfg = { ...fallback, ...raw.externalPrintQueue };
+      console.log(`[QUEUE] External print queue: ${cfg.enabled ? 'BAT' : 'TAT'} - baseUrl=${cfg.baseUrl} - poll moi ${cfg.pollIntervalMs}ms`);
+      return cfg;
+    }
+  } catch (err) {
+    console.warn(`[QUEUE] Khong doc duoc config externalPrintQueue (${err.message}) - tinh nang TAT.`);
+  }
+  return fallback;
 }
 
 app.use((req, res, next) => {
@@ -401,6 +423,52 @@ app.get('/ping-printer', (req, res) => {
   socket.on('error',   (e) => fail(e.message));
 });
 
+// -- External print queue polling ------------------------------------------
+// Lay toi da 10 lenh dang cho ("Pending") moi lan, tu in tung cai qua TCP
+// (printViaTcp da co san o tren), roi bao ket qua tung lenh ve server.
+async function pollExternalPrintQueue() {
+  if (!EXTERNAL_PRINT_QUEUE.enabled || !EXTERNAL_PRINT_QUEUE.baseUrl) return;
+
+  let body;
+  try {
+    const res = await fetch(`${EXTERNAL_PRINT_QUEUE.baseUrl}/api/external/print/queue/pending?limit=10`);
+    if (!res.ok) {
+      console.warn(`[QUEUE] Poll that bai - HTTP ${res.status}`);
+      return;
+    }
+    body = await res.json();
+  } catch (err) {
+    console.warn(`[QUEUE] Khong goi duoc server de poll: ${err.message}`);
+    return;
+  }
+
+  if (!body.ok || !Array.isArray(body.items) || body.items.length === 0) return;
+
+  console.log(`\n► [QUEUE] Nhan ${body.items.length} lenh in dang cho`);
+  for (const item of body.items) {
+    try {
+      const result = await printViaTcp(item.printerIp, item.printerPort, item.zpl);
+      console.log(`  ✓ #${item.id} (SN ${item.serial}) in xong - ${result.bytesSent} bytes / ${result.duration}ms`);
+      await reportQueueResult(item.id, true, null);
+    } catch (err) {
+      console.error(`  ✗ #${item.id} (SN ${item.serial}) loi: ${err.message}`);
+      await reportQueueResult(item.id, false, err.message);
+    }
+  }
+}
+
+async function reportQueueResult(id, success, error) {
+  try {
+    await fetch(`${EXTERNAL_PRINT_QUEUE.baseUrl}/api/external/print/queue/${id}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ success, error })
+    });
+  } catch (err) {
+    console.warn(`[QUEUE] Khong bao duoc ket qua lenh #${id}: ${err.message}`);
+  }
+}
+
 // -- Start -----------------------------------------------------------------
 app.listen(PORT, HOST, () => {
   console.log('');
@@ -416,4 +484,9 @@ app.listen(PORT, HOST, () => {
   console.log('  |  GET  /ping-printer   -> Test TCP           |');
   console.log('  +--------------------------------------------+');
   console.log('');
+
+  if (EXTERNAL_PRINT_QUEUE.enabled && EXTERNAL_PRINT_QUEUE.baseUrl) {
+    console.log(`  [QUEUE] Bat dau poll external print queue moi ${EXTERNAL_PRINT_QUEUE.pollIntervalMs}ms`);
+    setInterval(pollExternalPrintQueue, EXTERNAL_PRINT_QUEUE.pollIntervalMs);
+  }
 });
