@@ -111,6 +111,19 @@ public class ViidooService
         return new ViidooSearchResult { ProductCode = productCode, Color = color, Quantity = quantity, ProductId = productId };
     }
 
+    // Tra WO -> trả về NGUYÊN chuỗi mô tả sản phẩm (product_id[1] thô từ Odoo, vd
+    // "[WSS03-00307] Back Panel- Semi-finished product - Sakura Green") — dùng cho biến
+    // {product} của tem LotWip (ExternalPrintController). Trả về null nếu không tìm thấy WO.
+    public async Task<string?> GetProductNameByWorkOrderAsync(string productionCode)
+    {
+        string? cookie = await GetCookieFromDbAsync();
+        if (cookie == null)
+            throw new SakuraCodedException("odoo.cookieNotConfigured", "Odoo cookie not configured. Please update SVN_Defect_Cookie table.");
+
+        var record = await SearchProductionRecordAsync(productionCode, cookie);
+        return record == null ? null : GetProductDescription(record.Value);
+    }
+
     // Tra WO -> lấy product_id (dùng lại SearchAsync) -> gọi product.product/read để lấy
     // mã EAN (x_custcode). Dùng cho bước "Check EAN" ở Process (SnLabel): người vận hành
     // quét mã EAN trên sản phẩm, so khớp với mã trả về từ Odoo.

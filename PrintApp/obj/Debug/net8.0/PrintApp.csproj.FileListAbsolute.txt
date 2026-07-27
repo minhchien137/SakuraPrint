@@ -408,6 +408,22 @@ C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\sakura-build-check6\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck2\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
@@ -479,3 +495,59 @@ D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dl
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck3\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck4\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck5\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck6\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck7\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck8\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\claude\D--PrintService-Sakura-MiddleCheck-\bd7d7bf4-201d-477e-adc3-5f81819acb22\scratchpad\buildcheck9\PrintApp.pdb

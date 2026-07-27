@@ -22,3 +22,4 @@ ELSE IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.S
 BEGIN
     ALTER TABLE dbo.SM_Sakura_PalletInfoTemplate ADD PoNumber NVARCHAR(100) NOT NULL DEFAULT '';
 END
+

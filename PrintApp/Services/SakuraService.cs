@@ -1305,13 +1305,40 @@ public class SakuraService
 
     // ── Direct TCP send (raw port 9100) ──────────────────────────────────────
 
-    public async Task SendZplAsync(string host, int port, string zpl)
+    // connectTimeoutMs/maxAttempts có default để KHÔNG đổi hành vi các nơi gọi cũ (SnLabel
+    // DirectTcp) — chỉ khác là giờ fail nhanh (5s) + tự retry thay vì treo ~21s theo timeout
+    // mặc định của OS rồi fail hẳn 1 lần (xem log timeout dài ở ExternalPrintController).
+    public async Task SendZplAsync(string host, int port, string zpl, int connectTimeoutMs = 5000, int maxAttempts = 3)
     {
-        using var client = new TcpClient();
-        await client.ConnectAsync(host, port);
-        using var stream = client.GetStream();
         byte[] bytes = Encoding.UTF8.GetBytes(zpl);
-        await stream.WriteAsync(bytes, 0, bytes.Length);
+        Exception? lastError = null;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            using var client = new TcpClient();
+            using var cts = new CancellationTokenSource(connectTimeoutMs);
+            try
+            {
+                await client.ConnectAsync(host, port, cts.Token);
+                using var stream = client.GetStream();
+                await stream.WriteAsync(bytes, 0, bytes.Length);
+                return;
+            }
+            catch (Exception ex)
+            {
+                string reason = ex is OperationCanceledException
+                    ? $"Connect timeout sau {connectTimeoutMs}ms"
+                    : ex is SocketException se
+                        ? $"{ex.Message} (SocketErrorCode: {se.SocketErrorCode})"
+                        : ex.Message;
+                lastError = new Exception($"Lần thử {attempt}/{maxAttempts} tới {host}:{port} thất bại — {reason}", ex);
+
+                if (attempt < maxAttempts)
+                    await Task.Delay(500);
+            }
+        }
+
+        throw lastError!;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

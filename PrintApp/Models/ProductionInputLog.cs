@@ -8,8 +8,11 @@ namespace PrintApp.Models;
 [Table("SVN_ProductionInputLogs")]
 public class ProductionInputLog
 {
+    // Cột "id" trong SVN_ProductionInputLogs là INT (không phải BIGINT) — phải khớp đúng kiểu
+    // này, nếu không EF Core sẽ ném "Unable to cast object of type 'System.Int32' to type
+    // 'System.Int64'" ngay khi query nào đó materialize nguyên entity (không chỉ .Select() projection).
     [Key]
-    public long Id { get; set; }
+    public int Id { get; set; }
 
     [Column("serial_code")]
     public string? SerialCode { get; set; }
@@ -26,4 +29,9 @@ public class ProductionInputLog
     // khoảng ngày với bộ lọc trên bảng Middle, thay vì luôn tính trên toàn bộ lịch sử WO.
     [Column("date_finished")]
     public DateTime? DateFinished { get; set; }
+
+    // Số lượng đã nhập cho đúng dòng log này (= Lot Qty cho tem LotWip khi tra theo
+    // serial_code, xem ExternalPrintController).
+    [Column("product_qty")]
+    public decimal? ProductQty { get; set; }
 }

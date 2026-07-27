@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<CartonSnScanLog> CartonSnScanLogs { get; set; }
     public DbSet<SmPrinterInfo> SmPrinterInfos { get; set; }
     public DbSet<PalletInfoTemplate> PalletInfoTemplates { get; set; }
+    public DbSet<ExternalPrintQueueItem> ExternalPrintQueueItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -506,9 +506,6 @@
                         </div>
                         <button type="button" class="t-btn t-btn-outline" id="btnManagePallet" data-i18n="cartonsn.managePalletBtn" style="min-height:40px">⚙️ Pallet Manage</button>
                         <button type="button" class="t-btn t-btn-primary" id="btnPrintPalletLabel" data-i18n="cartonsn.printPalletLabelBtn" style="min-height:40px">🖨️ Print Pallet Label</button>
-                        <!-- TEMP TEST — gọi thẳng API /pallet/print, bỏ qua check bridge/máy in,
-                             không gửi bridge (chỉ tải .zpl). Xoá nút này sau khi test xong. -->
-                        <button type="button" class="t-btn t-btn-outline" id="btnTestPrintPalletLabel" style="min-height:40px">🧪 Test Print Pallet (no printer)</button>
                     </div>
                     <div id="palletStatus" class="t-status"></div>
                 </fieldset>
@@ -660,13 +657,8 @@
 
                 <div class="t-actions" style="margin-top:18px">
                     <!-- Quét đủ số ô Serial Number là tự động in luôn (xem handleSerialInput) —
-                         ẩn cả nút Print lẫn Preview ZPL, không cần bấm gì thêm. -->
+                         ẩn nút Print, không cần bấm gì thêm. -->
                     <button type="button" class="t-btn t-btn-primary" id="btnPrint" data-i18n="cartonsn.printBtn" style="display:none">🖨️ Print Carton Label</button>
-                    <!-- TEMP TEST — hiện tạm nút Preview ZPL để test không cần máy in/bridge hoạt
-                         động (previewZpl() vẫn lưu DB + gom Pallet như in thật, chỉ không gửi
-                         bridge). Bỏ data-i18n tạm để giữ nguyên chữ test này; khi revert thì đổi
-                         lại thành style="display:none" data-i18n="cartonsn.previewZplBtn" như cũ. -->
-                    <button type="button" class="t-btn t-btn-outline" id="btnPreviewZpl">📄 Preview ZPL (Test - no printer needed)</button>
                 </div>
                 <div id="printStatus" class="t-status"></div>
             </div>
@@ -1017,7 +1009,7 @@
         } else {
             // Đã chọn 1 template có sẵn (hoặc chưa chọn gì) -> ẩn 4 field này đi, khỏi lặp lại
             // dữ liệu người dùng đã thấy trong modal Manage Templates. Vẫn gán .value bình thường
-            // (dù input đang ẩn) để doPrintPalletLabel()/doTestPrintPalletLabel() đọc đúng giá trị.
+            // (dù input đang ẩn) để doPrintPalletLabel() đọc đúng giá trị.
             $palletManualFieldsWrap.style.display = 'none';
             const tpl = value ? palletTemplates.find(x => String(x.id) === String(value)) : null;
             $poNumber.value = tpl ? (tpl.poNumber || '') : '';
@@ -1195,7 +1187,7 @@
     }
 
     // Chặn in khi chưa chọn Template (hoặc ở chế độ Manual mà 3 field còn trống) / chưa nhập PO
-    // Number — gọi từ cả doPrintPalletLabel() lẫn doTestPrintPalletLabel().
+    // Number — gọi từ doPrintPalletLabel().
     function validatePalletInfoFields() {
         const templateValue = $palletTemplateSelect.value;
         if (!templateValue) return t('cartonsn.templateSelectRequired', 'Please select (or create) an Info Template before printing.');
@@ -1457,57 +1449,6 @@
 
     $btnPrintPalletLabel.addEventListener('click', doPrintPalletLabel);
 
-    // TEMP TEST — bản rút gọn của doPrintPalletLabel(), bỏ check bridgeOnline/isPrinterConfigured
-    // và KHÔNG gửi bridge (luôn tải file .zpl) để test được "chốt pallet" (sinh Pallet Number,
-    // lưu DB, reset Pallet ID/badge) khi máy in/Local Bridge đang lỗi. Xoá hẳn function này +
-    // nút #btnTestPrintPalletLabel trong HTML sau khi test xong.
-    const $btnTestPrintPalletLabel = document.getElementById('btnTestPrintPalletLabel');
-    async function doTestPrintPalletLabel() {
-        const palletId = $palletId.value.trim();
-        if (!palletId) {
-            showStatus($palletStatus, `✗ ${t('cartonsn.managePalletIdRequired', 'Enter a Pallet ID first.')}`, 'err');
-            return;
-        }
-        if (!woResolvedOk || !resolvedColor) {
-            showStatus($palletStatus, `✗ ${t('cartonsn.woLookupRequired', 'Look up a Work Order first.')}`, 'err');
-            return;
-        }
-        const palletInfoError = validatePalletInfoFields();
-        if (palletInfoError) {
-            showStatus($palletStatus, `✗ ${palletInfoError}`, 'err');
-            return;
-        }
-
-        $btnTestPrintPalletLabel.disabled = true;
-        try {
-            const res = await fetch(`${BASE}/api/sakura/cartonsn/pallet/print`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    palletId,
-                    poNumber: $poNumber.value.trim(),
-                    inboundReference: $inboundReference.value.trim(),
-                    warehouseReference: $warehouseReference.value.trim(),
-                    deliveryAddress: $deliveryAddress.value.trim()
-                })
-            });
-            const body = await res.json();
-            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printPalletFailed', 'Print Pallet Label failed.')));
-
-            downloadZplFile(body.zpl, `pallet-${body.palletNumber}-TEST.zpl`);
-            $palletId.value = '';
-            localStorage.removeItem(LS_PALLET.id);
-            $palletBoxCount.textContent = '0';
-            updateCartonNumberLock(); // Pallet ID vừa xoá -> khoá lại Carton Number/Serial Number
-            showStatus($palletStatus, `✓ [TEST] Pallet label generated (${body.palletNumber}, ${body.quantityCartons} carton(s) / ${body.quantityUnits} unit(s)) — no printer used, downloaded .zpl instead.`, 'ok');
-        } catch (e) {
-            showStatus($palletStatus, `✗ ${e.message}`, 'err');
-        } finally {
-            $btnTestPrintPalletLabel.disabled = false;
-        }
-    }
-    $btnTestPrintPalletLabel.addEventListener('click', doTestPrintPalletLabel);
-
     // Carton Number không được trùng — mỗi carton là 1 định danh vật lý riêng, đã in rồi thì
     // không cho nhập lại. Check ngay khi bấm Enter (trước khi nhảy focus sang ô SN đầu tiên),
     // trùng thì báo lỗi + reset ô + focus lại để nhập cái khác (build-zpl vẫn re-check lại lần
@@ -1709,7 +1650,6 @@
     const CARTON_REAL_PRINT_ENABLED = true;
 
     const $btnPrint  = document.getElementById('btnPrint');
-    const $btnPreviewZpl = document.getElementById('btnPreviewZpl');
     const $printStatus = document.getElementById('printStatus');
 
     function isPrinterConfigured() {
@@ -1763,9 +1703,8 @@
         return Array.from($serialGrid.querySelectorAll('input')).map(inp => inp.value.trim());
     }
 
-    // Đọc + validate Work Order/Carton Number trước khi gọi API build ZPL — dùng chung cho cả
-    // Print lẫn Preview ZPL (Preview không cần bridge/máy in, chỉ cần build+xem ZPL). Color giờ
-    // lấy tự động từ Work Order lookup (resolvedColor), Condition tạm cố định "New".
+    // Đọc + validate Work Order/Carton Number trước khi gọi API build ZPL. Color giờ lấy tự
+    // động từ Work Order lookup (resolvedColor), Condition tạm cố định "New".
     function readCartonFormOrNull() {
         const cartonNumber = $cartonNumber.value.trim();
 
@@ -1785,42 +1724,6 @@
         }
         return { workOrder: $workOrder.value.trim(), cartonNumber, color: resolvedColor, condition: CARTON_FIXED_CONDITION, palletId: $palletId.value.trim() };
     }
-
-    // Xem/tải ZPL sau khi đã thay biến — gọi thẳng server build ZPL, KHÔNG cần Local Bridge
-    // hay máy in kết nối (vd đang test ở nhà, không có mạng tới máy in) — chỉ để kiểm tra
-    // nội dung ZPL cuối cùng trước khi in thật.
-    async function previewZpl() {
-        const form = readCartonFormOrNull();
-        if (!form) return;
-
-        $btnPreviewZpl.disabled = true;
-        try {
-            const res = await fetch(`${BASE}/api/sakura/cartonsn/print`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, serialNumbers: getOrderedSerials() })
-            });
-            const body = await res.json();
-            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.printFailed', 'Print failed.')));
-
-            downloadZplFile(body.zpl, `carton-${form.cartonNumber}-preview.zpl`);
-
-            // Theo yêu cầu hiện tại (đang giai đoạn test, chưa in tem thật) — Preview ZPL cũng
-            // tính là đã "in xong": lưu DB + reset Carton Number/Serial Number, y hệt luồng in
-            // thật (doPrint). Nút Print thật đang ẩn nên đây là cách duy nhất để test hết luồng.
-            const result = await finishSuccessfulPrint(form);
-            const reportOk = !!result;
-            let reportWarning = reportOk ? '' : ` ⚠ ${t('cartonsn.reportResultFailed', 'Could not save the scan record to the server.')}`;
-            if (reportOk && result.palletAttachWarning) reportWarning += ` ⚠ ${result.palletAttachWarning}`;
-            showStatus($printStatus, `✓ ${t('cartonsn.zplPreviewReady', 'ZPL preview downloaded — no printer needed to check it.')}${reportWarning}`, reportOk ? 'ok' : 'err');
-        } catch (e) {
-            showStatus($printStatus, `✗ ${e.message}`, 'err');
-        } finally {
-            $btnPreviewZpl.disabled = false;
-        }
-    }
-
-    $btnPreviewZpl.addEventListener('click', previewZpl);
 
     // Lưu các serial không rỗng vào DB (SM_Sakura_CartonLabel_Data) — CHỈ gọi sau khi ZPL coi
     // như đã "in xong" (bridge thành công, hoặc Preview theo yêu cầu test hiện tại). Gửi kèm
@@ -1846,8 +1749,7 @@
     // cộng dồn cục bộ — có thể trạm khác cũng đang in cùng WO này) để lấy đúng Qty Print/Remain
     // thật từ server. lookupWorkOrder() tự lo xóa/khóa Carton Number + Serial Number rồi mở lại +
     // build đúng số ô cho carton kế tiếp nếu WO còn hàng (xem resetWoState()) — nếu WO đã hết thì
-    // giữ nguyên khóa + hiện thông báo, không cần code gì thêm ở đây. Dùng chung cho cả doPrint
-    // (in thật) lẫn previewZpl (đang test, xem mục đích ở previewZpl()).
+    // giữ nguyên khóa + hiện thông báo, không cần code gì thêm ở đây.
     async function finishSuccessfulPrint(form) {
         const result = await reportCartonPrintResult(form, getOrderedSerials());
         if (result && result.pallet) setPalletBoxCount(result.pallet.boxCount);
