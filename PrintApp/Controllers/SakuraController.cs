@@ -1222,6 +1222,11 @@ public class SakuraController : Controller
                 req.PalletId?.Trim() ?? "", req.PoNumber?.Trim() ?? "", req.InboundReference?.Trim() ?? "",
                 req.WarehouseReference?.Trim() ?? "", req.DeliveryAddress?.Trim() ?? "");
 
+            // In kèm tem PDF417 (toàn bộ serial của pallet) mỗi khi tem Pallet được in — xem
+            // SakuraService.BuildPdf417LabelZplsAsync. Có thể trả về nhiều tem nếu pallet vượt
+            // quá 240 serial (4 mã PDF417 x 60 SN/tem).
+            var pdf417Zpls = await _snLabel.BuildPdf417LabelZplsAsync(req.PalletId?.Trim() ?? "");
+
             return Ok(new
             {
                 ok = true,
@@ -1229,7 +1234,8 @@ public class SakuraController : Controller
                 palletNumber = result.PalletNumber,
                 quantityCartons = result.QuantityCartons,
                 quantityUnits = result.QuantityUnits,
-                color = result.Color
+                color = result.Color,
+                pdf417Zpls
             });
         }
         catch (ArgumentException ex)

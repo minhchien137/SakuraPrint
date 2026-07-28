@@ -673,6 +673,82 @@ public class SakuraService
         return (zpl, palletNumber, quantityCartons, quantityUnits, color);
     }
 
+    // ── Tem PDF417 đi kèm tem Pallet — mỗi lần in tem Pallet (BuildPalletLabelZplAsync) thì in
+    // kèm luôn tem này, gồm TOÀN BỘ serial của pallet mã hoá vào các mã PDF417 (theo thiết kế
+    // template "Pdf417Label": tối đa 4 mã PDF417/tem, mỗi mã chứa tối đa 60 serial nối bằng dấu
+    // phẩy). Nối serial của các carton theo ScanDate tăng dần (carton quét trước xếp trước).
+    // Nếu tổng serial > 240 (4x60) thì in thêm tem PDF417 tiếp theo (mỗi phần tử trả về = 1 tem
+    // vật lý riêng, gửi in tuần tự).
+    private const int Pdf417SerialsPerCode = 60;
+    private const int Pdf417CodesPerLabel = 4;
+
+    public async Task<List<string>> BuildPdf417LabelZplsAsync(string palletId)
+    {
+        if (string.IsNullOrWhiteSpace(palletId))
+            throw new SakuraValidationException("cartonLabel.pallet.palletIdMissing", "Thiếu Pallet ID.");
+
+        var rows = await _context.CartonSnScanLogs
+            .AsNoTracking()
+            .Where(x => x.PalletId == palletId)
+            .OrderBy(x => x.ScanDate)
+            .ToListAsync();
+
+        if (rows.Count == 0)
+            throw new SakuraValidationException("cartonLabel.pallet.noBoxesScanned", $"Pallet ID '{palletId}' chưa có thùng nào được quét vào.", new { palletId });
+
+        var allSerials = rows
+            .Where(x => !string.IsNullOrWhiteSpace(x.Serial))
+            .SelectMany(x => x.Serial.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(s => s.Length > 0)
+            .ToList();
+
+        if (allSerials.Count == 0)
+            return new List<string>();
+
+        string template = await GetZplTemplateAsync("Pdf417Label");
+        int serialsPerLabel = Pdf417SerialsPerCode * Pdf417CodesPerLabel; // 240
+        var zpls = new List<string>();
+
+        for (int offset = 0; offset < allSerials.Count; offset += serialsPerLabel)
+        {
+            var labelSerials = allSerials.Skip(offset).Take(serialsPerLabel).ToList();
+            string zpl = template;
+            for (int code = 0; code < Pdf417CodesPerLabel; code++)
+            {
+                var codeSerials = labelSerials.Skip(code * Pdf417SerialsPerCode).Take(Pdf417SerialsPerCode);
+                string csv = string.Join(",", codeSerials);
+                zpl = RemoveOrFillPdf417Field(zpl, $"{{pdf417_{code + 1}}}", csv);
+            }
+            zpls.Add(zpl);
+        }
+
+        return zpls;
+    }
+
+    // Điền serial vào {pdf417_N} nếu có dữ liệu; nếu KHÔNG có dữ liệu (tem cuối không lấp đầy
+    // đủ 4 mã) thì XOÁ LUÔN cả field barcode đó (dòng cấu hình ^BY... ngay phía trên + dòng
+    // ^FH\^FD{pdf417_N}^FS chứa placeholder) — để không in ra 1 mã PDF417 trống/rác trên tem.
+    private static string RemoveOrFillPdf417Field(string zpl, string placeholder, string serialsCsv)
+    {
+        if (serialsCsv.Length > 0)
+            return zpl.Replace(placeholder, serialsCsv);
+
+        var lines = zpl.Split('\n').ToList();
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (!lines[i].Contains(placeholder)) continue;
+
+            if (i > 0 && lines[i - 1].TrimStart().StartsWith("^BY", StringComparison.Ordinal))
+            {
+                lines.RemoveAt(i - 1);
+                i--;
+            }
+            lines.RemoveAt(i);
+            break;
+        }
+        return string.Join('\n', lines);
+    }
+
     // ── Pallet Info Template — preset Inbound Reference/Warehouse Reference/Delivery Address
     // để chọn nhanh ở vùng Print Pallet, khỏi gõ tay mỗi lần in (PO Number không nằm trong
     // template, luôn nhập tay riêng vì đổi theo từng pallet/lô hàng). ─────────────────────────
@@ -977,7 +1053,14 @@ public class SakuraService
             row.IsPalletReprint = true;
         await _context.SaveChangesAsync();
 
-        return new PalletReprintZplResponse { Zpl = zpl, PalletNumber = trimmed, QuantityCartons = quantityCartons, QuantityUnits = quantityUnits };
+        // In lại kèm tem PDF417 giống lần in gốc (xem BuildPdf417LabelZplsAsync) — cùng
+        // PalletId nên cùng bộ serial, không cần snapshot riêng.
+        string? palletId = rows[0].PalletId;
+        var pdf417Zpls = string.IsNullOrWhiteSpace(palletId)
+            ? new List<string>()
+            : await BuildPdf417LabelZplsAsync(palletId);
+
+        return new PalletReprintZplResponse { Zpl = zpl, PalletNumber = trimmed, QuantityCartons = quantityCartons, QuantityUnits = quantityUnits, Pdf417Zpls = pdf417Zpls };
     }
 
     // Ngày sản xuất của lần in đầu tiên cho Work Order này (null nếu chưa in lần nào).

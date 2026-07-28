@@ -606,6 +606,12 @@
             'cartonsn.noIpSet': ' No printer IP set — downloaded .zpl file instead.',
             'cartonsn.reportResultFailed': ' ⚠ Could not save the scan record to the server.',
 
+            'cartonsn.pdf417SentToUsbPrinter': ' PDF417 label{label} sent to USB printer "{name}" (Local Bridge).',
+            'cartonsn.pdf417SentToTcpPrinter': ' PDF417 label{label} sent to {ip}:{port} (Local Bridge).',
+            'cartonsn.pdf417NoUsbSelected': ' No USB printer selected — downloaded PDF417 label{label} .zpl file instead.',
+            'cartonsn.pdf417NoIpSet': ' No printer IP set — downloaded PDF417 label{label} .zpl file instead.',
+            'cartonsn.pdf417SendFailed': ' ✗ Failed to send PDF417 label{label} to printer: {error}',
+
             'cartonsn.printerConfigToggleTitle': 'Show/hide printer configuration',
             'cartonsn.savedHint': '✓ Saved',
 
@@ -1303,6 +1309,12 @@
             'cartonsn.sentToTcpPrinter': ' 已发送到 {ip}:{port}（本地服务）。',
             'cartonsn.noIpSet': ' 未设置打印机 IP — 已改为下载 .zpl 文件。',
             'cartonsn.reportResultFailed': ' ⚠ 无法将扫描记录保存到服务器。',
+
+            'cartonsn.pdf417SentToUsbPrinter': ' PDF417 标签{label}已发送到 USB 打印机 "{name}"（本地服务）。',
+            'cartonsn.pdf417SentToTcpPrinter': ' PDF417 标签{label}已发送到 {ip}:{port}（本地服务）。',
+            'cartonsn.pdf417NoUsbSelected': ' 未选择 USB 打印机 — 已改为下载 PDF417 标签{label} .zpl 文件。',
+            'cartonsn.pdf417NoIpSet': ' 未设置打印机 IP — 已改为下载 PDF417 标签{label} .zpl 文件。',
+            'cartonsn.pdf417SendFailed': ' ✗ 发送 PDF417 标签{label}到打印机失败：{error}',
 
             'cartonsn.printerConfigToggleTitle': '显示/隐藏打印机设置',
             'cartonsn.savedHint': '✓ 已保存',
