@@ -91,6 +91,8 @@
 
             'snlabel.printerServiceOffline': 'Print Service is offline — cannot print.',
             'snlabel.printerNotConnected': 'No printer connected — select a printer in Printer Configuration first.',
+            'snlabel.needSavePrinterFirst': 'Save a printer in Printer Configuration first.',
+            'snlabel.printerSelectFirst': 'Select a printer (IP or USB) first.',
 
             'snlabel.reprintLabel': 'Reprint by Serial',
             'snlabel.reprintSerialLabel': 'Serial Number',
@@ -787,6 +789,8 @@
 
             'snlabel.printerServiceOffline': '打印服务已离线 — 无法打印。',
             'snlabel.printerNotConnected': '尚未连接打印机 — 请先在打印机设置中选择打印机。',
+            'snlabel.needSavePrinterFirst': '请先在打印机设置中选择打印机并保存。',
+            'snlabel.printerSelectFirst': '请先选择打印机（IP 或 USB）。',
 
             'snlabel.reprintLabel': '按序列号补打',
             'snlabel.reprintSerialLabel': '序列号',

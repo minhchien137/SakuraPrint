@@ -221,6 +221,9 @@
     }
     .t-field input:hover, .t-field select:hover { border-color: var(--red-mid); }
     .t-field input:focus, .t-field select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .t-field input:disabled, .t-field select:disabled {
+        background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; border-color: var(--gray-200);
+    }
     .t-field select {
         appearance: none; cursor: pointer;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -241,6 +244,8 @@
     .t-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
     .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
     .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+    .t-btn:disabled:hover { transform: none; }
 
     /* "Saved" lit-up state — stays green until Reset is pressed, so it's obvious
        at a glance that the current Work Order has been saved. */
@@ -466,6 +471,7 @@
                         <button class="t-btn t-btn-ghost" id="btnSavePrinter" data-i18n="snlabel.save">Save</button>
                         <span class="snl-inline-saved" id="printerSavedHint" data-i18n="snlabel.savedHint">✓ Saved</span>
                     </div>
+                    <div id="printerConfigStatus" class="t-status"></div>
                 </div>
             </div>
 
@@ -487,12 +493,12 @@
                     <div class="t-grid t-grid-2" style="align-items:end">
                         <div class="t-field">
                             <label data-i18n="snlabel.workOrder">Work Order</label>
-                            <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="snlabel.workOrderPlaceholder" placeholder="Scan or type Work Order…" />
+                            <input type="text" id="workOrder" autocomplete="off" disabled data-i18n-placeholder="snlabel.workOrderPlaceholder" placeholder="Scan or type Work Order…" />
                         </div>
                         <div class="t-actions" style="margin-top:0">
-                            <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" data-i18n="snlabel.lookupBtn">🔍 Lookup</button>
-                            <button type="button" class="t-btn t-btn-ghost" id="btnSaveWo" data-i18n="snlabel.saveWoBtn">💾 Save</button>
-                            <button type="button" class="t-btn t-btn-ghost" id="btnResetWo" data-i18n="snlabel.resetWoBtn">✕ Reset</button>
+                            <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" disabled data-i18n="snlabel.lookupBtn">🔍 Lookup</button>
+                            <button type="button" class="t-btn t-btn-ghost" id="btnSaveWo" disabled data-i18n="snlabel.saveWoBtn">💾 Save</button>
+                            <button type="button" class="t-btn t-btn-ghost" id="btnResetWo" disabled data-i18n="snlabel.resetWoBtn">✕ Reset</button>
                         </div>
                     </div>
                     <div id="woStatus" class="t-status"></div>
@@ -555,11 +561,11 @@
                 <div class="t-grid" style="grid-template-columns:1fr">
                     <div class="t-field">
                         <label data-i18n="snlabel.ean">EAN</label>
-                        <input type="text" id="eanInput" autocomplete="off" data-i18n-placeholder="snlabel.eanPlaceholder" placeholder="Scan or type EAN…" />
+                        <input type="text" id="eanInput" autocomplete="off" disabled data-i18n-placeholder="snlabel.eanPlaceholder" placeholder="Scan or type EAN…" />
                     </div>
                     <div class="t-field">
                         <label data-i18n="snlabel.serialNumber">Serial Number</label>
-                        <input type="text" id="snInput" autocomplete="off" data-i18n-placeholder="snlabel.serialNumberPlaceholder" placeholder="Scan or type Serial Number…" />
+                        <input type="text" id="snInput" autocomplete="off" disabled data-i18n-placeholder="snlabel.serialNumberPlaceholder" placeholder="Scan or type Serial Number…" />
                     </div>
                 </div>
 
@@ -724,6 +730,8 @@
     const $copies      = document.getElementById('copies');
     const $btnSavePrinter = document.getElementById('btnSavePrinter');
     const $printerSavedHint = document.getElementById('printerSavedHint');
+    const $printerConfigStatus = document.getElementById('printerConfigStatus');
+    let printerSaved = false; // true once a printer has been chosen AND Save clicked — gates the Work Order field
 
     const $nodeDot = document.getElementById('nodeDot');
     const $nodeTxt = document.getElementById('nodeTxt');
@@ -893,10 +901,9 @@
     function lockForRetry(serial, stage, message) {
         pendingRetrySerial = serial;
         pendingRetryStage = stage;
-        $eanInput.disabled = true;
-        $snInput.disabled = true;
         $btnSnlTryAgain.title = message; // hiện đầy đủ lý do khi hover, giữ hàng gọn
         $snlRetryBox.style.display = 'flex';
+        updateEanSerialLock();
     }
 
     function unlockRetry() {
@@ -904,9 +911,8 @@
         pendingRetryStage = null;
         pendingRetryZpl = null;
         pendingRetryLogId = null;
-        $eanInput.disabled = false;
-        $snInput.disabled = false;
         $snlRetryBox.style.display = 'none';
+        updateEanSerialLock();
     }
 
     function resetVerifyState() {
@@ -955,6 +961,28 @@
         const printerReady = bridgeOnline && isPrinterConfigured();
         updatePrinterHint(printerReady);
         $btnReprint.disabled = !printerReady;
+    }
+
+    // ── Flow gate 1: Printer Configuration must be saved before Work Order can
+    // be touched at all. ────────────────────────────────────────────────────
+    function setWorkOrderLocked(locked) {
+        $workOrder.disabled = locked;
+        $btnLookupWo.disabled = locked;
+        $btnSaveWo.disabled = locked;
+        $btnResetWo.disabled = locked;
+        if (locked) {
+            showStatus($woStatus, `⚠ ${t('snlabel.needSavePrinterFirst', 'Save a printer in Printer Configuration first.')}`, 'err');
+        } else {
+            $woStatus.className = 't-status';
+        }
+    }
+
+    // ── Flow gate 2: EAN + Serial Number stay locked until the Work Order has
+    // been looked up successfully (also re-locked while a retry is pending). ──
+    function updateEanSerialLock() {
+        const locked = !woResolvedOk || !!pendingRetrySerial;
+        $eanInput.disabled = locked;
+        $snInput.disabled = locked;
     }
 
     function setMode(mode) {
@@ -1065,6 +1093,7 @@
             $woRemaining.textContent = body.data.remainingQuantity;
             $woResolved.style.display = 'flex';
             woResolvedOk = true;
+            updateEanSerialLock(); // WO hợp lệ -> mở khóa EAN + Serial Number
 
             const lookupMsg = t('snlabel.woLookupSuccess', '{color} — {qty} pcs remaining.')
                 .replace('{color}', body.data.color).replace('{qty}', body.data.remainingQuantity);
@@ -1098,17 +1127,26 @@
 
     // ── Save / Reset Work Order — Save ghi WO hiện tại vào localStorage để lần
     // sau mở trang tự điền + lookup lại; Reset xóa ô nhập và mọi state đã resolve.
-    $btnSaveWo.addEventListener('click', () => {
+    $btnSaveWo.addEventListener('click', async () => {
         const wo = $workOrder.value.trim();
         if (!wo) {
             showStatus($woStatus, `✗ ${t('snlabel.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
             return;
         }
         localStorage.setItem(LS_WO_KEY, wo);
+        $btnSaveWo.classList.add('is-saved');
+
+        // Chưa lookup WO này (VD gõ tay rồi bấm Save luôn, không qua Enter/Lookup) —
+        // Save cũng tự lookup luôn, xong tự trỏ focus xuống EAN như khi bấm Enter.
+        if (!woResolvedOk) {
+            await lookupWorkOrder();
+            return;
+        }
+
         showStatus($woStatus, `✓ ${t('snlabel.woSavedMsg', 'Work Order saved.')}`, 'ok');
         clearTimeout(woStatusHideTimer);
         woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
-        $btnSaveWo.classList.add('is-saved');
+        $eanInput.focus();
     });
 
     $btnResetWo.addEventListener('click', () => {
@@ -1554,13 +1592,21 @@
         if (v(LS.copies)) $copies.value = v(LS.copies);
         setPrintMode(v(LS.mode) === 'usb' ? 'usb' : 'tcp');
 
-        // Đã từng Save trước khi F5 -> hiện lại đèn "✓ Saved" ngay (không chờ bấm lại Save).
+        // Đã từng Save trước khi F5 -> hiện lại đèn "✓ Saved" ngay (không chờ bấm lại Save),
+        // và mở khóa luôn Work Order (không bắt bấm lại Save mỗi lần F5).
         if (v(LS.saved) === '1') {
             $printerSavedHint.classList.add('show');
+            printerSaved = true;
         }
+        setWorkOrderLocked(!printerSaved);
     }
 
     $btnSavePrinter.addEventListener('click', () => {
+        if (!isPrinterConfigured()) {
+            showStatus($printerConfigStatus, `✗ ${t('snlabel.printerSelectFirst', 'Select a printer (IP or USB) first.')}`, 'err');
+            return;
+        }
+
         localStorage.setItem(LS.ip, $printerIp.value.trim());
         localStorage.setItem(LS.port, $printerPort.value.trim());
         localStorage.setItem(LS.copies, $copies.value.trim());
@@ -1569,6 +1615,9 @@
 
         // Giữ nguyên "✓ Saved" cho tới khi refresh trang — không tự ẩn.
         $printerSavedHint.classList.add('show');
+        $printerConfigStatus.className = 't-status';
+        printerSaved = true;
+        setWorkOrderLocked(false); // mở khóa Work Order — bước tiếp theo trong luồng
     });
 
     // Browser → local bridge (localhost:8021) → printer, same flow as Toast / FQC pages.
@@ -1697,17 +1746,20 @@
 
     // ── init ──────────────────────────────────────────────────────────────────
     setPrinterConfigOpen(false);
-    loadPrinterConfig();
+    loadPrinterConfig(); // cũng quyết định luôn Work Order có bị khóa hay không (xem printerSaved)
+    updateEanSerialLock(); // mặc định khóa cho tới khi Work Order lookup thành công
     loadStatus();
     setMode('wo'); // Work Order is always the default mode on page load
 
-    // Khôi phục WO đã Save lần trước (nếu có) và tự lookup lại luôn.
+    // Khôi phục WO đã Save lần trước (nếu có). Chỉ tự lookup lại (và focus WO) nếu
+    // Printer Configuration cũng đã Save từ trước — nếu chưa thì WO vẫn đang khóa,
+    // phải Save Printer trước theo đúng luồng.
     const savedWo = localStorage.getItem(LS_WO_KEY);
     if (savedWo) {
         $workOrder.value = savedWo;
         $btnSaveWo.classList.add('is-saved');
-        lookupWorkOrder();
-    } else {
+        if (printerSaved) lookupWorkOrder();
+    } else if (printerSaved) {
         $workOrder.focus();
     }
 })();
