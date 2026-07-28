@@ -885,6 +885,7 @@
         woRemainingQuantity = null;
         expectedQuantityThisCarton = null;
         resolvedPalletId = null;
+        palletLockedForMissingTemplate = false; // WO mới -> không giữ lại khoá thiếu Template của WO trước.
         $woResolved.style.display = 'none';
 
         // Chưa có Work Order hợp lệ (WO đã in hết, chưa lookup, hoặc đang gõ WO khác) -> không
@@ -955,8 +956,9 @@
             showStatus($woStatus, `✓ ${lookupMsg}`, 'ok');
             woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
 
-            // Pallet ID giờ tự resolve xong luôn ở trên -> nhảy thẳng xuống Carton Number.
-            $cartonNumber.focus();
+            // Lookup xong -> bắt chọn Pallet Info Template trước (Carton Number chỉ nhận focus
+            // sau khi đã chọn Template — xem $palletTemplateSelect 'change'/$btnSavePalletInfo).
+            $palletTemplateSelect.focus();
         } catch (e) {
             // Lookup fail (vd WO đã in đủ số lượng) -> Carton Number/Serial Number vẫn đang khóa
             // (resetWoState() ở đầu hàm) — chỉ hiện thông báo + gợi ý đổi WO, KHÔNG tự làm gì
@@ -990,6 +992,8 @@
         clearTimeout(woStatusHideTimer);
         woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
         $btnSaveWo.classList.add('is-saved');
+        // Cùng đích focus với lookupWorkOrder() thành công — bắt chọn Pallet Info Template tiếp.
+        $palletTemplateSelect.focus();
     });
 
     $btnResetWo.addEventListener('click', () => {
@@ -1076,6 +1080,14 @@
         if (raw) localStorage.setItem(LS_PALLET.autoPrintTarget, raw);
         else localStorage.removeItem(LS_PALLET.autoPrintTarget);
         updatePrintPalletButtonState();
+
+        // Set Auto Print At mà chưa chọn (hoặc chưa điền đủ) Pallet Info Template -> nhắc ngay,
+        // tránh tới đúng lúc đủ target mới phát hiện thiếu Template (mất mốc target chính xác —
+        // xem lockCartonNumberForMissingTemplate()).
+        if (raw && validatePalletInfoFields()) {
+            showStatus($palletStatus, `⚠ ${t('cartonsn.palletAutoPrintNeedsTemplate', 'Select (or finish filling in) a Pallet Info Template first — Auto Print At needs it ready before the target is reached.')}`, 'err');
+            $palletTemplateSelect.focus();
+        }
     });
 
     // Save/Reset Pallet Info — cùng pattern với Save/Reset Work Order: bấm Save thì nút chuyển
@@ -1092,6 +1104,7 @@
         showStatus($palletStatus, `✓ ${t('cartonsn.savedMsg', '✓ Saved.')}`, 'ok');
         setTimeout(() => hideStatus($palletStatus), 3000);
         $btnSavePalletInfo.classList.add('is-saved');
+        $cartonNumber.focus();
     });
 
     $btnResetPalletInfo.addEventListener('click', () => {
@@ -1120,7 +1133,11 @@
         localStorage.removeItem(LS_PALLET.savedFlag);
     }
     [$poNumber, $inboundReference, $warehouseReference, $deliveryAddress].forEach(el => {
-        el.addEventListener('input', clearPalletSavedFlag);
+        el.addEventListener('input', () => {
+            clearPalletSavedFlag();
+            recheckMissingTemplateLock();
+            updateCartonNumberLock(); // Manual field vừa đổi -> tính lại đã đủ 4 field chưa, khoá/mở Carton Number tương ứng.
+        });
     });
     $palletTemplateSelect.addEventListener('change', clearPalletSavedFlag);
 
@@ -1189,10 +1206,23 @@
     }
 
     // Chỉ áp dụng lên form ngay (để build ZPL/in được luôn) — LƯU lựa chọn này lại (để lần sau
-    // mở trang tự khôi phục) chỉ xảy ra khi bấm nút 💾 Save Info, giống Pallet ID.
+    // mở trang tự khôi phục) chỉ xảy ra khi bấm nút 💾 Save Info, giống Pallet ID. Đã chọn xong
+    // Template (bất kể chọn gì) -> nhảy focus xuống Carton Number luôn, tiếp tục luồng quét.
     $palletTemplateSelect.addEventListener('change', () => {
         applyTemplateSelection($palletTemplateSelect.value);
+        recheckMissingTemplateLock();
+        updateCartonNumberLock(); // Template chưa hợp lệ (VD chọn Manual nhưng chưa điền đủ) -> khoá lại Carton Number ngay.
+        $cartonNumber.focus();
     });
+
+    // Đang bị khoá Carton Number vì thiếu Template (xem lockCartonNumberForMissingTemplate()) mà
+    // giờ đã chọn/điền đủ Template hợp lệ -> mở khoá lại ngay, không bắt phải bấm tay Print
+    // Pallet Label mới mở khoá.
+    function recheckMissingTemplateLock() {
+        if (palletLockedForMissingTemplate && !validatePalletInfoFields()) {
+            unlockCartonNumberForMissingTemplate();
+        }
+    }
 
     // Modal "Manage Info Templates" — CRUD template dùng cho dropdown ở trên.
     const $palletTemplateManageOverlay = document.getElementById('palletTemplateManageOverlay');
@@ -1353,11 +1383,33 @@
         } catch (e) { /* chỉ là badge hiển thị — im lặng bỏ qua lỗi mạng, không chặn thao tác khác */ }
     }
 
-    // Carton Number chỉ mở khi WO đã resolve (Pallet ID lúc này cũng đã tự resolve xong cùng
-    // lúc — xem lookupWorkOrder()), không cho nhảy cóc xuống quét Carton Number/Serial Number
-    // khi chưa có Work Order hợp lệ.
+    // Pallet vừa đủ/vượt "Auto Print At" nhưng KHÔNG in được vì thiếu Pallet Info Template
+    // (xem autoExecutePalletPrint()) -> khoá Carton Number/Serial Number lại ngay, không cho
+    // quét thêm carton nữa. Lý do: nếu cứ cho quét tiếp, số thùng sẽ vượt quá mốc target đã set
+    // (VD set 64 nhưng tới lúc chọn xong Template thì đã lỡ 65-66...), mất luôn ý nghĩa "đúng
+    // 64 thùng 1 pallet". Bắt buộc chọn Template xong rồi tự bấm tay Print Pallet Label — xem
+    // unlockCartonNumberForMissingTemplate() (gọi khi chọn lại Template hợp lệ, hoặc in xong).
+    let palletLockedForMissingTemplate = false;
+
+    function lockCartonNumberForMissingTemplate(message) {
+        palletLockedForMissingTemplate = true;
+        showStatus($palletStatus, `✗ ${message}`, 'err');
+        updateCartonNumberLock();
+    }
+
+    function unlockCartonNumberForMissingTemplate() {
+        if (!palletLockedForMissingTemplate) return;
+        palletLockedForMissingTemplate = false;
+        updateCartonNumberLock();
+    }
+
+    // Carton Number chỉ mở khi: WO đã resolve (Pallet ID lúc này cũng đã tự resolve xong cùng
+    // lúc — xem lookupWorkOrder()), KHÔNG đang bị khoá vì thiếu Template lúc vừa đạt Auto Print
+    // At ở trên, VÀ đã chọn (chọn sẵn xong, hoặc Manual + điền đủ 4 field) Pallet Info Template —
+    // validatePalletInfoFields() trả về null nghĩa là hợp lệ. Bắt chọn Template TRƯỚC khi cho
+    // quét carton, tránh quét xong hết mới phát hiện thiếu Template lúc in.
     function cartonNumberPrereqOk() {
-        return woResolvedOk && !!resolvedPalletId;
+        return woResolvedOk && !!resolvedPalletId && !palletLockedForMissingTemplate && !validatePalletInfoFields();
     }
     function updateCartonNumberLock() {
         const unlocked = cartonNumberPrereqOk();
@@ -1574,6 +1626,9 @@
             // 1 WO chỉ có ĐÚNG 1 Pallet ID mãi mãi -> KHÔNG reset gì sau khi in (khác hành vi cũ
             // "chốt pallet xong thì bắt đầu pallet mới"). Carton tiếp theo (nếu còn) vẫn tiếp tục
             // gom vào đúng Pallet ID này; in lại chỉ là cập nhật/tái tạo đúng tem đã có.
+            // In xong (dù gửi máy in fail, ZPL đã build được nghĩa là Template hợp lệ) -> mở khoá
+            // Carton Number nếu trước đó đang bị khoá vì thiếu Template.
+            unlockCartonNumberForMissingTemplate();
             showStatus($palletStatus, msg, statusType);
         } catch (e) {
             showStatus($palletStatus, `✗ ${e.message}`, 'err');
@@ -1933,13 +1988,13 @@
         }
     }
 
-    // Check tối thiểu (bỏ qua check WO/Color — lúc gọi từ nhánh "WO đã hết carton" ở trên,
-    // woResolvedOk/resolvedColor CHẮC CHẮN đang null, đó là điều kiện gọi, không phải lỗi) trước
-    // khi tự in — vẫn cần Info Template hợp lệ + bridge/máy in sẵn sàng như in tay.
+    // Đã đủ/vượt "Auto Print At" — cần Info Template hợp lệ + bridge/máy in sẵn sàng như in tay.
+    // Thiếu Template -> KHÔNG chỉ báo lỗi mà còn khoá Carton Number/Serial Number lại luôn (xem
+    // lockCartonNumberForMissingTemplate()), tránh quét thêm carton làm lệch mất đúng mốc target.
     async function autoExecutePalletPrint(palletId, notice) {
         const palletInfoError = validatePalletInfoFields();
         if (palletInfoError) {
-            showStatus($palletStatus, `✗ ${palletInfoError}`, 'err');
+            lockCartonNumberForMissingTemplate(palletInfoError);
             return;
         }
         if (!bridgeOnline || !isPrinterConfigured()) {
