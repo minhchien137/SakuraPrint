@@ -1156,7 +1156,8 @@ public class SakuraController : Controller
                 CartonNumber = x.CartonNumber,
                 Color = x.Color,
                 CountSerial = x.CountSerial,
-                PalletId = x.PalletId
+                PalletId = x.PalletId,
+                Serial = x.Serial
             }).ToList()
         };
 

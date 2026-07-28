@@ -17,7 +17,7 @@ public class PalletUnscanBoxRequest
     public string CartonNumber { get; set; } = "";
 }
 
-// 1 dòng trong bảng "Quản lý Pallet" — cột hiển thị: ID | Serial (= CartonNumber) | Pallet ID | Xóa.
+// 1 dòng trong bảng "Quản lý Pallet" — cột hiển thị: ID | Carton Number | Serial Number | Pallet ID | Xóa.
 public class PalletBoxDto
 {
     public int Id { get; set; }
@@ -25,6 +25,10 @@ public class PalletBoxDto
     public string? Color { get; set; }
     public int CountSerial { get; set; }
     public string? PalletId { get; set; }
+
+    // Toàn bộ serial của carton này, nối bằng dấu phẩy (xem CartonSnScanLog.Serial) — hiện ở
+    // cột "Serial Number" trong bảng, có thể dài nên cột này cuộn ngang riêng.
+    public string? Serial { get; set; }
 }
 
 public class PalletBoxesResponse

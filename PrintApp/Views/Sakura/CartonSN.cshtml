@@ -304,6 +304,9 @@
         text-transform: uppercase; color: var(--gray-500); border-bottom: 1.5px solid var(--gray-200); white-space: nowrap;
     }
     .pm-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-100); color: var(--gray-900); }
+    /* Serial Number có thể dài (nhiều serial nối dấu phẩy) — không xuống dòng, để bảng (đã bọc
+       trong div overflow-x:auto) tự cuộn ngang thay vì bóp vỡ layout. */
+    .pm-table td.cell-serial { white-space: nowrap; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.75rem; color: var(--gray-700); }
     .pm-table .pm-del-btn {
         background: var(--red-xlight); color: var(--danger); border: 1px solid var(--red-light); border-radius: 8px;
         cursor: pointer; padding: 5px 10px; font-size: 0.75rem; font-weight: 600;
@@ -646,7 +649,7 @@
             <!-- ── Modal "Quản lý Pallet" — xem danh sách + xoá từng thùng khỏi pallet. Ẩn mặc
                  định, mở qua nút ⚙️ Manage. ── -->
             <div id="palletManageOverlay" class="pm-overlay" style="display:none">
-                <div class="pm-modal">
+                <div class="pm-modal" style="max-width:920px">
                     <div class="pm-modal-header">
                         <span data-i18n="cartonsn.manageModalTitle">Manage Pallet</span>
                         <button type="button" class="pm-modal-close" id="btnClosePalletManage" data-i18n-title="cartonsn.manageModalCloseTitle" title="Close" aria-label="Close">✕</button>
@@ -661,6 +664,7 @@
                                         <tr>
                                             <th data-i18n="cartonsn.manageColId">ID</th>
                                             <th data-i18n="cartonsn.manageColSerial">Carton Number</th>
+                                            <th data-i18n="cartonsn.manageColSerialNumber">Serial Number</th>
                                             <th data-i18n="cartonsn.manageColPalletId">Pallet ID</th>
                                             <th data-i18n="cartonsn.manageColDelete">Delete</th>
                                         </tr>
@@ -1456,6 +1460,7 @@
             <tr>
                 <td>${b.id}</td>
                 <td>${escHtml(b.cartonNumber)}</td>
+                <td class="cell-serial">${escHtml(b.serial || '')}</td>
                 <td>${escHtml(b.palletId || '')}</td>
                 <td><button type="button" class="pm-del-btn" data-carton="${escHtml(b.cartonNumber)}">${t('cartonsn.manageColDelete', 'Delete')}</button></td>
             </tr>`).join('');
