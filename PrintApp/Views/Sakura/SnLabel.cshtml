@@ -116,8 +116,9 @@
     }
     .snl-step.snl-substep .snl-step-label { font-size: 0.8rem; font-weight: 500; color: var(--gray-600); }
 
-    /* ── Retry / Skip — gọn trong cùng hàng với "3. Print Label" khi bước in fail ──── */
-    .snl-retry-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+    /* ── Retry / Skip — hiện dưới danh sách Process khi bước 3 (Enter Production Result)
+       hoặc bước 4 (Print Label) fail, dùng chung cho cả 2 bước. ──────────────────────── */
+    .snl-retry-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; margin-top: 10px; }
     .snl-retry-btn {
         font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2px;
         border: 1.5px solid transparent; cursor: pointer; padding: 5px 10px; border-radius: 8px; white-space: nowrap;
@@ -336,6 +337,9 @@
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    /* type="text" vs type="password" can inherit different UA default placeholder sizing —
+       force both to match the input's own font instead of relying on inheritance. */
+    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
     .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
     .sk-modal-error.show { display: block; }
 
@@ -631,24 +635,28 @@
                     </div>
                     <div class="snl-step" id="snlStep2Row">
                         <div class="snl-step-icon" id="snlStep2Icon">2</div>
-                        <div class="snl-step-label" data-i18n="snlabel.step2Label">Check Color &amp; Serial Number</div>
-                    </div>
-                    <div class="snl-step snl-substep" id="snlStep2aRow">
-                        <div class="snl-step-icon" id="snlStep2aIcon">2.1</div>
-                        <div class="snl-step-label" data-i18n="snlabel.step2aLabel">Check Color</div>
-                    </div>
-                    <div class="snl-step snl-substep" id="snlStep2bRow">
-                        <div class="snl-step-icon" id="snlStep2bIcon">2.2</div>
-                        <div class="snl-step-label" data-i18n="snlabel.step2bLabel">Check Serial Number</div>
+                        <div class="snl-step-label" data-i18n="snlabel.step2Label">Check Color</div>
                     </div>
                     <div class="snl-step" id="snlStep3Row">
                         <div class="snl-step-icon" id="snlStep3Icon">3</div>
-                        <div class="snl-step-label" data-i18n="snlabel.step3Label">Print Label</div>
-                        <div class="snl-retry-actions" id="snlRetryBox" style="display:none">
-                            <button type="button" class="snl-retry-btn primary" id="btnSnlTryAgain" data-i18n="snlabel.tryAgainBtn" title="">🔄 Try Again</button>
-                            <button type="button" class="snl-retry-btn ghost" id="btnSnlSkip" data-i18n="snlabel.skipBtn">Skip →</button>
-                        </div>
+                        <div class="snl-step-label" data-i18n="snlabel.step3Label">Enter Production Result</div>
                     </div>
+                    <div class="snl-step snl-substep" id="snlStep3aRow">
+                        <div class="snl-step-icon" id="snlStep3aIcon">3.1</div>
+                        <div class="snl-step-label" data-i18n="snlabel.step3aLabel">Check Production Result Entered</div>
+                    </div>
+                    <div class="snl-step snl-substep" id="snlStep3bRow">
+                        <div class="snl-step-icon" id="snlStep3bIcon">3.2</div>
+                        <div class="snl-step-label" data-i18n="snlabel.step3bLabel">Enter Production Result</div>
+                    </div>
+                    <div class="snl-step" id="snlStep4Row">
+                        <div class="snl-step-icon" id="snlStep4Icon">4</div>
+                        <div class="snl-step-label" data-i18n="snlabel.step4Label">Print Label</div>
+                    </div>
+                </div>
+                <div class="snl-retry-actions" id="snlRetryBox" style="display:none">
+                    <button type="button" class="snl-retry-btn primary" id="btnSnlTryAgain" data-i18n="snlabel.tryAgainBtn" title="">🔄 Try Again</button>
+                    <button type="button" class="snl-retry-btn ghost" id="btnSnlSkip" data-i18n="snlabel.skipBtn">Skip →</button>
                 </div>
             </div>
         </div>
@@ -658,9 +666,10 @@
 
 <div class="sk-modal-overlay" id="pwModalOverlay">
     <div class="sk-modal">
-        <div class="sk-modal-title" data-i18n="snlabel.manualPwTitle">Enter the password to switch to Manual mode.</div>
+        <div class="sk-modal-title" data-i18n="snlabel.manualPwTitle">Log in to open Reprint.</div>
+        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="snlabel.manualPwUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
         <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="snlabel.manualPwPlaceholder" placeholder="Password" autocomplete="off" />
-        <div class="sk-modal-error" id="pwError" data-i18n="snlabel.manualPwWrong">Incorrect password.</div>
+        <div class="sk-modal-error" id="pwError" data-i18n="snlabel.manualPwWrong">Incorrect username or password.</div>
         <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
             <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="snlabel.cancel">Cancel</button>
             <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="snlabel.confirm">Confirm</button>
@@ -759,7 +768,10 @@
     let expectedColorValue = null; // màu (chuỗi "Blue"/"Pink"/"Green") của WO đang chọn
     let eanVerified = false; // đã quét đúng EAN của WO này chưa
     let verifiedEan = ''; // giá trị EAN đã verify — gửi kèm lúc verify-serial
-    let pendingRetrySerial = null; // khác null khi đang khóa chờ Try Again/Skip (bước Print Label fail)
+    let pendingRetrySerial = null; // khác null khi đang khóa chờ Try Again/Skip (bước 3 hoặc 4 fail)
+    let pendingRetryStage = null; // 'production' (bước 3 fail) hoặc 'print' (bước 4 fail) — quyết định Try Again gọi lại API nào
+    let pendingRetryZpl = null; // ZPL đã có sẵn từ lần verify-serial đã pass — 'print' stage dùng lại, KHÔNG verify lại
+    let pendingRetryLogId = null; // logId (PENDING) tương ứng — dùng cho cả 2 stage khi Try Again
 
     // ── Print mode: Work Order (default) vs Manual (password-gated every time) ──
     const $modeTabs   = document.getElementById('modeTabs');
@@ -775,6 +787,7 @@
     const $woPrinted  = document.getElementById('woPrinted');
 
     const $pwOverlay  = document.getElementById('pwModalOverlay');
+    const $pwUsername = document.getElementById('pwUsername');
     const $pwInput    = document.getElementById('pwInput');
     const $pwError    = document.getElementById('pwError');
     const $btnPwCancel= document.getElementById('btnPwCancel');
@@ -792,10 +805,11 @@
     // sửa lại HTML/JS gì khác.
     const MANUAL_PRINT_ENABLED = false;
 
-    // Tạm bỏ bước xác nhận mật khẩu khi chuyển sang tab Reprint (chỉ còn Reprint
-    // by Serial nên bớt phiền). Modal + API /verify-manual-password vẫn giữ
-    // nguyên — cần bật lại gate thì đổi true là đủ.
-    const MANUAL_PW_GATE_ENABLED = false;
+    // Bắt buộc đăng nhập (Username + Password, xem SM_UserPermission) mỗi lần vào tab
+    // Reprint — không "remember me": trạng thái đăng nhập KHÔNG được lưu ở đâu cả (không
+    // localStorage/sessionStorage), nên F5, chuyển trang, hay chỉ đơn giản bấm sang tab Work
+    // Order rồi quay lại Reprint cũng đều phải đăng nhập lại (xem $modeTabs click handler).
+    const MANUAL_PW_GATE_ENABLED = true;
 
     let entryMode = 'wo'; // always defaults to Work Order on page load
     let woResolvedOk = false;
@@ -817,9 +831,10 @@
         el.className = `t-status show ${type}`;
     }
 
-    // ── Process step tracker (1 Check EAN / 2.1 Check Color / 2.2 Check Serial Number /
-    // 3 Print Label) + Result circle — mirrors BackPanel/Laser.cshtml's setStepState/flashCircle. ──
-    const STEP_PENDING_TEXT = { '1': '1', '2': '2', '2a': '2.1', '2b': '2.2', '3': '3' };
+    // ── Process step tracker (1 Check EAN / 2 Check Color / 3.1 Check Production Result
+    // Entered / 3.2 Enter Production Result / 4 Print Label) + Result circle — mirrors
+    // BackPanel/Laser.cshtml's setStepState/flashCircle. ──
+    const STEP_PENDING_TEXT = { '1': '1', '2': '2', '3': '3', '3a': '3.1', '3b': '3.2', '4': '4' };
 
     function setStepState(key, state) {
         const $icon = document.getElementById(`snlStep${key}Icon`);
@@ -841,20 +856,20 @@
     }
 
     function resetSteps() {
-        ['1', '2', '2a', '2b', '3'].forEach(k => setStepState(k, 'pending'));
+        ['1', '2', '3', '3a', '3b', '4'].forEach(k => setStepState(k, 'pending'));
     }
 
-    // "2. Check Color & Serial Number" là dòng nhóm của 2.1/2.2 — done khi cả 2 sub-step
-    // done, fail khi 1 trong 2 fail, còn lại thì pending.
-    function updateParentStep2() {
-        const $a = document.getElementById('snlStep2aIcon');
-        const $b = document.getElementById('snlStep2bIcon');
+    // "3. Enter Production Result" là dòng nhóm của 3.1/3.2 — done khi cả 2 sub-step done,
+    // fail khi 1 trong 2 fail, còn lại thì pending.
+    function updateParentStep3() {
+        const $a = document.getElementById('snlStep3aIcon');
+        const $b = document.getElementById('snlStep3bIcon');
         if ($a && $a.classList.contains('done') && $b && $b.classList.contains('done')) {
-            setStepState('2', 'done');
+            setStepState('3', 'done');
         } else if (($a && $a.classList.contains('fail')) || ($b && $b.classList.contains('fail'))) {
-            setStepState('2', 'fail');
+            setStepState('3', 'fail');
         } else {
-            setStepState('2', 'pending');
+            setStepState('3', 'pending');
         }
     }
 
@@ -870,19 +885,25 @@
         resultTimer = setTimeout(() => setResult('idle', '—'), 4000);
     }
 
-    // Khoá EAN + Serial lại — bắt buộc phải Try Again (pass) hoặc Skip trước khi được
-    // quét tiếp, vì bước Print Label (3) chưa hoàn tất cho serial này. Không xoá EAN/Serial
-    // đã nhập để Try Again gọi lại checkSerialAndPrint() dùng đúng giá trị cũ.
-    function lockForPrintRetry(serial, message) {
+    // Khoá EAN + Serial lại — bắt buộc phải Try Again (pass) hoặc Skip trước khi được quét
+    // tiếp, vì bước 3 (Enter Production Result) hoặc 4 (Print Label) chưa hoàn tất cho serial
+    // này. stage = 'production' (Try Again chỉ gọi lại enter-production-result) hoặc 'print'
+    // (Try Again chỉ gửi lại đúng ZPL đã có, không verify/nhập KQSX lại). Không xoá EAN/Serial
+    // đã nhập để Try Again dùng đúng giá trị cũ.
+    function lockForRetry(serial, stage, message) {
         pendingRetrySerial = serial;
+        pendingRetryStage = stage;
         $eanInput.disabled = true;
         $snInput.disabled = true;
         $btnSnlTryAgain.title = message; // hiện đầy đủ lý do khi hover, giữ hàng gọn
         $snlRetryBox.style.display = 'flex';
     }
 
-    function unlockPrintRetry() {
+    function unlockRetry() {
         pendingRetrySerial = null;
+        pendingRetryStage = null;
+        pendingRetryZpl = null;
+        pendingRetryLogId = null;
         $eanInput.disabled = false;
         $snInput.disabled = false;
         $snlRetryBox.style.display = 'none';
@@ -893,7 +914,7 @@
         setResult('idle', '—');
         $snlResultResolved.style.display = 'none';
         resetSteps();
-        unlockPrintRetry();
+        unlockRetry();
         eanVerified = false;
         verifiedEan = '';
         $eanInput.value = '';
@@ -960,12 +981,14 @@
         setMode(mode);
     });
 
-    // ── Manual mode password gate ─────────────────────────────────────────────
+    // ── Reprint login gate — mở modal MỖI LẦN bấm vào tab Reprint (xem $modeTabs click
+    // handler, không có cờ "đã đăng nhập" nào được lưu lại). ─────────────────────────
     function openPasswordModal() {
+        $pwUsername.value = '';
         $pwInput.value = '';
         $pwError.classList.remove('show');
         $pwOverlay.classList.add('show');
-        $pwInput.focus();
+        $pwUsername.focus();
     }
 
     function closePasswordModal() {
@@ -976,14 +999,15 @@
     $pwOverlay.addEventListener('click', (e) => { if (e.target === $pwOverlay) closePasswordModal(); });
 
     async function submitPassword() {
+        const username = $pwUsername.value.trim();
         const pw = $pwInput.value;
-        if (!pw) return;
+        if (!username || !pw) return;
         $btnPwSubmit.disabled = true;
         try {
-            const res = await fetch(`${BASE}/api/sakura/snlabel/verify-manual-password`, {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
+                body: JSON.stringify({ username, password: pw })
             });
             const body = await res.json().catch(() => null);
             if (!res.ok || !body || body.ok === false) {
@@ -1000,6 +1024,7 @@
     }
 
     $btnPwSubmit.addEventListener('click', submitPassword);
+    $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPassword(); });
     $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPassword(); });
 
     // ── Work Order lookup ─────────────────────────────────────────────────────
@@ -1164,11 +1189,10 @@
         if (eanVerified) {
             eanVerified = false;
             setStepState('1', 'pending');
-            updateParentStep2();
         }
     });
 
-    // ── Process — Step 2 (2.1/2.2) + Step 3: Check Color & Serial Number, Print Label ──
+    // ── Process — Step 3 (3.1/3.2) + Step 4: Enter Production Result, Print Label ──
     // Gửi cả EAN + Serial cho server verify lại toàn bộ (không tin riêng client) — pass hết
     // thì server trả ZPL sẵn sàng in đúng Serial đã quét, không tự sinh serial mới.
     async function printGivenZpl(zpl) {
@@ -1210,18 +1234,20 @@
         return false;
     }
 
-    // failedStep server trả về (1=EAN, 2=Color, 3=Serial/đã nhập KQSX) -> message i18n phía
-    // client, KHÔNG hiện nguyên văn message tiếng Việt server trả (server chỉ dùng nó để
-    // ghi FailReason nội bộ nếu cần sau này, còn hiển thị luôn phải qua i18n EN/ZH).
+    // failedStep server trả về (1=EAN, 2=Color, 5=3.1 đã nhập KQSX rồi/trùng, 6=3.2 lỗi nhập
+    // KQSX) -> message i18n phía client, KHÔNG hiện nguyên văn message tiếng Việt server trả
+    // (server chỉ dùng nó để ghi FailReason nội bộ nếu cần sau này, còn hiển thị luôn phải
+    // qua i18n EN/ZH).
     function verifyFailMessage(failedStep) {
         if (failedStep === 1) return t('snlabel.eanMismatch', 'Scanned EAN does not match this Work Order.');
         if (failedStep === 2) return t('snlabel.colorMismatch', 'Serial color does not match this Work Order.');
-        if (failedStep === 3) return t('snlabel.serialNotEntered', 'This serial has not had a production result entered yet.');
+        if (failedStep === 5) return t('snlabel.serialAlreadyEntered', 'This serial has already had a production result entered.');
+        if (failedStep === 6) return t('snlabel.enterProductionResultFailed', 'Could not enter the production result.');
         return t('snlabel.verifyFailed', 'Verify failed.');
     }
 
-    // Fail ở bước 1 (Check EAN) hoặc 2 (Check Color & Serial Number) -> reset về đầu,
-    // quét lại EAN từ đầu (không khoá, không cần Try Again/Skip).
+    // Fail ở bước 1 (Check EAN) hoặc 2 (Check Color) -> reset về đầu, quét lại EAN từ đầu
+    // (không khoá, không cần Try Again/Skip).
     function restartFromEan(message) {
         flashResult('fail', t('snlabel.fail', 'FAIL'));
         showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${message}`, 'err');
@@ -1230,6 +1256,16 @@
         eanVerified = false;
         verifiedEan = '';
         $eanInput.focus();
+    }
+
+    // Fail ở bước 3.1 (Check Production Result Entered — đã nhập rồi/trùng) -> trạng thái
+    // vĩnh viễn với đúng serial này (thử lại vẫn ra kết quả y hệt), KHÔNG khoá Try Again/Skip —
+    // chỉ xóa ô Serial Number rồi cho quét serial TIẾP THEO ngay, EAN đã verify giữ nguyên.
+    function restartSerialOnly(message) {
+        flashResult('fail', t('snlabel.fail', 'FAIL'));
+        showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${message}`, 'err');
+        $snInput.value = '';
+        $snInput.focus();
     }
 
     async function checkSerialAndPrint() {
@@ -1247,10 +1283,11 @@
             return;
         }
 
-        setStepState('2a', 'pending');
-        setStepState('2b', 'pending');
         setStepState('2', 'pending');
         setStepState('3', 'pending');
+        setStepState('3a', 'pending');
+        setStepState('3b', 'pending');
+        setStepState('4', 'pending');
         $resSerial.textContent = serial;
         $snlResultResolved.style.display = 'flex';
 
@@ -1270,8 +1307,7 @@
             if (!res.ok && res.status !== 409) throw new Error(window.SakuraI18n.translateApiError(body, t('snlabel.verifyFailed', 'Verify failed.')));
 
             if (res.status === 409) {
-                setStepState('2a', 'fail');
-                updateParentStep2();
+                setStepState('2', 'fail');
                 restartFromEan(window.SakuraI18n.translateApiError(body, t('snlabel.serialAlreadyPrinted', 'This serial has already been printed.')));
                 return;
             }
@@ -1286,47 +1322,17 @@
             setStepState('1', 'done');
 
             if (d.failedStep === 2) {
-                setStepState('2a', 'fail');
-                updateParentStep2();
+                setStepState('2', 'fail');
                 restartFromEan(verifyFailMessage(2));
                 return;
             }
-            setStepState('2a', 'done');
+            setStepState('2', 'done');
 
-            if (d.failedStep === 3) {
-                setStepState('2b', 'fail');
-                updateParentStep2();
-                restartFromEan(verifyFailMessage(3));
-                return;
-            }
-            setStepState('2b', 'done');
-            updateParentStep2();
-
-            // Check EAN + Color + Serial đã pass hết -> in luôn với đúng Serial vừa quét.
-            const printOk = await printGivenZpl(d.zpl);
-            const reportOk = await reportPrintResult(d.logId, printOk);
-            const reportWarning = reportOk ? '' : ` ⚠ ${t('snlabel.reportResultFailed', 'Could not confirm the result with the server — the history record may stay stuck at PENDING.')}`;
-
-            if (printOk) {
-                setStepState('3', 'done');
-                flashResult('pass', t('snlabel.pass', 'PASS'));
-                showStatus($printStatus, `✓ ${t('snlabel.pass', 'PASS')} — ${serial}${reportWarning}`, reportOk ? 'ok' : 'err');
-                unlockPrintRetry();
-                $snInput.value = '';
-                $eanInput.value = '';
-                eanVerified = false;
-                verifiedEan = '';
-                $eanInput.focus();
-            } else {
-                // Check EAN + Color + Serial đều đã pass — chỉ riêng gửi máy in lỗi (mất kết
-                // nối bridge, máy in tắt...) — khoá lại, cho Try Again (không phải quét lại
-                // từ đầu vì dữ liệu đã hợp lệ) hoặc Skip để bỏ qua serial này.
-                setStepState('3', 'fail');
-                flashResult('fail', t('snlabel.fail', 'FAIL'));
-                const failMsg = t('snlabel.printSendFailed', 'Failed to send to printer.');
-                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}${reportWarning}`, 'err');
-                lockForPrintRetry(serial, `⚠ ${t('snlabel.step3Label', 'Print Label')} (SN ${serial}) — ${failMsg}`);
-            }
+            // Check EAN + Color đã pass hết -> bước 3 (Enter Production Result, chia nhỏ 3.1
+            // Check / 3.2 Enter), rồi bước 4 (Print Label). 2 bước này gọi qua
+            // attemptEnterProductionResult/attemptPrint (endpoint riêng) để nếu 1 trong 2 bước
+            // fail, Try Again chỉ cần retry ĐÚNG bước đó.
+            await attemptEnterProductionResult(serial, d.logId, d.zpl);
         } catch (e) {
             flashResult('fail', t('snlabel.fail', 'FAIL'));
             showStatus($printStatus, `✗ ${e.message}`, 'err');
@@ -1337,25 +1343,122 @@
         }
     }
 
+    // Process — Step 3: Enter Production Result. Tách riêng khỏi verify-serial để Try Again
+    // khi bước này fail chỉ cần gọi lại ĐÚNG endpoint này (EAN/Color/Serial ở trên đã pass,
+    // tất định, không cần verify lại).
+    async function attemptEnterProductionResult(serial, logId, zpl) {
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/enter-production-result`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    logId,
+                    workOrder: $workOrder.value.trim(),
+                    productId: expectedProductId,
+                    serialNumber: serial,
+                    totalQuantity: woTotalQuantity
+                })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('snlabel.verifyFailed', 'Verify failed.')));
+
+            const d = body.data;
+
+            if (d.checkResultOk === false) {
+                // 3.1 fail: đã nhập KQSX rồi (trùng) — trạng thái vĩnh viễn với đúng serial
+                // này, KHÔNG khoá Try Again/Skip — chỉ xóa Serial Number rồi cho quét tiếp
+                // ngay, EAN đã verify giữ nguyên.
+                setStepState('3a', 'fail');
+                updateParentStep3();
+                restartSerialOnly(verifyFailMessage(5));
+                return;
+            }
+            setStepState('3a', 'done');
+
+            if (d.inputResultOk === false) {
+                // 3.2 fail: lỗi gọi API nhập KQSX (transient, vd mất kết nối) — khoá, cho
+                // Try Again (gọi lại đúng endpoint này) hoặc Skip.
+                setStepState('3b', 'fail');
+                updateParentStep3();
+                flashResult('fail', t('snlabel.fail', 'FAIL'));
+                const failMsg = verifyFailMessage(6);
+                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}`, 'err');
+                pendingRetryZpl = zpl;
+                pendingRetryLogId = logId;
+                lockForRetry(serial, 'production', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${failMsg}`);
+                return;
+            }
+            setStepState('3b', 'done');
+            updateParentStep3();
+            await attemptPrint(serial, zpl, logId);
+        } catch (e) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            lockForRetry(serial, 'production', `⚠ ${t('snlabel.step3Label', 'Enter Production Result')} (SN ${serial}) — ${e.message}`);
+        }
+    }
+
+    // Process — Step 4: Print Label. Tách hàm riêng để Try Again (khi chỉ riêng bước này
+    // fail) có thể gọi lại đúng bước gửi máy in, KHÔNG gọi lại Enter Production Result.
+    async function attemptPrint(serial, zpl, logId) {
+        const printOk = await printGivenZpl(zpl);
+        const reportOk = await reportPrintResult(logId, printOk);
+        const reportWarning = reportOk ? '' : ` ⚠ ${t('snlabel.reportResultFailed', 'Could not confirm the result with the server — the history record may stay stuck at PENDING.')}`;
+
+        if (printOk) {
+            setStepState('4', 'done');
+            flashResult('pass', t('snlabel.pass', 'PASS'));
+            showStatus($printStatus, `✓ ${t('snlabel.pass', 'PASS')} — ${serial}${reportWarning}`, reportOk ? 'ok' : 'err');
+            unlockRetry();
+            $snInput.value = '';
+            $eanInput.value = '';
+            eanVerified = false;
+            verifiedEan = '';
+            $eanInput.focus();
+        } else {
+            // Check EAN + Color + Serial + Enter Production Result đều đã pass — chỉ riêng gửi
+            // máy in lỗi (mất kết nối bridge, máy in tắt...) — khoá lại, cho Try Again (không
+            // phải quét lại từ đầu vì dữ liệu đã hợp lệ) hoặc Skip để bỏ qua serial này.
+            setStepState('4', 'fail');
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            const failMsg = t('snlabel.printSendFailed', 'Failed to send to printer.');
+            showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}${reportWarning}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            lockForRetry(serial, 'print', `⚠ ${t('snlabel.step4Label', 'Print Label')} (SN ${serial}) — ${failMsg}`);
+        }
+    }
+
     $snInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); checkSerialAndPrint(); }
     });
 
-    // Try Again: gọi lại đúng checkSerialAndPrint() với cùng EAN/Serial đang khoá (không xoá
-    // khi lock) — server verify-serial là idempotent nên EAN/Color/Serial sẽ tự pass lại y hệt,
-    // chỉ thử lại đúng bước gửi máy in đang fail.
+    // Try Again: KHÔNG verify lại EAN/Color/Serial (đã pass, tất định) — chỉ retry ĐÚNG bước
+    // đang khoá: 'production' gọi lại Enter Production Result, 'print' gửi lại đúng ZPL đã có.
     $btnSnlTryAgain.addEventListener('click', async () => {
-        if (!pendingRetrySerial) return;
+        if (!pendingRetrySerial || !pendingRetryStage) return;
+        const serial = pendingRetrySerial;
+        const stage = pendingRetryStage;
+        const zpl = pendingRetryZpl;
+        const logId = pendingRetryLogId;
+
         $btnSnlTryAgain.disabled = true;
         showStatus($printStatus, `⏳ ${t('snlabel.retryInProgress', 'Retrying…')}`, 'ok');
-        unlockPrintRetry();
-        await checkSerialAndPrint();
+        unlockRetry();
+
+        if (stage === 'production') {
+            await attemptEnterProductionResult(serial, logId, zpl);
+        } else {
+            await attemptPrint(serial, zpl, logId);
+        }
         $btnSnlTryAgain.disabled = false;
     });
 
     $btnSnlSkip.addEventListener('click', () => {
         if (!pendingRetrySerial) return;
-        unlockPrintRetry();
+        unlockRetry();
         showStatus($printStatus, `⚠ ${t('snlabel.skippedMsg', 'Skipped — you can scan the next EAN.')}`, 'err');
         $snInput.value = '';
         $eanInput.value = '';

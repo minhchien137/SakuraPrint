@@ -84,6 +84,9 @@
        (co rúm lại khi màn hình không đủ rộng cho hết filter). */
     .t-grid-auto { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); align-items: end; }
     .t-grid-auto > .t-btn { justify-self: start; }
+    /* Refresh + Export Excel dùng chung 1 ô lưới, gần nhau, thay vì mỗi nút 1 cột auto-fit
+       rộng (khiến 2 nút bị dạt ra xa nhau). */
+    .t-hist-btn-group { display: flex; gap: 8px; justify-self: start; }
 
     .t-field label {
         display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
@@ -283,8 +286,10 @@
                     <option value="100">100</option>
                 </select>
             </div>
-            <button class="t-btn t-btn-ghost" id="btnHistRefresh" data-i18n="cartonHistory.refresh">↻ Refresh</button>
-            <button class="t-btn t-btn-ghost" id="btnHistExport" data-i18n="cartonHistory.exportBtn">📊 Export Excel</button>
+            <div class="t-hist-btn-group">
+                <button class="t-btn t-btn-ghost" id="btnHistRefresh" data-i18n="cartonHistory.refresh">↻ Refresh</button>
+                <button class="t-btn t-btn-ghost" id="btnHistExport" data-i18n="cartonHistory.exportBtn">📊 Export Excel</button>
+            </div>
         </div>
     </div>
 

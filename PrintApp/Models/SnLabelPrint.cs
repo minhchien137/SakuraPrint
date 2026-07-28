@@ -116,6 +116,20 @@ public class SnLabelVerifyRequest
     public string SerialNumber { get; set; } = "";
 }
 
+// Process step 3 "Enter Production Result" — gọi sau khi verify-serial trả status=PENDING
+// (đã có logId). Tách riêng khỏi verify-serial để Try Again khi bước này fail chỉ retry
+// đúng bước này, không phải verify lại EAN/Color/Serial.
+public class SnLabelEnterProductionResultRequest
+{
+    public int LogId { get; set; }
+    public string WorkOrder { get; set; } = "";
+    public int ProductId { get; set; }
+    public string SerialNumber { get; set; } = "";
+
+    // Tổng số lượng của Work Order — lấy từ WO context lúc lookup (giống LaserVerifySerialRequest).
+    public decimal? TotalQuantity { get; set; }
+}
+
 // Trình duyệt tự gửi ZPL tới bridge cục bộ (server không với tới máy in) rồi báo kết quả
 // về đây để chốt Status/FailedStep (4 = Print Label) của đúng dòng log (logId) vừa tạo.
 public class SnLabelReportPrintResultRequest
@@ -133,10 +147,6 @@ public class SnLabelEanFailLogRequest
     public string? Ean { get; set; }
 }
 
-public class ManualUnlockRequest
-{
-    public string Password { get; set; } = "";
-}
 
 public class SnLabelSerialDto
 {

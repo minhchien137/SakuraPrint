@@ -445,7 +445,7 @@ public class SakuraController : Controller
 
         int? failedStep = null;
         string? failMessage = null;
-        bool eanOk, colorOk = false, serialLogOk = false;
+        bool eanOk, colorOk = false;
 
         // Bước 1: Check EAN — đối chiếu lại với Odoo (không tin mã client đã tự so khớp trước đó).
         string? realEan;
@@ -464,8 +464,8 @@ public class SakuraController : Controller
             failMessage = "Mã EAN không khớp với Work Order.";
         }
 
-        // Bước 2 (2.1): Check Color — màu embed trong Serial (theo TryResolveColorFromSerial)
-        // phải khớp màu của Work Order.
+        // Bước 2: Check Color — màu embed trong Serial (theo TryResolveColorFromSerial) phải
+        // khớp màu của Work Order.
         if (failedStep == null)
         {
             string? serialColor = SakuraService.TryResolveColorFromSerial(serial);
@@ -477,20 +477,10 @@ public class SakuraController : Controller
             }
         }
 
-        // Bước 3 (2.2): Check đã nhập kết quả sản xuất cho serial này chưa — dùng lại
-        // CheckLotSerialFG của trạm Laser nhưng NGƯỢC ý nghĩa: ok=false (đã nhập trước đó)
-        // mới là điều SnLabel cần (label chỉ in SAU khi đã nhập KQSX ở trạm khác).
-        if (failedStep == null)
-        {
-            var checkResult = await _productionApi.CheckLotSerialFgAsync(req.ProductId, serial);
-            serialLogOk = checkResult.Ok == false;
-            if (!serialLogOk)
-            {
-                failedStep = 3;
-                failMessage = "Serial chưa được nhập kết quả sản xuất.";
-            }
-        }
-
+        // failedStep 1/2 dừng ở đây — bước "Enter Production Result" (Process step 3, chia
+        // nhỏ 3.1 Check / 3.2 Enter) và Print Label (step 4) đi qua 2 endpoint riêng
+        // (EnterProductionResult / report-print-result) để Try Again có thể retry ĐÚNG 1 bước
+        // đang fail, không phải chạy lại từ đầu (EAN/Color check ở trên là tất định).
         string status = failedStep != null ? "FAIL" : "PENDING";
         string zpl = "";
         if (failedStep == null)
@@ -538,9 +528,147 @@ public class SakuraController : Controller
                 failMessage,
                 eanOk,
                 colorOk,
-                serialLogOk,
                 logId = logEntry.Id,
                 zpl
+            }
+        });
+    }
+
+    // Lấy số thứ tự WO con lớn nhất HIỆN CÓ (chưa +1) của master_wo_code này từ
+    // SVN_ProductionInputLogs — dùng để tính subName tiếp theo cho bước Enter Production
+    // Result. Giống hệt BackPanelController.GetCurrentMaxSubNameSuffixAsync (trạm Laser).
+    private async Task<int> GetCurrentMaxSubNameSuffixAsync(string masterWoCode)
+    {
+        return await _db.Database
+            .SqlQuery<int>($@"
+                SELECT ISNULL(MAX(
+                    CASE WHEN CHARINDEX('-', REVERSE(wo_code)) > 0
+                         THEN TRY_CAST(RIGHT(wo_code, CHARINDEX('-', REVERSE(wo_code)) - 1) AS INT)
+                         ELSE NULL END
+                ), 0) AS Value
+                FROM [svn_pentaho].[dbo].[SVN_ProductionInputLogs]
+                WHERE master_wo_code = {masterWoCode}")
+            .SingleAsync();
+    }
+
+    // Lấy số thứ tự WO con lớn nhất hiện có của master_wo_code này, +1, để tính subName tiếp
+    // theo ("{masterWoCode}-{max+1:000}"). Ném exception nếu query fail — caller phải dừng lại,
+    // không được tự đoán subName khi mất kết nối DB.
+    private async Task<string> BuildNextSubNameAsync(string masterWoCode)
+    {
+        int maxSuffix = await GetCurrentMaxSubNameSuffixAsync(masterWoCode);
+        return $"{masterWoCode}-{(maxSuffix + 1):D3}";
+    }
+
+    // ── API: Process step 3 "Enter Production Result" — chỉ gọi sau khi verify-serial trả
+    // status="PENDING" (đã pass Check EAN + Check Color + Check Serial) với đúng logId vừa
+    // tạo. Tách riêng khỏi verify-serial để Try Again khi bước này fail chỉ cần gọi lại ĐÚNG
+    // endpoint này (không phải verify lại EAN/Color/Serial — vốn đã pass và tất định). ─────
+
+    [HttpPost("/api/sakura/snlabel/enter-production-result")]
+    public async Task<IActionResult> EnterProductionResult([FromBody] SnLabelEnterProductionResultRequest req)
+    {
+        if (req == null)
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+        if (string.IsNullOrWhiteSpace(req.WorkOrder) || string.IsNullOrWhiteSpace(req.SerialNumber))
+            return BadRequest(new { ok = false, error = "Thiếu Work Order hoặc Serial Number.", errorCode = "common.missingData" });
+
+        var entry = await _db.SnLabelScanLogs.FindAsync(req.LogId);
+        if (entry == null)
+            return NotFound(new { ok = false, error = $"Không tìm thấy log Id={req.LogId}.", errorCode = "common.missingData" });
+
+        string workOrder = req.WorkOrder.Trim();
+        string serial = req.SerialNumber.Trim();
+
+        // Bước 3.1: Check đã nhập KQSX (ProductionInputLog) cho serial này chưa — dùng
+        // CheckLotSerialFG của trạm Laser, ĐÚNG ý nghĩa gốc của nó (ok=true nghĩa là CHƯA
+        // nhập). Khác trạm Laser: ở đây "đã nhập rồi" (ok=false) là FAIL — vì trạm SnLabel tự
+        // đảm nhiệm việc nhập, không cần chờ trạm khác — trạng thái vĩnh viễn với serial này
+        // (không khoá Try Again, chỉ xóa Serial Number rồi cho quét serial tiếp theo ngay, EAN
+        // giữ nguyên — xem $btnSnlTryAgain/restartSerialOnly phía client).
+        var checkResult = await _productionApi.CheckLotSerialFgAsync(req.ProductId, serial);
+        if (!checkResult.Ok)
+        {
+            entry.Status = "FAIL";
+            entry.FailedStep = 5; // 3.1 — xem chú thích FailedStep ở SnLabelScanLog.
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, BuildError(ex));
+            }
+
+            return Ok(new
+            {
+                ok = true,
+                data = new { checkResultOk = false, checkResultMessage = checkResult.Message, failedStep = 5, logId = entry.Id }
+            });
+        }
+
+        // Bước 3.2: Nhập KQSX — "products" phải kèm 1 phần tử tự tham chiếu chính sản
+        // phẩm/serial đang xử lý (yêu cầu riêng của API cho trạm này, khác trạm Laser).
+        string? subName = null;
+        const int maxAttempts = 3;
+        Exception? lastEx = null;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                subName = await BuildNextSubNameAsync(workOrder);
+                lastEx = null;
+                break;
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                if (attempt < maxAttempts) await Task.Delay(1000);
+            }
+        }
+
+        bool inputResultOk;
+        string? inputResultMessage = null;
+        if (lastEx != null)
+        {
+            Console.WriteLine($"[Sakura] Loi query SVN_ProductionInputLogs de tinh subName (sau {maxAttempts} lan thu): {lastEx.Message}");
+            inputResultOk = false;
+            inputResultMessage = "Không lấy được số thứ tự WO từ database.";
+        }
+        else
+        {
+            var inputResult = await _productionApi.InputProductionResultLogAsync(
+                workOrder, subName!, serial, req.ProductId, req.TotalQuantity ?? 0,
+                new[] { new ProductionResultProduct { Product_id = req.ProductId, Has_tracking = "serial", Serial_code = serial } });
+            inputResultOk = inputResult.Ok;
+            inputResultMessage = inputResult.Message;
+            if (!inputResult.Ok) subName = null; // API nhập fail -> không tính là đã dùng subName này.
+        }
+
+        entry.ProductionResultSubName = subName;
+        entry.Status = inputResultOk ? "PENDING" : "FAIL";
+        entry.FailedStep = inputResultOk ? null : 6; // 3.2 — xem chú thích FailedStep ở SnLabelScanLog.
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, BuildError(ex));
+        }
+
+        return Ok(new
+        {
+            ok = true,
+            data = new
+            {
+                checkResultOk = true,
+                inputResultOk,
+                inputResultMessage,
+                subName,
+                failedStep = entry.FailedStep,
+                logId = entry.Id
             }
         });
     }
@@ -596,14 +724,22 @@ public class SakuraController : Controller
         return Ok(new { ok = true });
     }
 
-    // ── API: unlock Manual print mode with a shared password ────────────────────
+    // ── API: đăng nhập để mở khoá tab Reprint — bắt buộc đăng nhập lại MỖI LẦN vào tab
+    // này (client không lưu trạng thái đã đăng nhập ở đâu cả — không localStorage/session-
+    // Storage — nên F5, chuyển trang, hoặc chỉ đơn giản chuyển tab đi rồi quay lại cũng phải
+    // đăng nhập lại). Tài khoản lưu ở SM_UserPermission (PasswordHash — PBKDF2/SHA256, xem
+    // SimplePasswordHasher), không có mật khẩu dùng chung như trước nữa. ──────────────────
 
-    [HttpPost("/api/sakura/snlabel/verify-manual-password")]
-    public IActionResult VerifyManualPassword([FromBody] ManualUnlockRequest req)
+    [HttpPost("/api/sakura/snlabel/verify-reprint-login")]
+    public async Task<IActionResult> VerifyReprintLogin([FromBody] ReprintLoginRequest req)
     {
-        string expected = _config["Sakura:SnLabel:ManualModePassword"] ?? "";
-        if (req == null || string.IsNullOrEmpty(expected) || req.Password != expected)
-            return Unauthorized(new { ok = false, error = "Sai mật khẩu.", errorCode = "password.incorrect" });
+        if (req == null || string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+            return Unauthorized(new { ok = false, error = "Sai tài khoản hoặc mật khẩu.", errorCode = "login.incorrect" });
+
+        string username = req.Username.Trim();
+        var user = await _db.UserPermissions.FirstOrDefaultAsync(x => x.Username == username);
+        if (user == null || !SimplePasswordHasher.Verify(req.Password, user.PasswordHash))
+            return Unauthorized(new { ok = false, error = "Sai tài khoản hoặc mật khẩu.", errorCode = "login.incorrect" });
 
         return Ok(new { ok = true });
     }

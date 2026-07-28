@@ -406,13 +406,18 @@
     });
 
     // Số hiển thị + nhãn cho FailedStep, cùng quy ước với verify-serial phía server:
-    // 1=Check EAN, 2=Check Color (2.1), 3=Check Serial/đã nhập KQSX (2.2), 4=Print Label (3).
-    const STEP_DISPLAY_NUMBER = { 1: '1', 2: '2.1', 3: '2.2', 4: '3' };
+    // 1=Check EAN, 2=Check Color, 4=Print Label. 3=(LỊCH SỬ CŨ, không còn ghi mới) Check
+    // Serial ở trạm khác. 5=Check Production Result Entered (3.1), 6=Enter Production Result
+    // (3.2) — thêm SAU nên lấy số 5/6 dù 3.1/3.2 đứng trước bước 4 trong quy trình, để không
+    // đổi ý nghĩa các dòng lịch sử cũ đã dùng 4=Print Label.
+    const STEP_DISPLAY_NUMBER = { 1: '1', 2: '2', 3: '2.2', 4: '4', 5: '3.1', 6: '3.2' };
     function stepLabel(n) {
         if (n === 1) return t('snlabel.step1Label', 'Check EAN');
-        if (n === 2) return t('snlabel.step2aLabel', 'Check Color');
+        if (n === 2) return t('snlabel.step2Label', 'Check Color');
         if (n === 3) return t('snlabel.step2bLabel', 'Check Serial Number');
-        if (n === 4) return t('snlabel.step3Label', 'Print Label');
+        if (n === 4) return t('snlabel.step4Label', 'Print Label');
+        if (n === 5) return t('snlabel.step3aLabel', 'Check Production Result Entered');
+        if (n === 6) return t('snlabel.step3bLabel', 'Enter Production Result');
         return '—';
     }
 

@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<SmPrinterInfo> SmPrinterInfos { get; set; }
     public DbSet<PalletInfoTemplate> PalletInfoTemplates { get; set; }
     public DbSet<ExternalPrintQueueItem> ExternalPrintQueueItems { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PalletInfoTemplate>(e =>
         {
             e.HasIndex(x => x.TemplateName).IsUnique();
+        });
+
+        modelBuilder.Entity<UserPermission>(e =>
+        {
+            e.HasIndex(x => x.Username).IsUnique();
         });
     }
 }

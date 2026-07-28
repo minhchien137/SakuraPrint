@@ -25,3 +25,11 @@ BEGIN
     CREATE INDEX IX_SM_SNLabelScanLog_SerialNumber ON dbo.SM_SNLabelScanLog (SerialNumber);
 END
 GO
+
+-- Bảng đã tạo từ trước khi có bước "Enter Production Result" (tự nhập KQSX tại SnLabel) —
+-- thêm cột cho môi trường đã có sẵn bảng. Cùng vai trò với cột cùng tên ở SM_BackPanelLaserLog.
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_SNLabelScanLog') AND name = 'ProductionResultSubName')
+BEGIN
+    ALTER TABLE dbo.SM_SNLabelScanLog ADD ProductionResultSubName NVARCHAR(50) NULL;
+END
+GO

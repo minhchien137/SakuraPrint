@@ -10,6 +10,17 @@ public class ProductionApiResult
     public string? Message { get; set; }
 }
 
+// 1 phần tử trong mảng "products" của InputProductionResultLog — chỉ trạm Sakura/SnLabel
+// cần gửi kèm (tự tham chiếu chính sản phẩm/serial đang xử lý); trạm Laser vẫn để products=[].
+// Tên field giữ NGUYÊN chữ hoa/thường (Product_id/Has_tracking/Serial_code) theo đúng API bên
+// sigmaworldwide.io yêu cầu — KHÔNG đổi thành camelCase.
+public class ProductionResultProduct
+{
+    public int Product_id { get; set; }
+    public string Has_tracking { get; set; } = "serial";
+    public string Serial_code { get; set; } = "";
+}
+
 // Gọi 2 API sản xuất (sigmaworldwide.io) dùng ở bước 3 (Enter Production Result) của
 // trạm Laser (Back Panel) — chạy sau khi bước 2 (Print Laser/ghi SN.txt) đã thành công.
 // Dùng ở BackPanelController.VerifySerial.
@@ -51,8 +62,11 @@ public class ProductionResultApiService
     }
 
     // Nhập kết quả sản xuất cho 1 serial — chỉ gọi sau khi CheckLotSerialFgAsync trả ok=true.
+    // products: mặc định null/rỗng (trạm Laser) — trạm Sakura/SnLabel truyền vào 1 phần tử
+    // tự tham chiếu chính sản phẩm/serial đang xử lý (yêu cầu riêng của API cho trạm này).
     public Task<ProductionApiResult> InputProductionResultLogAsync(
-        string workOrder, string subName, string serial, int productId, decimal totalQuantity)
+        string workOrder, string subName, string serial, int productId, decimal totalQuantity,
+        IEnumerable<ProductionResultProduct>? products = null)
     {
         var payload = new
         {
@@ -63,7 +77,7 @@ public class ProductionResultApiService
             serial,
             productID = productId.ToString(CultureInfo.InvariantCulture),
             totalQuantity = totalQuantity.ToString("0.####", CultureInfo.InvariantCulture),
-            products = Array.Empty<object>()
+            products = products != null ? products.ToArray() : Array.Empty<object>()
         };
         return PostAsync(_inputProductionResultLogPath, payload);
     }

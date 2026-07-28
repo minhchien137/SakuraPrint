@@ -270,11 +270,36 @@
         .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
         .sk-lang-flag { width: 22px; height: 22px; }
     }
+
+    /* ── Login gate modal — mở khoá trang này, bắt buộc đăng nhập lại mỗi lần vào trang
+       (không lưu trạng thái đăng nhập ở đâu cả), cùng thiết kế với modal ở SnLabel.cshtml. ── */
+    .sk-modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.45);
+        z-index: 200; align-items: center; justify-content: center;
+    }
+    .sk-modal-overlay.show { display: flex; }
+    .sk-modal {
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 26px 28px;
+        width: 320px; max-width: 90vw; box-shadow: var(--shadow-lg);
+    }
+    .sk-modal-title {
+        font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--gray-900);
+        margin-bottom: 14px; line-height: 1.5;
+    }
+    .sk-modal-input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 44px; padding: 10px 14px; font-family: var(--font-body); font-size: 14px; color: var(--gray-900); outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
+    .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
+    .sk-modal-error.show { display: block; }
 </style>
 
 @await Html.PartialAsync("_LangSwitcher")
 
-<div class="snl-page">
+<div class="snl-page" id="cartonReprintPage" style="display:none">
 
     <header class="snl-header">
         <div>
@@ -562,6 +587,19 @@
 
 </div>
 
+<div class="sk-modal-overlay" id="pwModalOverlay">
+    <div class="sk-modal">
+        <div class="sk-modal-title" data-i18n="cartonReprint.loginTitle">Log in to open Reprint.</div>
+        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="cartonReprint.loginUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
+        <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="cartonReprint.loginPasswordPlaceholder" placeholder="Password" autocomplete="off" />
+        <div class="sk-modal-error" id="pwError" data-i18n="cartonReprint.loginWrong">Incorrect username or password.</div>
+        <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
+            <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="cartonReprint.cancel">Cancel</button>
+            <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="cartonReprint.confirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
 <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
@@ -569,6 +607,58 @@
 (function () {
     const NODE_SERVICE = 'http://localhost:8021';
     const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+
+    // ── Login gate — bắt buộc đăng nhập lại MỖI LẦN vào trang này (F5, chuyển trang đi rồi
+    // quay lại...) vì không lưu trạng thái đăng nhập ở đâu cả (không localStorage/session-
+    // Storage). Toàn bộ nội dung trang bị ẩn (#cartonReprintPage) cho tới khi đăng nhập đúng —
+    // các API load dữ liệu (Carton/Pallet list) cũng KHÔNG được gọi trước đó. Dùng chung tài
+    // khoản SM_UserPermission với tab Reprint ở trang SnLabel.
+    const $cartonReprintPage = document.getElementById('cartonReprintPage');
+    const $pwOverlay  = document.getElementById('pwModalOverlay');
+    const $pwUsername = document.getElementById('pwUsername');
+    const $pwInput    = document.getElementById('pwInput');
+    const $pwError    = document.getElementById('pwError');
+    const $btnPwCancel= document.getElementById('btnPwCancel');
+    const $btnPwSubmit= document.getElementById('btnPwSubmit');
+
+    function openPasswordModal() {
+        $pwUsername.value = '';
+        $pwInput.value = '';
+        $pwError.classList.remove('show');
+        $pwOverlay.classList.add('show');
+        $pwUsername.focus();
+    }
+
+    async function submitLogin() {
+        const username = $pwUsername.value.trim();
+        const pw = $pwInput.value;
+        if (!username || !pw) return;
+        $btnPwSubmit.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password: pw })
+            });
+            const body = await res.json().catch(() => null);
+            if (!res.ok || !body || body.ok === false) {
+                $pwError.classList.add('show');
+                return;
+            }
+            $pwOverlay.classList.remove('show');
+            $cartonReprintPage.style.display = '';
+            initPage();
+        } catch {
+            $pwError.classList.add('show');
+        } finally {
+            $btnPwSubmit.disabled = false;
+        }
+    }
+
+    $btnPwCancel.addEventListener('click', () => { window.location.href = `${BASE}/sakura`; });
+    $btnPwSubmit.addEventListener('click', submitLogin);
+    $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+    $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
 
     function t(key, fallback) {
         return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
@@ -1083,11 +1173,16 @@
             : t('cartonsn.bridgeOffline', 'Service — Offline');
     });
 
-    // ── init ──────────────────────────────────────────────────────────────────
-    loadPrinterConfig();
-    setPrinterConfigOpen(localStorage.getItem(LS.saved) !== '1');
-    loadCartonList();
-    loadPalletList();
+    // ── init — chỉ chạy SAU khi đăng nhập thành công (xem submitLogin ở trên); trước đó
+    // không load Carton/Pallet list, không đụng gì tới cấu hình máy in. ────────────────────
+    function initPage() {
+        loadPrinterConfig();
+        setPrinterConfigOpen(localStorage.getItem(LS.saved) !== '1');
+        loadCartonList();
+        loadPalletList();
+    }
+
+    openPasswordModal();
 })();
 </script>
 }
