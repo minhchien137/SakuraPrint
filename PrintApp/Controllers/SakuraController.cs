@@ -1128,6 +1128,20 @@ public class SakuraController : Controller
         }
     }
 
+    // ── API: Resolve Pallet ID cho 1 Work Order — 1 WO chỉ có ĐÚNG 1 Pallet ID, tự sinh nếu WO
+    // hoàn toàn mới, dùng lại nếu WO đã có (xem SakuraService.ResolvePalletIdForWorkOrderAsync).
+    // Gọi ngay sau khi Work Order lookup thành công — người vận hành KHÔNG còn tự nhập Pallet ID nữa.
+
+    [HttpGet("/api/sakura/cartonsn/pallet/resolve")]
+    public async Task<IActionResult> ResolvePalletId([FromQuery] string workOrder)
+    {
+        if (string.IsNullOrWhiteSpace(workOrder))
+            return BadRequest(new { ok = false, error = "Thiếu Work Order.", errorCode = "workOrder.missing" });
+
+        string palletId = await _snLabel.ResolvePalletIdForWorkOrderAsync(workOrder.Trim());
+        return Ok(new { ok = true, data = new { palletId } });
+    }
+
     // ── API: Print Pallet — gom carton đã in vào 1 Pallet ID, đếm realtime, sinh Pallet Number ─
 
     private static PalletBoxesResponse ToPalletBoxesResponse(string palletId, (int BoxCount, int UnitCount, List<CartonSnScanLog> Boxes) result) =>

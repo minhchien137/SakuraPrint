@@ -427,6 +427,39 @@ public class SakuraService
         return attachWarning;
     }
 
+    // ── Resolve Pallet ID cho 1 Work Order — 1 WO chỉ có ĐÚNG 1 Pallet ID trong suốt vòng đời
+    // (khác WO thì không được lẫn, xem check Work Order trong RecordCartonScanAsync/
+    // ScanCartonIntoPalletAsync ở trên). WO đã có Pallet ID từ trước (đã từng lưu carton kèm
+    // Pallet ID) -> trả về đúng cái đó, dùng lại mãi mãi cho WO này — KHÔNG tự sinh mới, kể cả
+    // sau khi đã "chốt"/in tem xong. WO hoàn toàn mới -> tự sinh Pallet ID kế tiếp
+    // ("PALLET-{max+1:D3}", tính theo số lớn nhất đang có trong toàn hệ thống, không phân biệt
+    // WO). Chỉ là gợi ý/best-effort — Pallet ID thật sự chỉ "chốt" khi carton đầu tiên được lưu
+    // kèm nó (RecordCartonScanAsync), lúc đó check khác WO ở trên mới là chặn thật sự.
+    public async Task<string> ResolvePalletIdForWorkOrderAsync(string workOrder)
+    {
+        string? existing = await _context.CartonSnScanLogs
+            .Where(x => x.WorkOrder == workOrder && x.PalletId != null)
+            .Select(x => x.PalletId)
+            .FirstOrDefaultAsync();
+        if (existing != null) return existing;
+
+        const string prefix = "PALLET-";
+        var allIds = await _context.CartonSnScanLogs
+            .Where(x => x.PalletId != null && x.PalletId.StartsWith(prefix))
+            .Select(x => x.PalletId!)
+            .Distinct()
+            .ToListAsync();
+
+        int max = 0;
+        foreach (string id in allIds)
+        {
+            if (int.TryParse(id.Substring(prefix.Length), out int n) && n > max)
+                max = n;
+        }
+
+        return prefix + (max + 1).ToString("D3");
+    }
+
     // ── Print Pallet (Main Pallet Label) — gom nhiều carton đã in (SM_Sakura_CartonLabel_Data)
     // vào 1 Pallet ID do người vận hành tự đặt (vd "PALLET-001"), đếm số thùng/unit realtime,
     // sinh Pallet Number tự động lúc "chốt"/in tem. ──────────────────────────────────────────
