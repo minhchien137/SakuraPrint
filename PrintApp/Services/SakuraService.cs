@@ -882,7 +882,9 @@ public class SakuraService
                 ScanDate = x.ScanDate,
                 PalletId = x.PalletId,
                 PalletNumber = x.PalletNumber,
-                IsReprint = x.IsReprint
+                IsReprint = x.IsReprint,
+                LastReprintAt = x.LastReprintAt,
+                ReprintCount = x.ReprintCount
             }).ToList(),
             TotalCount = totalCount,
             Page = page,
@@ -943,6 +945,8 @@ public class SakuraService
                 CartonCount = g.Count(),
                 UnitCount = g.Sum(x => x.CountSerial),
                 IsPalletReprint = g.Any(x => x.IsPalletReprint),
+                LastPalletReprintAt = g.Max(x => x.LastPalletReprintAt),
+                PalletReprintCount = g.Max(x => x.PalletReprintCount),
                 LastScanDate = g.Max(x => x.ScanDate)
             });
 
@@ -985,6 +989,8 @@ public class SakuraService
         string zpl = await RenderCartonZplAsync(row.CartonNumber, meta, row.Condition ?? "New", slots, slots);
 
         row.IsReprint = true;
+        row.LastReprintAt = VietnamNow();
+        row.ReprintCount++;
         await _context.SaveChangesAsync();
 
         return new CartonReprintZplResponse { Zpl = zpl, CartonNumber = row.CartonNumber };
@@ -992,7 +998,8 @@ public class SakuraService
 
     // In lại tem Pallet ĐÚNG dữ liệu cũ (PO Number/Inbound/Warehouse/Delivery Address snapshot
     // lúc build tem gần nhất — xem BuildPalletLabelZplAsync) cho 1 Pallet Number đã "chốt"/in tem
-    // trước đó. Đánh dấu IsPalletReprint = true trên MỌI carton của pallet này.
+    // trước đó. Đánh dấu IsPalletReprint = true + ghi LastPalletReprintAt/PalletReprintCount trên
+    // MỌI carton của pallet này.
     public async Task<PalletReprintZplResponse> ReprintPalletLabelAsync(string palletNumber)
     {
         if (string.IsNullOrWhiteSpace(palletNumber))
@@ -1023,8 +1030,13 @@ public class SakuraService
             .Replace("{palletNumber}", trimmed)
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(rows[0].DeliveryAddress ?? ""));
 
+        var reprintAt = VietnamNow();
         foreach (var row in rows)
+        {
             row.IsPalletReprint = true;
+            row.LastPalletReprintAt = reprintAt;
+            row.PalletReprintCount++;
+        }
         await _context.SaveChangesAsync();
 
         // In lại kèm tem PDF417 giống lần in gốc (xem BuildPdf417LabelZplsAsync) — lọc đúng

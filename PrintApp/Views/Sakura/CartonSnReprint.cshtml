@@ -455,10 +455,11 @@
                         <th data-i18n="cartonHistory.colSerials">Serials</th>
                         <th data-i18n="cartonHistory.colScanDate">Scanned At</th>
                         <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
+                        <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="cartonRows">
-                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -550,10 +551,11 @@
                         <th data-i18n="cartonReprint.colUnitCount">Units</th>
                         <th data-i18n="cartonHistory.colScanDate">Last Scanned</th>
                         <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
+                        <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="palletRows">
-                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -676,6 +678,15 @@
     function hideStatus(el) { el.classList.remove('show', 'ok', 'err'); }
 
     const COLOR_CLASS = { Blue: 'blue', Pink: 'pink', Green: 'green' };
+
+    // Cột "Last Reprint" dùng chung cho cả bảng Carton lẫn Pallet — hiện số lần in lại + thời
+    // điểm gần nhất (xem SakuraService.ReprintCartonLabelAsync/ReprintPalletLabelAsync ghi
+    // ReprintCount/LastReprintAt tương ứng), "—" nếu chưa từng in lại.
+    function reprintCell(count, lastAt) {
+        if (!count) return '<span style="color:var(--gray-400)">—</span>';
+        const d = lastAt ? new Date(lastAt).toLocaleString() : '—';
+        return `<span class="count-pill">×${count}</span> <span style="color:var(--gray-500);font-size:0.78rem;white-space:nowrap">${d}</span>`;
+    }
 
     // ── Printer Configuration — CÙNG localStorage keys với CartonSN.cshtml, để cấu hình máy in
     // đã lưu ở trang Print tự áp dụng luôn ở đây, khỏi phải cấu hình lại lần 2. ────────────────
@@ -900,7 +911,7 @@
         if ($cartonFilterPalletNumber.value.trim()) params.set('palletNumber', $cartonFilterPalletNumber.value.trim());
         if ($cartonFilterReprintStatus.value) params.set('isReprint', $cartonFilterReprintStatus.value);
 
-        $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -911,7 +922,7 @@
             renderCartonPagination();
         } catch (e) {
             cartonTotalCount = 0;
-            $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderCartonPagination();
         }
         $cartonSelectAll.checked = false;
@@ -920,7 +931,7 @@
 
     function renderCartonRows(rows) {
         if (!rows.length) {
-            $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $cartonRows.innerHTML = rows.map(r => {
@@ -942,6 +953,7 @@
                     <td class="cell-serials">${serialsDisplay}</td>
                     <td>${scanDate}</td>
                     <td>${reprintBadge}</td>
+                    <td>${reprintCell(r.reprintCount, r.lastReprintAt)}</td>
                 </tr>`;
         }).join('');
         $cartonRows.querySelectorAll('.carton-select').forEach(cb => cb.addEventListener('change', updateCartonSelectedCount));
@@ -1052,7 +1064,7 @@
         if ($palletFilterPalletNumber.value.trim()) params.set('palletNumber', $palletFilterPalletNumber.value.trim());
         if ($palletFilterReprintStatus.value) params.set('isPalletReprint', $palletFilterReprintStatus.value);
 
-        $palletRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
             const body = await res.json();
@@ -1063,7 +1075,7 @@
             renderPalletPagination();
         } catch (e) {
             palletTotalCount = 0;
-            $palletRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPalletPagination();
         }
         $palletSelectAll.checked = false;
@@ -1072,7 +1084,7 @@
 
     function renderPalletRows(rows) {
         if (!rows.length) {
-            $palletRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $palletRows.innerHTML = rows.map(r => {
@@ -1092,6 +1104,7 @@
                     <td><span class="count-pill">${r.unitCount}</span></td>
                     <td>${lastScan}</td>
                     <td>${reprintBadge}</td>
+                    <td>${reprintCell(r.palletReprintCount, r.lastPalletReprintAt)}</td>
                 </tr>`;
         }).join('');
         $palletRows.querySelectorAll('.pallet-select').forEach(cb => cb.addEventListener('change', updatePalletSelectedCount));

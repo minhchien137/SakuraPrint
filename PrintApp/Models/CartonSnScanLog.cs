@@ -64,10 +64,20 @@ public class CartonSnScanLog
     // SakuraService.ReprintCartonLabelAsync). Chỉ audit — không ảnh hưởng số lượng WO/chặn trùng.
     public bool IsReprint { get; set; }
 
+    // Thời điểm + số lần Reprint carton này gần nhất/tổng cộng — cập nhật cùng lúc với IsReprint
+    // ở trên mỗi lần bấm Reprint (ReprintCartonLabelAsync).
+    public DateTime? LastReprintAt { get; set; }
+    public int ReprintCount { get; set; }
+
     // Set = true trên MỌI carton cùng PalletNumber khi bấm Reprint pallet (xem
     // SakuraService.ReprintPalletLabelAsync) — không có bảng Pallet riêng nên đánh dấu theo cách
     // denormalize giống PalletId/PalletNumber ở trên.
     public bool IsPalletReprint { get; set; }
+
+    // Thời điểm + số lần Reprint tem Pallet gần nhất/tổng cộng cho PalletNumber này — cập nhật
+    // trên MỌI carton cùng PalletNumber, cùng lúc với IsPalletReprint ở trên (ReprintPalletLabelAsync).
+    public DateTime? LastPalletReprintAt { get; set; }
+    public int PalletReprintCount { get; set; }
 
     // Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address dùng lúc build ZPL
     // tem Pallet gần nhất (ghi/cập nhật ở BuildPalletLabelZplAsync mỗi lần build tem Pallet cho
