@@ -351,11 +351,10 @@ public class SakuraService
     //
     // Nếu palletId được truyền vào (Pallet ID đang nhập trên UI lúc in carton này), gom thẳng
     // carton vào pallet đó luôn — không cần thao tác "Manage" thủ công như ScanCartonIntoPalletAsync.
-    // Carton LUÔN được lưu kèm Pallet Number ngay lúc này (không đợi tới lúc bấm "Print Pallet
-    // Label"): nếu pallet đã có số rồi (đã từng "chốt"/in tem trước đó) thì dùng lại đúng số đó;
-    // nếu đây là carton ĐẦU TIÊN của 1 Pallet ID hoàn toàn mới thì sinh số mới luôn (dùng chung
-    // GenerateAndAssignPalletNumberAsync — concurrency-safe, giống lúc "chốt" pallet). "Print
-    // Pallet Label" sau này chỉ còn việc build ZPL từ số đã có sẵn.
+    // Carton KHÔNG được gán Pallet Number ở đây — PalletNumber chỉ sinh lúc "Print Pallet Label"
+    // (BuildPalletLabelZplAsync), mỗi lần in là 1 Pallet Number MỚI cho đúng lô carton đang
+    // "pending" (PalletNumber còn null) tại thời điểm đó. 1 Pallet ID (1 WO) có thể trải qua
+    // NHIỀU Pallet Number theo thời gian — mỗi Pallet Number ứng với 1 tem/1 pallet vật lý đã in.
     // Carton đã in thật rồi nên KHÔNG được throw ở đây: nếu pallet đang gom màu khác thì bỏ qua
     // việc gán PalletId/PalletNumber (vẫn lưu carton bình thường) và trả về cảnh báo cho caller.
     public async Task<string?> RecordCartonScanAsync(string workOrder, string cartonNumber, string color, string condition, IReadOnlyList<string> orderedSlots, string? palletId)
@@ -400,30 +399,7 @@ public class SakuraService
             PalletId = trimmedPalletId
         };
         _context.CartonSnScanLogs.Add(row);
-
-        if (trimmedPalletId == null)
-        {
-            await _context.SaveChangesAsync();
-            return attachWarning;
-        }
-
-        string? existingNumber = await _context.CartonSnScanLogs
-            .Where(x => x.PalletId == trimmedPalletId && x.PalletNumber != null)
-            .Select(x => x.PalletNumber)
-            .FirstOrDefaultAsync();
-
-        if (existingNumber != null)
-        {
-            row.PalletNumber = existingNumber;
-            await _context.SaveChangesAsync();
-        }
-        else
-        {
-            // Carton đầu tiên của Pallet ID này -> sinh Pallet Number ngay, cùng transaction với
-            // việc insert carton (GenerateAndAssignPalletNumberAsync tự SaveChanges + commit).
-            await GenerateAndAssignPalletNumberAsync(new List<CartonSnScanLog> { row });
-        }
-
+        await _context.SaveChangesAsync();
         return attachWarning;
     }
 
@@ -464,8 +440,11 @@ public class SakuraService
     // vào 1 Pallet ID do người vận hành tự đặt (vd "PALLET-001"), đếm số thùng/unit realtime,
     // sinh Pallet Number tự động lúc "chốt"/in tem. ──────────────────────────────────────────
 
-    // Danh sách carton hiện đang thuộc 1 Pallet ID + tổng số thùng/unit — dùng cho cả badge
-    // realtime lẫn bảng trong modal "Quản lý Pallet".
+    // Danh sách carton ĐANG CHỜ IN (PalletNumber còn null — chưa thuộc lô/tem Pallet nào đã in)
+    // của 1 Pallet ID + tổng số thùng/unit — dùng cho cả badge realtime lẫn bảng trong modal
+    // "Quản lý Pallet". Carton đã có Pallet Number (đã in tem rồi ở 1 lần Print trước) không còn
+    // hiện ở đây nữa — coi như đã "chốt"/đóng gói vào 1 pallet vật lý riêng (xem
+    // BuildPalletLabelZplAsync sinh Pallet Number mới cho đúng lô pending này mỗi lần in).
     public async Task<(int BoxCount, int UnitCount, List<CartonSnScanLog> Boxes)> GetPalletBoxesAsync(string palletId)
     {
         if (string.IsNullOrWhiteSpace(palletId))
@@ -473,7 +452,7 @@ public class SakuraService
 
         var boxes = await _context.CartonSnScanLogs
             .AsNoTracking()
-            .Where(x => x.PalletId == palletId)
+            .Where(x => x.PalletId == palletId && x.PalletNumber == null)
             .OrderBy(x => x.ScanDate)
             .ToListAsync();
 
@@ -511,25 +490,10 @@ public class SakuraService
 
         if (row.PalletId != palletId)
         {
+            // PalletNumber KHÔNG gán ở đây — chỉ sinh lúc "Print Pallet Label" (xem
+            // BuildPalletLabelZplAsync), carton mới gắn vào coi như "pending" cho lần in kế tiếp.
             row.PalletId = palletId;
-
-            // Giữ đúng bất biến "carton thuộc Pallet ID nào thì luôn có sẵn Pallet Number của
-            // pallet đó" — giống RecordCartonScanAsync: dùng lại số đã có, hoặc sinh mới nếu đây
-            // là carton đầu tiên của Pallet ID này.
-            string? existingNumber = await _context.CartonSnScanLogs
-                .Where(x => x.PalletId == palletId && x.PalletNumber != null)
-                .Select(x => x.PalletNumber)
-                .FirstOrDefaultAsync();
-
-            if (existingNumber != null)
-            {
-                row.PalletNumber = existingNumber;
-                await _context.SaveChangesAsync();
-            }
-            else
-            {
-                await GenerateAndAssignPalletNumberAsync(new List<CartonSnScanLog> { row });
-            }
+            await _context.SaveChangesAsync();
         }
 
         return await GetPalletBoxesAsync(palletId);
@@ -550,6 +514,11 @@ public class SakuraService
         var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.CartonNumber == trimmedCarton && x.PalletId == palletId);
         if (row == null)
             throw new SakuraValidationException("cartonLabel.pallet.cartonNotFound", $"Carton Number '{trimmedCarton}' không thuộc Pallet ID '{palletId}'.", new { cartonNumber = trimmedCarton, palletId });
+
+        // Carton đã có Pallet Number (đã in tem ở 1 lần Print trước) coi như đã đóng gói thật vào
+        // 1 pallet vật lý rồi -> không cho gỡ nữa (tránh làm sai lệch tem/PDF417 đã in ra).
+        if (row.PalletNumber != null)
+            throw new SakuraConflictException("cartonLabel.pallet.cartonAlreadyPrinted", $"Carton Number '{trimmedCarton}' đã được in vào tem Pallet '{row.PalletNumber}' rồi, không thể gỡ khỏi Pallet nữa.", new { cartonNumber = trimmedCarton, palletId, palletNumber = row.PalletNumber });
 
         row.PalletId = null;
         row.IsDeleted = true;
@@ -617,10 +586,13 @@ public class SakuraService
         throw new SakuraConflictException("cartonLabel.pallet.numberCapacityExceeded", "Không thể sinh Pallet Number do tranh chấp đồng thời quá nhiều lần, vui lòng thử lại.");
     }
 
-    // "Chốt" pallet + build ZPL tem Pallet: lấy toàn bộ carton đang thuộc palletId (không giới
-    // hạn đủ 64 thùng — chốt được ở bất kỳ số lượng nào), tính tổng thùng/unit, sinh (hoặc dùng
-    // lại nếu đã từng in) Pallet Number, gán vào toàn bộ carton đó, rồi thay token vào template
-    // "PalletLabel" (nội dung ZPL thật do người dùng tự cập nhật sau trong SM_Sakura_ZplTemplate).
+    // "Chốt" 1 LÔ pallet + build ZPL tem Pallet: lấy carton đang PENDING (PalletNumber còn null)
+    // thuộc palletId — tức các carton quét vào SAU lần "Print Pallet Label" gần nhất (không giới
+    // hạn đủ 64 thùng — chốt được ở bất kỳ số lượng nào), tính tổng thùng/unit của riêng lô này,
+    // LUÔN sinh 1 Pallet Number MỚI (1 Pallet ID/WO có thể trải qua nhiều Pallet Number theo thời
+    // gian, mỗi Pallet Number = 1 tem/1 pallet vật lý đã đóng gói xong), gán vào đúng lô carton
+    // này, rồi thay token vào template "PalletLabel" (nội dung ZPL thật do người dùng tự cập nhật
+    // sau trong SM_Sakura_ZplTemplate).
     public async Task<(string Zpl, string PalletNumber, int QuantityCartons, int QuantityUnits, string Color)> BuildPalletLabelZplAsync(
         string palletId, string poNumber, string inboundReference, string warehouseReference, string deliveryAddress)
     {
@@ -628,11 +600,11 @@ public class SakuraService
             throw new SakuraValidationException("cartonLabel.pallet.palletIdMissing", "Thiếu Pallet ID.");
 
         var rows = await _context.CartonSnScanLogs
-            .Where(x => x.PalletId == palletId)
+            .Where(x => x.PalletId == palletId && x.PalletNumber == null)
             .ToListAsync();
 
         if (rows.Count == 0)
-            throw new SakuraValidationException("cartonLabel.pallet.noBoxesScanned", $"Pallet ID '{palletId}' chưa có thùng nào được quét vào.", new { palletId });
+            throw new SakuraValidationException("cartonLabel.pallet.noBoxesScanned", $"Pallet ID '{palletId}' chưa có thùng mới nào chờ in (toàn bộ carton đã quét vào đều đã được in vào 1 tem Pallet trước đó).", new { palletId });
 
         string color = rows[0].Color ?? "";
         if (!ZplTemplates.CartonColorMeta.TryGetValue(color, out var meta))
@@ -641,13 +613,12 @@ public class SakuraService
         int quantityCartons = rows.Count;
         int quantityUnits = rows.Sum(x => x.CountSerial);
 
-        string? palletNumber = rows.Select(x => x.PalletNumber).FirstOrDefault(pn => !string.IsNullOrEmpty(pn));
-        if (palletNumber == null)
-            palletNumber = await GenerateAndAssignPalletNumberAsync(rows);
+        string palletNumber = await GenerateAndAssignPalletNumberAsync(rows);
 
-        // Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address vào MỌI carton
-        // của pallet này (ghi lại mỗi lần build tem, kể cả in lần đầu) — không có bảng Pallet riêng
-        // để lưu, và cần dữ liệu này sau này cho ReprintPalletLabelAsync build lại đúng tem cũ.
+        // Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address vào đúng lô
+        // carton vừa "chốt" này (không đụng tới carton của các Pallet Number trước đó — mỗi lô có
+        // thể có thông tin khác nhau) — cần dữ liệu này sau này cho ReprintPalletLabelAsync build
+        // lại đúng tem cũ.
         foreach (var row in rows)
         {
             row.PoNumber = poNumber?.Trim() ?? "";
@@ -671,6 +642,85 @@ public class SakuraService
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(deliveryAddress ?? ""));
 
         return (zpl, palletNumber, quantityCartons, quantityUnits, color);
+    }
+
+    // ── Tem PDF417 đi kèm tem Pallet — mỗi lần in tem Pallet (BuildPalletLabelZplAsync) thì in
+    // kèm luôn tem này, gồm serial của ĐÚNG LÔ vừa in (cùng Pallet Number vừa sinh) mã hoá vào các
+    // mã PDF417 (theo thiết kế template "Pdf417Label": tối đa 4 mã PDF417/tem, mỗi mã chứa tối đa
+    // 60 serial nối bằng dấu phẩy) — không gộp chung serial của các lô/Pallet Number khác đã in
+    // trước đó cho cùng Pallet ID. Nối serial của các carton theo ScanDate tăng dần (carton quét
+    // trước xếp trước). Nếu tổng serial > 240 (4x60) thì in thêm tem PDF417 tiếp theo (mỗi phần tử
+    // trả về = 1 tem vật lý riêng, gửi in tuần tự).
+    private const int Pdf417SerialsPerCode = 60;
+    private const int Pdf417CodesPerLabel = 4;
+
+    public async Task<List<string>> BuildPdf417LabelZplsAsync(string palletId, string palletNumber)
+    {
+        if (string.IsNullOrWhiteSpace(palletId))
+            throw new SakuraValidationException("cartonLabel.pallet.palletIdMissing", "Thiếu Pallet ID.");
+        if (string.IsNullOrWhiteSpace(palletNumber))
+            throw new SakuraValidationException("cartonLabel.pallet.palletNumberMissing", "Thiếu Pallet Number.");
+
+        var rows = await _context.CartonSnScanLogs
+            .AsNoTracking()
+            .Where(x => x.PalletId == palletId && x.PalletNumber == palletNumber)
+            .OrderBy(x => x.ScanDate)
+            .ToListAsync();
+
+        if (rows.Count == 0)
+            throw new SakuraValidationException("cartonLabel.pallet.noBoxesScanned", $"Pallet ID '{palletId}' / Pallet Number '{palletNumber}' chưa có thùng nào được quét vào.", new { palletId, palletNumber });
+
+        var allSerials = rows
+            .Where(x => !string.IsNullOrWhiteSpace(x.Serial))
+            .SelectMany(x => x.Serial.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(s => s.Length > 0)
+            .ToList();
+
+        if (allSerials.Count == 0)
+            return new List<string>();
+
+        string template = await GetZplTemplateAsync("Pdf417Label");
+        int serialsPerLabel = Pdf417SerialsPerCode * Pdf417CodesPerLabel; // 240
+        var zpls = new List<string>();
+
+        for (int offset = 0; offset < allSerials.Count; offset += serialsPerLabel)
+        {
+            var labelSerials = allSerials.Skip(offset).Take(serialsPerLabel).ToList();
+            string zpl = template;
+            for (int code = 0; code < Pdf417CodesPerLabel; code++)
+            {
+                var codeSerials = labelSerials.Skip(code * Pdf417SerialsPerCode).Take(Pdf417SerialsPerCode);
+                string csv = string.Join(",", codeSerials);
+                zpl = RemoveOrFillPdf417Field(zpl, $"{{pdf417_{code + 1}}}", csv);
+            }
+            zpls.Add(zpl);
+        }
+
+        return zpls;
+    }
+
+    // Điền serial vào {pdf417_N} nếu có dữ liệu; nếu KHÔNG có dữ liệu (tem cuối không lấp đầy
+    // đủ 4 mã) thì XOÁ LUÔN cả field barcode đó (dòng cấu hình ^BY... ngay phía trên + dòng
+    // ^FH\^FD{pdf417_N}^FS chứa placeholder) — để không in ra 1 mã PDF417 trống/rác trên tem.
+    private static string RemoveOrFillPdf417Field(string zpl, string placeholder, string serialsCsv)
+    {
+        if (serialsCsv.Length > 0)
+            return zpl.Replace(placeholder, serialsCsv);
+
+        var lines = zpl.Split('\n').ToList();
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (!lines[i].Contains(placeholder)) continue;
+
+            if (i > 0 && lines[i - 1].TrimStart().StartsWith("^BY", StringComparison.Ordinal))
+            {
+                lines.RemoveAt(i - 1);
+                i--;
+            }
+            lines.RemoveAt(i);
+            break;
+        }
+        return string.Join('\n', lines);
     }
 
     // ── Pallet Info Template — preset Inbound Reference/Warehouse Reference/Delivery Address
@@ -977,7 +1027,14 @@ public class SakuraService
             row.IsPalletReprint = true;
         await _context.SaveChangesAsync();
 
-        return new PalletReprintZplResponse { Zpl = zpl, PalletNumber = trimmed, QuantityCartons = quantityCartons, QuantityUnits = quantityUnits };
+        // In lại kèm tem PDF417 giống lần in gốc (xem BuildPdf417LabelZplsAsync) — lọc đúng
+        // PalletId + Pallet Number này nên vẫn đúng bộ serial của lô đã in, không cần snapshot riêng.
+        string? palletId = rows[0].PalletId;
+        var pdf417Zpls = string.IsNullOrWhiteSpace(palletId)
+            ? new List<string>()
+            : await BuildPdf417LabelZplsAsync(palletId, trimmed);
+
+        return new PalletReprintZplResponse { Zpl = zpl, PalletNumber = trimmed, QuantityCartons = quantityCartons, QuantityUnits = quantityUnits, Pdf417Zpls = pdf417Zpls };
     }
 
     // Ngày sản xuất của lần in đầu tiên cho Work Order này (null nếu chưa in lần nào).

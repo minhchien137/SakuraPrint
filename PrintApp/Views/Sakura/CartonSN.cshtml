@@ -960,9 +960,13 @@
             showStatus($woStatus, `✓ ${lookupMsg}`, 'ok');
             woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
 
-            // Lookup xong -> bắt chọn Pallet Info Template trước (Carton Number chỉ nhận focus
-            // sau khi đã chọn Template — xem $palletTemplateSelect 'change'/$btnSavePalletInfo).
-            $palletTemplateSelect.focus();
+            // Lookup xong: Template CHƯA chọn/chưa hợp lệ -> bắt chọn Template trước (Carton
+            // Number chỉ nhận focus sau khi đã chọn Template — xem $palletTemplateSelect
+            // 'change'/$btnSavePalletInfo). Template ĐÃ hợp lệ rồi (vd lookupWorkOrder() này được
+            // gọi lại từ finishSuccessfulPrint() sau mỗi lần in carton để refresh số lượng còn
+            // lại) -> focus thẳng Carton Number để quét carton tiếp theo, khỏi phải bấm tay lại.
+            if (validatePalletInfoFields()) $palletTemplateSelect.focus();
+            else $cartonNumber.focus();
         } catch (e) {
             // Lookup fail (vd WO đã in đủ số lượng) -> Carton Number/Serial Number vẫn đang khóa
             // (resetWoState() ở đầu hàm) — chỉ hiện thông báo + gợi ý đổi WO, KHÔNG tự làm gì
@@ -1574,6 +1578,61 @@
         openPalletPrintConfirm(palletId);
     }
 
+    // In kèm tem PDF417 (chứa toàn bộ serial của pallet, chia vào 4 mã PDF417 x tối đa 60 SN/mã)
+    // ngay sau khi tem Pallet build xong — server có thể trả về NHIỀU tem nếu pallet vượt quá
+    // 240 serial (4x60), gửi in tuần tự từng tem. Dùng cùng máy in/printMode/copies đang chọn cho
+    // tem Pallet. Trả về { ok, msg } để executePalletPrint gộp vào thông báo chung.
+    async function sendPdf417Labels(pdf417Zpls, palletNumber) {
+        if (!pdf417Zpls || pdf417Zpls.length === 0) return { ok: true, msg: '' };
+
+        const copies = parseInt($copies.value) || 1;
+        let ok = true;
+        let msg = '';
+
+        for (let idx = 0; idx < pdf417Zpls.length; idx++) {
+            const zpl = pdf417Zpls[idx];
+            const label = pdf417Zpls.length > 1 ? ` (${idx + 1}/${pdf417Zpls.length})` : '';
+            const filenameSuffix = pdf417Zpls.length > 1 ? `-${idx + 1}` : '';
+
+            if (printMode === 'usb') {
+                const printerName = $usbSelect.value;
+                if (printerName) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridgeUsb(zpl, printerName);
+                        msg += t('cartonsn.pdf417SentToUsbPrinter', ' PDF417 label{label} sent to USB printer "{name}" (Local Bridge).')
+                            .replace('{label}', label).replace('{name}', printerName);
+                    } catch (e) {
+                        ok = false;
+                        msg += t('cartonsn.pdf417SendFailed', ' ✗ Failed to send PDF417 label{label} to printer: {error}')
+                            .replace('{label}', label).replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `pdf417-${palletNumber}${filenameSuffix}.zpl`);
+                    msg += t('cartonsn.pdf417NoUsbSelected', ' No USB printer selected — downloaded PDF417 label{label} .zpl file instead.').replace('{label}', label);
+                }
+            } else {
+                const printerIp = $printerIp.value.trim();
+                const printerPort = parseInt($printerPort.value) || 9100;
+                if (printerIp) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridge(zpl, printerIp, printerPort);
+                        msg += t('cartonsn.pdf417SentToTcpPrinter', ' PDF417 label{label} sent to {ip}:{port} (Local Bridge).')
+                            .replace('{label}', label).replace('{ip}', printerIp).replace('{port}', printerPort);
+                    } catch (e) {
+                        ok = false;
+                        msg += t('cartonsn.pdf417SendFailed', ' ✗ Failed to send PDF417 label{label} to printer: {error}')
+                            .replace('{label}', label).replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `pdf417-${palletNumber}${filenameSuffix}.zpl`);
+                    msg += t('cartonsn.pdf417NoIpSet', ' No printer IP set — downloaded PDF417 label{label} .zpl file instead.').replace('{label}', label);
+                }
+            }
+        }
+
+        return { ok, msg };
+    }
+
     async function executePalletPrint(palletId, notice) {
         $btnConfirmPrintPalletLabel.disabled = true;
         try {
@@ -1628,9 +1687,18 @@
                 }
             }
 
-            // 1 WO chỉ có ĐÚNG 1 Pallet ID mãi mãi -> KHÔNG reset gì sau khi in (khác hành vi cũ
-            // "chốt pallet xong thì bắt đầu pallet mới"). Carton tiếp theo (nếu còn) vẫn tiếp tục
-            // gom vào đúng Pallet ID này; in lại chỉ là cập nhật/tái tạo đúng tem đã có.
+            // In kèm tem PDF417 (serial của đúng lô vừa in) — xem SakuraService.BuildPdf417LabelZplsAsync.
+            const pdf417Result = await sendPdf417Labels(body.pdf417Zpls, body.palletNumber);
+            if (pdf417Result.msg) {
+                msg += pdf417Result.msg;
+                if (!pdf417Result.ok) statusType = 'err';
+            }
+
+            // 1 WO chỉ có ĐÚNG 1 Pallet ID mãi mãi -> Pallet ID KHÔNG đổi sau khi in. Nhưng carton
+            // vừa in đã được gán 1 Pallet Number mới (xem BuildPalletLabelZplAsync) -> badge
+            // "Boxes in Pallet" phải refresh lại từ server để về 0 (carton tiếp theo quét vào là
+            // lô MỚI, chờ Pallet Number kế tiếp ở lần Print sau).
+            await refreshPalletBadge();
             // In xong (dù gửi máy in fail, ZPL đã build được nghĩa là Template hợp lệ) -> mở khoá
             // Carton Number nếu trước đó đang bị khoá vì thiếu Template.
             unlockCartonNumberForMissingTemplate();

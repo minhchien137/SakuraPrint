@@ -1153,6 +1153,14 @@
                 const body = await res.json();
                 if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonReprint.reprintPalletFailed', 'Reprint failed.')));
                 await printZpl(body.data.zpl, `pallet-${palletNumber}-reprint`);
+
+                // In lại kèm tem PDF417 giống lần in gốc (xem SakuraService.BuildPdf417LabelZplsAsync).
+                const pdf417Zpls = body.data.pdf417Zpls || [];
+                for (let i = 0; i < pdf417Zpls.length; i++) {
+                    const suffix = pdf417Zpls.length > 1 ? `-${i + 1}` : '';
+                    await printZpl(pdf417Zpls[i], `pdf417-${palletNumber}-reprint${suffix}`);
+                }
+
                 okCount++;
             } catch (e) {
                 failCount++;

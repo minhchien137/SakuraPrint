@@ -117,4 +117,5 @@ public class PalletReprintZplResponse
     public string PalletNumber { get; set; } = "";
     public int QuantityCartons { get; set; }
     public int QuantityUnits { get; set; }
+    public List<string> Pdf417Zpls { get; set; } = new();
 }
