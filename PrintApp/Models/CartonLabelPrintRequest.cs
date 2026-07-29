@@ -61,6 +61,8 @@ public class CartonSnHistoryItemDto
     public string? PalletId { get; set; }
     public string? PalletNumber { get; set; }
     public bool IsReprint { get; set; }
+    public DateTime? LastReprintAt { get; set; }
+    public int ReprintCount { get; set; }
 }
 
 public class CartonSnHistoryPageDto
@@ -82,6 +84,8 @@ public class CartonSnPalletReprintItemDto
     public int CartonCount { get; set; }
     public int UnitCount { get; set; }
     public bool IsPalletReprint { get; set; }
+    public DateTime? LastPalletReprintAt { get; set; }
+    public int PalletReprintCount { get; set; }
     public DateTime LastScanDate { get; set; }
 }
 

@@ -882,7 +882,9 @@ public class SakuraService
                 ScanDate = x.ScanDate,
                 PalletId = x.PalletId,
                 PalletNumber = x.PalletNumber,
-                IsReprint = x.IsReprint
+                IsReprint = x.IsReprint,
+                LastReprintAt = x.LastReprintAt,
+                ReprintCount = x.ReprintCount
             }).ToList(),
             TotalCount = totalCount,
             Page = page,
@@ -943,6 +945,8 @@ public class SakuraService
                 CartonCount = g.Count(),
                 UnitCount = g.Sum(x => x.CountSerial),
                 IsPalletReprint = g.Any(x => x.IsPalletReprint),
+                LastPalletReprintAt = g.Max(x => x.LastPalletReprintAt),
+                PalletReprintCount = g.Max(x => x.PalletReprintCount),
                 LastScanDate = g.Max(x => x.ScanDate)
             });
 
@@ -985,6 +989,8 @@ public class SakuraService
         string zpl = await RenderCartonZplAsync(row.CartonNumber, meta, row.Condition ?? "New", slots, slots);
 
         row.IsReprint = true;
+        row.LastReprintAt = VietnamNow();
+        row.ReprintCount++;
         await _context.SaveChangesAsync();
 
         return new CartonReprintZplResponse { Zpl = zpl, CartonNumber = row.CartonNumber };
@@ -992,7 +998,8 @@ public class SakuraService
 
     // In lại tem Pallet ĐÚNG dữ liệu cũ (PO Number/Inbound/Warehouse/Delivery Address snapshot
     // lúc build tem gần nhất — xem BuildPalletLabelZplAsync) cho 1 Pallet Number đã "chốt"/in tem
-    // trước đó. Đánh dấu IsPalletReprint = true trên MỌI carton của pallet này.
+    // trước đó. Đánh dấu IsPalletReprint = true + ghi LastPalletReprintAt/PalletReprintCount trên
+    // MỌI carton của pallet này.
     public async Task<PalletReprintZplResponse> ReprintPalletLabelAsync(string palletNumber)
     {
         if (string.IsNullOrWhiteSpace(palletNumber))
@@ -1023,8 +1030,13 @@ public class SakuraService
             .Replace("{palletNumber}", trimmed)
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(rows[0].DeliveryAddress ?? ""));
 
+        var reprintAt = VietnamNow();
         foreach (var row in rows)
+        {
             row.IsPalletReprint = true;
+            row.LastPalletReprintAt = reprintAt;
+            row.PalletReprintCount++;
+        }
         await _context.SaveChangesAsync();
 
         // In lại kèm tem PDF417 giống lần in gốc (xem BuildPdf417LabelZplsAsync) — lọc đúng
@@ -1102,18 +1114,23 @@ public class SakuraService
     // Đọc từ SM_SNLabelScanLog — audit trail ĐẦY ĐỦ mọi lần quét EAN+Serial (kể cả các lần
     // FAIL, mỗi lần 1 dòng riêng, không bị ghi đè). SM_SNLabelPrint (chỉ chứa serial đã in
     // THÀNH CÔNG) chỉ được join thêm vào để lấy ReprintCount/LastReprintedAt cho badge Reprint.
-    public async Task<SnLabelHistoryPageDto> GetHistoryAsync(DateTime? date, string? workOrder, string? serialNumber, string? ean, int page, int pageSize)
+    public async Task<SnLabelHistoryPageDto> GetHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? serialNumber, string? ean, int page, int pageSize)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 200);
 
         var query = _context.SnLabelScanLogs.AsNoTracking().AsQueryable();
 
-        if (date.HasValue)
+        if (dateFrom.HasValue)
         {
-            DateTime dayStart = date.Value.Date;
-            DateTime dayEnd = dayStart.AddDays(1);
-            query = query.Where(x => x.Timeline >= dayStart && x.Timeline < dayEnd);
+            DateTime rangeStart = dateFrom.Value.Date;
+            query = query.Where(x => x.Timeline >= rangeStart);
+        }
+
+        if (dateTo.HasValue)
+        {
+            DateTime rangeEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.Timeline < rangeEnd);
         }
 
         if (!string.IsNullOrWhiteSpace(workOrder))

@@ -94,6 +94,25 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sak
     ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD IsPalletReprint BIT NOT NULL DEFAULT 0;
 GO
 
+-- LastReprintAt/ReprintCount: thời điểm + số lần Reprint carton này gần nhất/tổng cộng (ghi cùng
+-- lúc với IsReprint ở trên, xem ReprintCartonLabelAsync). LastPalletReprintAt/PalletReprintCount:
+-- tương tự nhưng cho Reprint tem Pallet, ghi trên MỌI carton cùng PalletNumber (ReprintPalletLabelAsync).
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'LastReprintAt')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD LastReprintAt DATETIME NULL;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'ReprintCount')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD ReprintCount INT NOT NULL DEFAULT 0;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'LastPalletReprintAt')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD LastPalletReprintAt DATETIME NULL;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.SM_Sakura_CartonLabel_Data') AND name = 'PalletReprintCount')
+    ALTER TABLE dbo.SM_Sakura_CartonLabel_Data ADD PalletReprintCount INT NOT NULL DEFAULT 0;
+GO
+
 -- Snapshot PO Number/Inbound Reference/Warehouse Reference/Delivery Address dùng lúc build ZPL
 -- tem Pallet (BuildPalletLabelZplAsync) — trước đây các field này chỉ tồn tại tạm trên form UI,
 -- không lưu DB, nên không có cách build lại ĐÚNG tem Pallet cũ để Reprint. Từ giờ ghi/cập nhật

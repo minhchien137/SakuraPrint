@@ -875,9 +875,9 @@ public class SakuraController : Controller
     // ── API: history ──────────────────────────────────────────────────────────
 
     [HttpGet("/api/sakura/snlabel/history")]
-    public async Task<IActionResult> History([FromQuery] DateTime? date, [FromQuery] string? workOrder, [FromQuery] string? serialNumber, [FromQuery] string? ean, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> History([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder, [FromQuery] string? serialNumber, [FromQuery] string? ean, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await _snLabel.GetHistoryAsync(date, workOrder, serialNumber, ean, page, pageSize);
+        var result = await _snLabel.GetHistoryAsync(dateFrom, dateTo, workOrder, serialNumber, ean, page, pageSize);
         return Ok(new { ok = true, data = result });
     }
 

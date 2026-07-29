@@ -338,10 +338,11 @@
                         <th data-i18n="cartonHistory.colQuantity">Quantity</th>
                         <th data-i18n="cartonHistory.colSerials">Serials</th>
                         <th data-i18n="cartonHistory.colScanDate">Scanned At</th>
+                        <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -416,10 +417,11 @@
                         <th data-i18n="cartonReprint.colUnitCount">Units</th>
                         <th data-i18n="cartonHistory.colScanDate">Last Scanned</th>
                         <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
+                        <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="palletSummaryRows">
-                    <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -517,7 +519,7 @@
         params.set('page', currentPage);
         params.set('pageSize', pageSize());
 
-        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -530,7 +532,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -569,9 +571,18 @@
         loadHistory();
     });
 
+    // Cột "Last Reprint" dùng chung cho cả bảng Carton lẫn bảng Pallet Summary bên dưới — hiện
+    // số lần in lại + thời điểm gần nhất (xem SakuraService.ReprintCartonLabelAsync/
+    // ReprintPalletLabelAsync ghi ReprintCount/LastReprintAt tương ứng), "—" nếu chưa từng in lại.
+    function reprintCell(count, lastAt) {
+        if (!count) return '<span style="color:var(--gray-400)">—</span>';
+        const d = lastAt ? new Date(lastAt).toLocaleString() : '—';
+        return `<span class="count-pill">×${count}</span> <span style="color:var(--gray-500);font-size:0.78rem;white-space:nowrap">${d}</span>`;
+    }
+
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => {
@@ -589,6 +600,7 @@
                     <td><span class="count-pill">${r.countSerial}</span></td>
                     <td class="cell-serials">${serialsDisplay}</td>
                     <td>${scanDate}</td>
+                    <td>${reprintCell(r.reprintCount, r.lastReprintAt)}</td>
                 </tr>`;
         }).join('');
     }
@@ -660,7 +672,7 @@
         params.set('page', palletSummaryPage);
         params.set('pageSize', palletSummaryPageSize());
 
-        $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
             const body = await res.json();
@@ -673,14 +685,14 @@
         } catch (e) {
             lastPalletRows = null;
             palletSummaryTotalCount = 0;
-            $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPalletSummaryPagination();
         }
     }
 
     function renderPalletSummary(rows) {
         if (!rows.length) {
-            $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $palletSummaryRows.innerHTML = rows.map(r => {
@@ -699,6 +711,7 @@
                     <td><span class="count-pill">${r.unitCount}</span></td>
                     <td>${lastScan}</td>
                     <td>${reprintBadge}</td>
+                    <td>${reprintCell(r.palletReprintCount, r.lastPalletReprintAt)}</td>
                 </tr>`;
         }).join('');
     }
@@ -765,7 +778,9 @@
         { key: 'condition', i18n: 'cartonHistory.colCondition', fallback: 'Condition', get: r => r.condition || '' },
         { key: 'countSerial', i18n: 'cartonHistory.colQuantity', fallback: 'Quantity', get: r => r.countSerial },
         { key: 'serial', i18n: 'cartonHistory.colSerials', fallback: 'Serials', get: r => r.serial ? r.serial.split(',').join(', ') : '' },
-        { key: 'scanDate', i18n: 'cartonHistory.colScanDate', fallback: 'Scanned At', get: r => new Date(r.scanDate).toLocaleString() }
+        { key: 'scanDate', i18n: 'cartonHistory.colScanDate', fallback: 'Scanned At', get: r => new Date(r.scanDate).toLocaleString() },
+        { key: 'reprintCount', i18n: 'cartonHistory.colReprintCount', fallback: 'Reprint Count', get: r => r.reprintCount || 0 },
+        { key: 'lastReprintAt', i18n: 'cartonHistory.colLastReprint', fallback: 'Last Reprint', get: r => r.lastReprintAt ? new Date(r.lastReprintAt).toLocaleString() : '' }
     ];
 
     const EXPORT_PAGE_SIZE = 200; // Khớp cap server-side (Math.Clamp 1..200 trong GetCartonHistoryAsync).
