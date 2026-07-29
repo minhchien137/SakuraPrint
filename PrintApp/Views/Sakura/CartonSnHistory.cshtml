@@ -144,6 +144,13 @@
         min-width: 26px; padding: 2px 9px;
     }
 
+    .reprint-badge {
+        display: inline-flex; align-items: center; font-family: var(--font-body); font-size: 0.72rem;
+        font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.2px;
+    }
+    .reprint-badge.yes { background: #ECFDF5; color: var(--success); border: 1px solid rgba(5,150,105,0.25); }
+    .reprint-badge.no  { background: var(--gray-100); color: var(--gray-500); border: 1px solid var(--gray-200); }
+
     /* Pagination footer */
     .hist-pagination {
         display: flex; align-items: center; justify-content: space-between;
@@ -350,6 +357,84 @@
         </div>
     </div>
 
+    <!-- ── Pallet Summary — 1 dòng = 1 Pallet Number (1 lô/tem Pallet đã in), khác bảng
+         "Printed Cartons" ở trên vốn 1 dòng = 1 carton nên không thấy rõ đã in những lô pallet
+         nào. Chỉ xem, không cho reprint ở đây (Reprint thật sự nằm ở trang /sakura/cartonsn/reprint,
+         yêu cầu đăng nhập) — dùng lại đúng API GET /api/sakura/cartonsn/reprint/pallets. ── -->
+    <div class="t-section">
+        <div class="t-section-label" data-i18n="cartonHistory.printedPallets">Printed Pallets</div>
+        <div class="t-grid t-grid-auto" style="margin-bottom:16px">
+            <div class="t-field">
+                <label data-i18n="cartonHistory.dateFrom">From Date</label>
+                <input type="date" id="palletSummaryDateFrom" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.dateTo">To Date</label>
+                <input type="date" id="palletSummaryDateTo" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
+                <input type="text" id="palletSummaryPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
+                <input type="text" id="palletSummaryPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.filterWorkOrder">Work Order</label>
+                <input type="text" id="palletSummaryWorkOrder" autocomplete="off" data-i18n-placeholder="cartonHistory.filterWorkOrderPlaceholder" placeholder="Search Work Order…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonReprint.filterReprintStatus">Reprint Status</label>
+                <select id="palletSummaryReprintStatus">
+                    <option value="" data-i18n="cartonReprint.filterAll">All</option>
+                    <option value="1" data-i18n="cartonReprint.filterReprintedOnly">Reprinted</option>
+                    <option value="0" data-i18n="cartonReprint.filterNotReprintedOnly">Not reprinted yet</option>
+                </select>
+            </div>
+            <div class="t-field">
+                <label data-i18n="cartonHistory.pageSize">Records / Page</label>
+                <select id="palletSummaryPageSize">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <button class="t-btn t-btn-ghost" id="btnPalletSummaryRefresh" data-i18n="cartonHistory.refresh">↻ Refresh</button>
+        </div>
+
+        <div class="t-table-wrap">
+            <table class="t-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
+                        <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
+                        <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
+                        <th data-i18n="cartonHistory.colColor">Color</th>
+                        <th data-i18n="cartonReprint.colCartonCount">Cartons</th>
+                        <th data-i18n="cartonReprint.colUnitCount">Units</th>
+                        <th data-i18n="cartonHistory.colScanDate">Last Scanned</th>
+                        <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
+                    </tr>
+                </thead>
+                <tbody id="palletSummaryRows">
+                    <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="hist-pagination">
+            <div class="info" id="palletSummaryPageInfo">—</div>
+            <div class="pages">
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryFirst" data-i18n-title="cartonHistory.firstPage" title="First page">⏮</button>
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryPrev" data-i18n="cartonHistory.prevPage">← Prev</button>
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryNext" data-i18n="cartonHistory.nextPage">Next →</button>
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryLast" data-i18n-title="cartonHistory.lastPage" title="Last page">⏭</button>
+            </div>
+        </div>
+    </div>
+
     <div style="display:flex;gap:18px">
         <a href="@Url.Content("~/sakura")" data-i18n="cartonHistory.backHome" style="font-family:var(--font-body);font-size:11px;color:var(--gray-500);
             letter-spacing:0.5px;text-decoration:none;border-bottom:1px solid var(--gray-200);">
@@ -533,7 +618,141 @@
     document.addEventListener('sakura:lang-changed', () => {
         if (lastRows) renderHistory(lastRows);
         renderPagination();
+        if (lastPalletRows) renderPalletSummary(lastPalletRows);
+        renderPalletSummaryPagination();
     });
+
+    // ── Pallet Summary — 1 dòng = 1 Pallet Number (1 lô/tem Pallet đã in), dùng lại đúng API
+    // GET /api/sakura/cartonsn/reprint/pallets (đã group theo PalletNumber ở server, xem
+    // SakuraService.GetPalletReprintListAsync) nhưng chỉ hiển thị — không có chọn/Reprint như
+    // trang /sakura/cartonsn/reprint (trang đó yêu cầu đăng nhập vì cho in lại thật). ──────────
+    const $palletSummaryDateFrom = document.getElementById('palletSummaryDateFrom');
+    const $palletSummaryDateTo = document.getElementById('palletSummaryDateTo');
+    const $palletSummaryPalletId = document.getElementById('palletSummaryPalletId');
+    const $palletSummaryPalletNumber = document.getElementById('palletSummaryPalletNumber');
+    const $palletSummaryWorkOrder = document.getElementById('palletSummaryWorkOrder');
+    const $palletSummaryReprintStatus = document.getElementById('palletSummaryReprintStatus');
+    const $palletSummaryPageSize = document.getElementById('palletSummaryPageSize');
+    const $btnPalletSummaryRefresh = document.getElementById('btnPalletSummaryRefresh');
+    const $palletSummaryRows = document.getElementById('palletSummaryRows');
+    const $palletSummaryPageInfo = document.getElementById('palletSummaryPageInfo');
+    const $btnPalletSummaryFirst = document.getElementById('btnPalletSummaryFirst');
+    const $btnPalletSummaryPrev = document.getElementById('btnPalletSummaryPrev');
+    const $btnPalletSummaryNext = document.getElementById('btnPalletSummaryNext');
+    const $btnPalletSummaryLast = document.getElementById('btnPalletSummaryLast');
+
+    let palletSummaryPage = 1;
+    let palletSummaryTotalCount = 0;
+    let lastPalletRows = null;
+
+    function palletSummaryPageSize() {
+        return parseInt($palletSummaryPageSize.value) || 20;
+    }
+
+    async function loadPalletSummary() {
+        const params = new URLSearchParams();
+        if ($palletSummaryDateFrom.value) params.set('dateFrom', $palletSummaryDateFrom.value);
+        if ($palletSummaryDateTo.value) params.set('dateTo', $palletSummaryDateTo.value);
+        if ($palletSummaryPalletId.value.trim()) params.set('palletId', $palletSummaryPalletId.value.trim());
+        if ($palletSummaryPalletNumber.value.trim()) params.set('palletNumber', $palletSummaryPalletNumber.value.trim());
+        if ($palletSummaryWorkOrder.value.trim()) params.set('workOrder', $palletSummaryWorkOrder.value.trim());
+        if ($palletSummaryReprintStatus.value) params.set('isPalletReprint', $palletSummaryReprintStatus.value);
+        params.set('page', palletSummaryPage);
+        params.set('pageSize', palletSummaryPageSize());
+
+        $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonHistory.loadHistoryFailed', 'Failed to load history.')));
+            lastPalletRows = body.data.items;
+            palletSummaryTotalCount = body.data.totalCount;
+            palletSummaryPage = body.data.page;
+            renderPalletSummary(lastPalletRows);
+            renderPalletSummaryPagination();
+        } catch (e) {
+            lastPalletRows = null;
+            palletSummaryTotalCount = 0;
+            $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            renderPalletSummaryPagination();
+        }
+    }
+
+    function renderPalletSummary(rows) {
+        if (!rows.length) {
+            $palletSummaryRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            return;
+        }
+        $palletSummaryRows.innerHTML = rows.map(r => {
+            const colorCls = COLOR_CLASS[r.color] || '';
+            const lastScan = new Date(r.lastScanDate).toLocaleString();
+            const reprintBadge = r.isPalletReprint
+                ? `<span class="reprint-badge yes">✓ ${t('cartonReprint.statusReprinted', 'Reprinted')}</span>`
+                : `<span class="reprint-badge no">${t('cartonReprint.statusNotYet', 'Not yet')}</span>`;
+            return `
+                <tr>
+                    <td>${r.palletId ? escHtml(r.palletId) : '—'}</td>
+                    <td>${r.palletNumber ? escHtml(r.palletNumber) : '—'}</td>
+                    <td>${escHtml(r.workOrder) || '—'}</td>
+                    <td>${r.color ? `<span class="swatch-dot ${colorCls}"></span>${escHtml(r.color)}` : '—'}</td>
+                    <td><span class="count-pill">${r.cartonCount}</span></td>
+                    <td><span class="count-pill">${r.unitCount}</span></td>
+                    <td>${lastScan}</td>
+                    <td>${reprintBadge}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function renderPalletSummaryPagination() {
+        const totalPages = Math.max(1, Math.ceil(palletSummaryTotalCount / palletSummaryPageSize()));
+        $palletSummaryPageInfo.textContent = palletSummaryTotalCount === 0
+            ? t('cartonHistory.noData', 'No data yet.')
+            : `${t('cartonHistory.page', 'Page')} ${palletSummaryPage} / ${totalPages} — ${palletSummaryTotalCount} ${t('cartonHistory.records', 'records')}`;
+        $btnPalletSummaryFirst.disabled = palletSummaryPage <= 1;
+        $btnPalletSummaryPrev.disabled = palletSummaryPage <= 1;
+        $btnPalletSummaryNext.disabled = palletSummaryPage >= totalPages;
+        $btnPalletSummaryLast.disabled = palletSummaryPage >= totalPages;
+    }
+
+    $btnPalletSummaryFirst.addEventListener('click', () => {
+        if (palletSummaryPage <= 1) return;
+        palletSummaryPage = 1;
+        loadPalletSummary();
+    });
+    $btnPalletSummaryPrev.addEventListener('click', () => {
+        if (palletSummaryPage <= 1) return;
+        palletSummaryPage--;
+        loadPalletSummary();
+    });
+    $btnPalletSummaryNext.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(palletSummaryTotalCount / palletSummaryPageSize()));
+        if (palletSummaryPage >= totalPages) return;
+        palletSummaryPage++;
+        loadPalletSummary();
+    });
+    $btnPalletSummaryLast.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(palletSummaryTotalCount / palletSummaryPageSize()));
+        if (palletSummaryPage >= totalPages) return;
+        palletSummaryPage = totalPages;
+        loadPalletSummary();
+    });
+
+    $palletSummaryDateFrom.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
+    $palletSummaryDateTo.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
+    $palletSummaryReprintStatus.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
+    $palletSummaryPageSize.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
+    $palletSummaryPalletId.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); palletSummaryPage = 1; loadPalletSummary(); }
+    });
+    $palletSummaryPalletNumber.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); palletSummaryPage = 1; loadPalletSummary(); }
+    });
+    $palletSummaryWorkOrder.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); palletSummaryPage = 1; loadPalletSummary(); }
+    });
+    $btnPalletSummaryRefresh.addEventListener('click', () => { palletSummaryPage = 1; loadPalletSummary(); });
+
+    loadPalletSummary();
 
     // ── Export Excel — modal chọn cột rồi xuất TOÀN BỘ dữ liệu đang lọc (không chỉ trang hiện
     // tại) ra file .xlsx, dùng thư viện SheetJS (CDN, không cần build/npm) ─────────────────────
