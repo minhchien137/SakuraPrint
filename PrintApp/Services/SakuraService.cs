@@ -1114,18 +1114,23 @@ public class SakuraService
     // Đọc từ SM_SNLabelScanLog — audit trail ĐẦY ĐỦ mọi lần quét EAN+Serial (kể cả các lần
     // FAIL, mỗi lần 1 dòng riêng, không bị ghi đè). SM_SNLabelPrint (chỉ chứa serial đã in
     // THÀNH CÔNG) chỉ được join thêm vào để lấy ReprintCount/LastReprintedAt cho badge Reprint.
-    public async Task<SnLabelHistoryPageDto> GetHistoryAsync(DateTime? date, string? workOrder, string? serialNumber, string? ean, int page, int pageSize)
+    public async Task<SnLabelHistoryPageDto> GetHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? serialNumber, string? ean, int page, int pageSize)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 200);
 
         var query = _context.SnLabelScanLogs.AsNoTracking().AsQueryable();
 
-        if (date.HasValue)
+        if (dateFrom.HasValue)
         {
-            DateTime dayStart = date.Value.Date;
-            DateTime dayEnd = dayStart.AddDays(1);
-            query = query.Where(x => x.Timeline >= dayStart && x.Timeline < dayEnd);
+            DateTime rangeStart = dateFrom.Value.Date;
+            query = query.Where(x => x.Timeline >= rangeStart);
+        }
+
+        if (dateTo.HasValue)
+        {
+            DateTime rangeEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.Timeline < rangeEnd);
         }
 
         if (!string.IsNullOrWhiteSpace(workOrder))

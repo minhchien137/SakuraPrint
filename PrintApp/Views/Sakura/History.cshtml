@@ -80,7 +80,7 @@
     .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
 
     .t-grid { display: grid; gap: 16px 20px; }
-    .t-grid-auto { grid-template-columns: 170px 1fr 1fr 1fr 120px auto; align-items: end; }
+    .t-grid-auto { grid-template-columns: 150px 150px 1fr 1fr 1fr 120px auto; align-items: end; }
 
     .t-field label {
         display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
@@ -214,8 +214,12 @@
         <div class="t-section-label" data-i18n="history.filter">Filter</div>
         <div class="t-grid t-grid-auto">
             <div class="t-field">
-                <label data-i18n="history.prodDate">Production Date</label>
-                <input type="date" id="histDate" />
+                <label data-i18n="history.prodDateFrom">From Date</label>
+                <input type="date" id="histDateFrom" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="history.prodDateTo">To Date</label>
+                <input type="date" id="histDateTo" />
             </div>
             <div class="t-field">
                 <label data-i18n="history.filterSerial">Serial Number</label>
@@ -311,7 +315,8 @@
         '02': { get name() { return t('color.green', 'Green'); }, cls: 'green' }
     };
 
-    const $histDate = document.getElementById('histDate');
+    const $histDateFrom = document.getElementById('histDateFrom');
+    const $histDateTo = document.getElementById('histDateTo');
     const $histSerial = document.getElementById('histSerial');
     const $histEan = document.getElementById('histEan');
     const $histWorkOrder = document.getElementById('histWorkOrder');
@@ -348,7 +353,8 @@
 
     async function loadHistory() {
         const params = new URLSearchParams({ page: currentPage, pageSize: pageSize() });
-        if ($histDate.value) params.set('date', $histDate.value);
+        if ($histDateFrom.value) params.set('dateFrom', $histDateFrom.value);
+        if ($histDateTo.value) params.set('dateTo', $histDateTo.value);
         if ($histSerial.value.trim()) params.set('serialNumber', $histSerial.value.trim());
         if ($histEan.value.trim()) params.set('ean', $histEan.value.trim());
         if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
@@ -457,7 +463,8 @@
         }).join('');
     }
 
-    $histDate.addEventListener('change', () => { currentPage = 1; loadHistory(); });
+    $histDateFrom.addEventListener('change', () => { currentPage = 1; loadHistory(); });
+    $histDateTo.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histPageSize.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histSerial.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
@@ -478,7 +485,8 @@
     });
 
     // ── init ──────────────────────────────────────────────────────────────────
-    $histDate.value = todayStr();
+    $histDateFrom.value = todayStr();
+    $histDateTo.value = todayStr();
     loadHistory();
 })();
 </script>
