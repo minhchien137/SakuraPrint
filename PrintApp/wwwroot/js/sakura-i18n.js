@@ -67,8 +67,7 @@
             'tile.comingsoon.title': 'Coming soon',
             'tile.comingsoon.desc': 'Next Sakura feature',
 
-            'snlabel.title': 'SN LABEL PRINT',
-            'snlabel.subtitle': 'Serial Number Print — Sakura',
+            'snlabel.title': 'SN LABEL ON GIFT BOX',
             'snlabel.printModeLabel': 'Print Mode',
             'snlabel.modeWorkOrder': 'Work Order',
             'snlabel.modeManual': 'Reprint',
@@ -237,8 +236,7 @@
             'history.loadWorkOrdersFailed': 'Failed to load Work Orders.',
             'history.loadHistoryFailed': 'Failed to load history.',
 
-            'laser.title': 'BACK PANEL',
-            'laser.subtitle': 'Back Panel — Sakura',
+            'laser.title': 'BACK PANEL STATION',
             'laser.badge': 'BACK PANEL',
             'laser.workOrderSection': 'Work Order',
             'laser.workOrder': 'Work Order',
@@ -406,7 +404,7 @@
             'middleSummary.workOrderCount': '{n} Work Order',
             'middleSummary.backResult': '← Back to Result',
 
-            'middleInput.title': 'MIDDLE PANEL',
+            'middleInput.title': 'MIDDLE PANEL STATION',
             'middleInput.workOrderSection': 'Work Order',
             'middleInput.workOrder': 'Work Order',
             'middleInput.workOrderPlaceholder': 'Scan or type Work Order…',
@@ -471,8 +469,7 @@
             'middleInputHistory.records': 'records',
             'middleInputHistory.backInputResult': '← Back to Input Result',
 
-            'cartonsn.title': 'CARTON SN & PALLET LABEL PRINT',
-            'cartonsn.subtitle': 'Carton Serial Number Print — Sakura',
+            'cartonsn.title': 'CARTON SN LABEL AND PALLET LABEL',
             'cartonsn.printerConfig': 'Printer Configuration',
             'cartonsn.serviceChecking': 'Service …',
             'cartonsn.bridgeOnline': 'Service — Online',
@@ -778,8 +775,7 @@
             'tile.comingsoon.title': '敬请期待',
             'tile.comingsoon.desc': '下一个 Sakura 功能',
 
-            'snlabel.title': 'SN 序列号打印',
-            'snlabel.subtitle': '序列号打印 — Sakura',
+            'snlabel.title': '礼品盒 SN 标签',
             'snlabel.printModeLabel': '打印模式',
             'snlabel.modeWorkOrder': '工单打印',
             'snlabel.modeManual': '手动打印',
@@ -948,8 +944,7 @@
             'history.loadWorkOrdersFailed': '无法加载工单列表。',
             'history.loadHistoryFailed': '无法加载历史记录。',
 
-            'laser.title': '镭射打码检验',
-            'laser.subtitle': '背板 — Sakura',
+            'laser.title': '背板工位',
             'laser.badge': '背板',
             'laser.workOrderSection': '工单号',
             'laser.workOrder': '工单号',
@@ -1117,7 +1112,7 @@
             'middleSummary.workOrderCount': '{n} 个工单',
             'middleSummary.backResult': '← 返回结果页',
 
-            'middleInput.title': '录入生产结果',
+            'middleInput.title': 'Middle 站',
             'middleInput.workOrderSection': '工单号',
             'middleInput.workOrder': '工单号',
             'middleInput.workOrderPlaceholder': '扫描或输入工单号…',
@@ -1182,8 +1177,7 @@
             'middleInputHistory.records': '条记录',
             'middleInputHistory.backInputResult': '← 返回录入结果',
 
-            'cartonsn.title': 'CARTON SN 标签打印',
-            'cartonsn.subtitle': '纸箱序列号打印 — Sakura',
+            'cartonsn.title': 'CARTON SN 标签及栈板标签',
             'cartonsn.printerConfig': '打印机设置',
             'cartonsn.serviceChecking': '服务 …',
             'cartonsn.bridgeOnline': '服务 — 在线',
