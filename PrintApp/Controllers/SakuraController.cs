@@ -224,6 +224,26 @@ public class SakuraController : Controller
             },
             new SakuraAppTile
             {
+                Key = "reworkgroup",
+                Icon = "🔁",
+                Title = "Rework",
+                Subtitle = "Rework station",
+                Enabled = true,
+                Items = new List<SakuraAppTile>
+                {
+                    new SakuraAppTile
+                    {
+                        Key = "rework",
+                        Icon = "🔁",
+                        Title = "Rework",
+                        Subtitle = "Rework station (coming soon)",
+                        Href = Url.Content("~/sakura/rework"),
+                        Enabled = true
+                    }
+                }
+            },
+            new SakuraAppTile
+            {
                 Key = "comingsoon",
                 Icon = "➕",
                 Title = "Coming soon",
@@ -263,6 +283,13 @@ public class SakuraController : Controller
     public IActionResult CartonSnReprint()
     {
         return View("~/Views/Sakura/CartonSnReprint.cshtml");
+    }
+
+    // Placeholder — chức năng Rework, chưa có logic, sẽ bổ sung sau.
+    [HttpGet("/sakura/rework")]
+    public IActionResult ReworkIndex()
+    {
+        return View("~/Views/Sakura/Rework.cshtml");
     }
 
     // ── API: printer list (for other Sakura pages that need it) ────────────────
@@ -369,6 +396,62 @@ public class SakuraController : Controller
                 return BadRequest(new { ok = false, error = $"Không tìm thấy mã EAN cho Work Order '{wo}'.", errorCode = "ean.notFound", errorParams = new { wo } });
 
             return Ok(new { ok = true, data = new { workOrder = wo, ean } });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+    }
+
+    // ── API: Rework — Work Order lookup (Product Code + EAN) ────────────────────
+    // Tra Work Order trên Odoo để lấy Mã sản phẩm (bracket code trong product_id[1], vd
+    // "[RM15A-1001RW] Sakura - Desert Pink (Rework)" -> "RM15A-1001RW" — xem
+    // ViidooService.ExtractCodeFromDescription) và mã EAN (x_custcode) của đúng sản phẩm đó
+    // (giống cách EanLookup/GetEanByWorkOrderAsync tra EAN cho SnLabel). EAN có thể null nếu
+    // sản phẩm chưa cấu hình x_custcode trên Odoo — không coi đó là lỗi, chỉ hiển thị "—".
+
+    [HttpGet("/api/sakura/rework/workorder-lookup")]
+    public async Task<IActionResult> ReworkWorkOrderLookup([FromQuery] string workOrder)
+    {
+        if (string.IsNullOrWhiteSpace(workOrder))
+            return BadRequest(new { ok = false, error = "Thiếu Work Order.", errorCode = "workOrder.missing" });
+
+        string wo = workOrder.Trim();
+        try
+        {
+            var result = await _viidoo.SearchAsync(wo);
+            if (result == null)
+                return BadRequest(new { ok = false, error = $"Không tìm thấy Work Order '{wo}' trên Odoo.", errorCode = "workOrder.notFoundOdoo", errorParams = new { wo } });
+
+            string? ean = result.ProductId is int productId ? await _viidoo.GetProductEanAsync(productId) : null;
+
+            return Ok(new { ok = true, data = new { workOrder = wo, productCode = result.ProductCode, ean, color = result.Color, productId = result.ProductId } });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+    }
+
+    // ── API: Rework — Check Color & EAN. Tra ngược mã EAN người vận hành quét trên sản phẩm
+    // thật (KHÔNG dựa vào product_id của Work Order) -> tìm ra màu của đúng sản phẩm sở hữu EAN
+    // đó, để front-end tự so khớp với màu của Work Order đã lookup ở bước 1. Trả lỗi nếu không
+    // tìm thấy sản phẩm nào có EAN này, hoặc không suy ra được màu từ tên sản phẩm. ───────────
+
+    [HttpGet("/api/sakura/rework/ean-color-lookup")]
+    public async Task<IActionResult> ReworkEanColorLookup([FromQuery] string ean)
+    {
+        if (string.IsNullOrWhiteSpace(ean))
+            return BadRequest(new { ok = false, error = "Thiếu mã EAN.", errorCode = "ean.missing" });
+
+        string e = ean.Trim();
+        try
+        {
+            string? color = await _viidoo.GetProductColorByEanAsync(e);
+            if (string.IsNullOrEmpty(color))
+                return BadRequest(new { ok = false, error = $"Không xác định được màu cho EAN '{e}'.", errorCode = "ean.colorNotFound", errorParams = new { ean = e } });
+
+            return Ok(new { ok = true, data = new { ean = e, color } });
         }
         catch (Exception ex)
         {

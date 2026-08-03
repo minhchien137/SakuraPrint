@@ -25,6 +25,7 @@ public class ViidooService
 
     private const string OdooApiUrl = "https://sigmaworldwide.io/web/dataset/call_kw/mrp.production/web_search_read";
     private const string OdooProductReadUrl = "https://sigmaworldwide.io/web/dataset/call_kw/product.product/read";
+    private const string OdooProductSearchUrl = "https://sigmaworldwide.io/web/dataset/call_kw/product.product/web_search_read";
 
     // Số cấp WO cha tối đa sẽ truy ngược khi tìm màu (tránh lặp vô hạn).
     private const int MaxParentLookupDepth = 5;
@@ -198,6 +199,79 @@ public class ViidooService
         }
 
         return null;
+    }
+
+    // Tra ngược từ mã EAN (x_custcode) -> sản phẩm (product.product) sở hữu mã đó -> màu (quét
+    // display_name tìm Green/Blue/Pink, giống ExtractColorFromDescription dùng cho WO). Dùng ở
+    // bước "Check Color & EAN" của trạm Rework: người vận hành quét EAN trên sản phẩm thật, đối
+    // chiếu màu suy ra được với màu của Work Order đang chọn — KHÔNG dựa vào product_id của WO
+    // (để phát hiện được trường hợp quét nhầm EAN của sản phẩm khác màu).
+    // Trả về null nếu không tìm thấy sản phẩm nào có EAN này, hoặc tên sản phẩm không chứa màu.
+    public async Task<string?> GetProductColorByEanAsync(string ean)
+    {
+        string? cookie = await GetCookieFromDbAsync();
+        if (cookie == null)
+            throw new SakuraCodedException("odoo.cookieNotConfigured", "Odoo cookie not configured. Please update SVN_Defect_Cookie table.");
+
+        string safeEan = JsonSerializer.Serialize(ean);
+        string finalJson = $@"
+    {{
+        ""id"": 555555558,
+        ""jsonrpc"": ""2.0"",
+        ""method"": ""call"",
+        ""params"": {{
+            ""model"": ""product.product"",
+            ""method"": ""web_search_read"",
+            ""args"": [],
+            ""kwargs"": {{
+                ""limit"": 1,
+                ""offset"": 0,
+                ""order"": """",
+                ""context"": {{
+                    ""lang"": ""vi_VN"",
+                    ""tz"": ""Asia/Ho_Chi_Minh"",
+                    ""uid"": 2,
+                    ""allowed_company_ids"": [1]
+                }},
+                ""count_limit"": 1,
+                ""domain"": [[""x_custcode"", ""="", {safeEan}]],
+                ""fields"": [""display_name""]
+            }}
+        }}
+    }}";
+
+        var jsonContent = new StringContent(finalJson, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, OdooProductSearchUrl) { Content = jsonContent };
+        request.Headers.Add("Cookie", cookie);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        string responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("error", out var error))
+        {
+            Console.WriteLine($"Odoo returned error: {error}");
+            return null;
+        }
+
+        if (!root.TryGetProperty("result", out var result) ||
+            !result.TryGetProperty("records", out var records) ||
+            records.ValueKind != JsonValueKind.Array ||
+            records.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        var record = records[0];
+        string? displayName = record.TryGetProperty("display_name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String
+            ? nameEl.GetString()
+            : null;
+
+        return ExtractColorFromDescription(displayName);
     }
 
     // Gọi Odoo web_search_read trên mrp.production theo productionCode,

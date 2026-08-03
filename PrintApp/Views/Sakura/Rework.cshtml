@@ -1,0 +1,1007 @@
+@{
+    ViewData["Title"] = "Rework — Sakura";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    /* ── Sigma Red design tokens — shared across all Sakura pages ─────────── */
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .rw-page { max-width: 1440px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── Header — same treatment as SnLabel.cshtml's .snl-header: big title, no subtitle/bar ── */
+    .rw-header { display: block; position: relative; text-align: center; margin-bottom: 28px; }
+    .rw-header h1 { font-family: var(--font-head); font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--red-dark); line-height: 1.1; }
+    .rw-badge {
+        position: absolute; top: 0; right: 0;
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .rw-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+    .rw-layout { display: flex; gap: 32px; align-items: flex-start; }
+    .rw-left { flex: 1.1; min-width: 0; }
+    .rw-right { flex: 1; min-width: 0; position: sticky; top: 24px; }
+
+    /* ── Reused section/grid/field/button primitives (same as SnLabel.cshtml) ── */
+    .t-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 24px 26px 20px; margin-bottom: 18px; box-shadow: var(--shadow-md);
+    }
+    .t-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .t-grid { display: grid; gap: 16px 20px; }
+    .t-grid-2 { grid-template-columns: 1fr 1fr; }
+    .printer-grid { align-items: end; }
+    .usb-row { display: flex; gap: 10px; align-items: end; }
+    .usb-row .t-field { flex: 1; margin-bottom: 0; }
+
+    .t-field label {
+        display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .t-field input, .t-field select {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .t-field input:hover, .t-field select:hover { border-color: var(--red-mid); }
+    .t-field input:focus, .t-field select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .t-field input:disabled, .t-field select:disabled {
+        background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; border-color: var(--gray-200);
+    }
+    .t-field select {
+        appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
+    }
+
+    .t-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .t-btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+        border: none; cursor: pointer; min-height: 46px; padding: 11px 18px; border-radius: 10px;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 7px;
+    }
+    .t-btn-primary { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); box-shadow: 0 4px 14px rgba(200,16,46,0.35); }
+    .t-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,16,46,0.4); }
+    .t-btn-outline { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-outline:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+    .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+    .t-btn:disabled:hover { transform: none; }
+
+    /* "Saved" lit-up state — stays green until Reset is pressed, same as SnLabel/CartonSN. */
+    .t-btn-ghost.is-saved, .t-btn-ghost.is-saved:hover {
+        background: var(--success); border-color: #047857; color: var(--white);
+    }
+
+    /* Work Order lookup readout — Product Code / EAN */
+    .rw-readout { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .rw-readout-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px dashed var(--gray-200); padding-bottom: 8px; }
+    .rw-readout-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .rw-readout-row .k { font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-500); }
+    .rw-readout-row .v { font-family: var(--font-body); font-size: 15px; color: var(--gray-900); font-weight: 600; }
+
+    .btn-icon {
+        flex-shrink: 0; background: var(--white); border: 1.5px solid var(--gray-200); color: var(--gray-500);
+        font-family: var(--font-body); font-weight: 600; font-size: 0.8rem; min-height: 46px;
+        padding: 8px 14px; border-radius: 10px; cursor: pointer; margin-bottom: 0;
+        transition: all 0.2s ease; display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .btn-icon:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+
+    .t-status {
+        font-family: var(--font-body); font-size: 0.85rem; padding: 12px 16px; border-radius: 12px;
+        display: none; align-items: flex-start; gap: 10px; margin-top: 14px; line-height: 1.5;
+        box-shadow: var(--shadow-sm);
+    }
+    .t-status.show { display: flex; }
+    .t-status.ok  { background: #ECFDF5; border-left: 3px solid var(--success); color: #065F46; }
+    .t-status.err { background: var(--red-xlight); border-left: 3px solid var(--danger); color: #7F1D1D; }
+
+    /* ── Printer Configuration — collapsible header, same pattern/markup as SnLabel.cshtml
+       and CartonSN.cshtml: node-indicator + collapse button float in the section's top-right
+       corner via .snl-config-topright. The nested override below is required — .node-indicator
+       is also used standalone (absolute) elsewhere, so it must be reset to static here or it
+       overlaps the collapse button instead of sitting next to it in the flex row. ──────────── */
+    .snl-config-topright { position: absolute; top: 18px; right: 20px; display: flex; align-items: center; gap: 12px; }
+    .snl-config-topright .node-indicator { position: static; top: auto; right: auto; }
+    .snl-collapse-btn {
+        background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 6px; cursor: pointer;
+        width: 22px; height: 22px; padding: 0; margin: 0;
+        color: var(--gray-500); font-size: 12px; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .snl-collapse-btn:hover { color: var(--red); border-color: var(--red); background: var(--red-xlight); }
+    .snl-collapse-btn span { display: inline-block; transition: transform 0.2s ease; }
+    .snl-collapse-btn.open span { transform: rotate(180deg); }
+
+    .mode-toggle {
+        display: flex; gap: 0; margin-bottom: 18px;
+        border: 1.5px solid var(--gray-200); border-radius: 10px; overflow: hidden;
+    }
+    .mode-toggle label {
+        flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 11px 16px; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700;
+        letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray-500); cursor: pointer;
+        transition: all 0.2s ease; margin-bottom: 0; user-select: none; background: var(--white);
+    }
+    .mode-toggle label:first-of-type { border-right: 1.5px solid var(--gray-200); }
+    .mode-toggle input[type="radio"] { display: none; }
+    .mode-toggle label.active { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); }
+
+    .node-indicator {
+        display: flex; align-items: center; gap: 6px;
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 600; color: var(--gray-500);
+    }
+    .node-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-400); }
+    .node-dot.alive { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .node-dot.dead { background: var(--danger); }
+
+    .usb-status { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; margin-top: 6px; height: 14px; color: var(--gray-500); }
+    .usb-status.ok  { color: var(--success); }
+    .usb-status.bad { color: var(--danger); }
+
+    .rw-inline-saved {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; color: var(--success);
+        opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+    }
+    .rw-inline-saved.show { opacity: 1; }
+
+    /* ── Print Mode tabs ──────────────────────────────────────────────────────── */
+    .sk-mode-tabs { display: flex; gap: 10px; }
+    .sk-mode-tab {
+        flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--gray-200); background: var(--white);
+        color: var(--gray-500); cursor: pointer; transition: all 0.2s ease;
+    }
+    .sk-mode-tab.active {
+        border-color: transparent; background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white);
+        box-shadow: 0 4px 14px rgba(200,16,46,0.3);
+    }
+    .sk-mode-tab .mode-icon { font-size: 15px; }
+
+    /* ── Result — circle on the left, Process steps on the right (mirrors SnLabel.cshtml's
+       .snl-circle / .snl-steps, merged into one section instead of two separate ones). ────── */
+    .rw-result-grid { display: flex; gap: 28px; align-items: center; min-height: 280px; }
+    .rw-circle-wrap { display: flex; flex-direction: column; align-items: center; padding: 24px 0; flex-shrink: 0; }
+    .rw-circle {
+        width: 230px; height: 230px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-head); font-size: 42px; font-weight: 800; color: var(--white);
+        border: 7px solid transparent; box-shadow: var(--shadow-lg);
+        transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+    .rw-circle.idle { background: var(--gray-200); color: var(--gray-500); border-color: var(--gray-400); }
+    .rw-circle.pass { background: var(--success); border-color: #047857; transform: scale(1.03); }
+    .rw-circle.fail { background: var(--danger);  border-color: #B91C1C; transform: scale(1.03); }
+
+    .rw-steps { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .rw-step { display: flex; align-items: center; gap: 14px; padding: 20px 2px; border-bottom: 1px dashed var(--gray-200); }
+    .rw-step:last-child { border-bottom: none; }
+    .rw-step-icon {
+        min-width: 34px; height: 34px; padding: 0 5px; border-radius: 17px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-body); font-size: 14px; font-weight: 800;
+        border: 2px solid var(--gray-200); background: var(--white); color: var(--gray-400);
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .rw-step-icon.done { background: var(--success); border-color: #047857; color: var(--white); }
+    .rw-step-icon.fail { background: var(--danger); border-color: #B91C1C; color: var(--white); }
+    .rw-step-label { font-family: var(--font-body); font-size: 0.95rem; font-weight: 600; color: var(--gray-700); flex: 1; }
+    .rw-step.is-done .rw-step-label { color: var(--gray-900); }
+    .rw-step.is-fail .rw-step-label { color: var(--red-dark); }
+
+    /* ── Retry / Skip — chỉ hiện khi bước 3 (Print Label) fail, mirrors SnLabel.cshtml's
+       .snl-retry-actions/.snl-retry-btn (Check Work Order/Check Color & EAN fail thì chỉ cần
+       quét lại, không cần Try Again/Skip). ─────────────────────────────────────────────── */
+    .rw-retry-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; margin-top: 10px; }
+    .rw-retry-btn {
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2px;
+        border: 1.5px solid transparent; cursor: pointer; padding: 5px 10px; border-radius: 8px; white-space: nowrap;
+        display: flex; align-items: center; gap: 4px; transition: all 0.2s ease;
+    }
+    .rw-retry-btn.primary { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); }
+    .rw-retry-btn.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(200,16,46,0.3); }
+    .rw-retry-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .rw-retry-btn.ghost { background: var(--white); color: var(--gray-500); border-color: var(--gray-200); }
+    .rw-retry-btn.ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+
+    @@media (max-width: 480px) {
+        .rw-result-grid { flex-direction: column; }
+    }
+
+    .rw-back { display: inline-block; font-family: var(--font-body); font-size: 11px; color: var(--gray-500); letter-spacing: 0.5px; text-decoration: none; border-bottom: 1px solid var(--gray-200); }
+    .rw-back:hover { color: var(--red); border-color: var(--red); }
+
+    @@media (max-width: 860px) {
+        .rw-layout { flex-direction: column; }
+        .rw-right { position: static; width: 100%; }
+        .t-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    /* ── Login gate modal — bắt buộc đăng nhập lại mỗi lần vào trang, cùng thiết kế với
+       modal Reprint (SnLabel.cshtml / CartonSnReprint.cshtml). ──────────────────────── */
+    .sk-modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.45);
+        z-index: 200; align-items: center; justify-content: center;
+    }
+    .sk-modal-overlay.show { display: flex; }
+    .sk-modal {
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 26px 28px;
+        width: 320px; max-width: 90vw; box-shadow: var(--shadow-lg);
+    }
+    .sk-modal-title {
+        font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--gray-900);
+        margin-bottom: 14px; line-height: 1.5;
+    }
+    .sk-modal-input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 44px; padding: 10px 14px; font-family: var(--font-body); font-size: 14px; color: var(--gray-900); outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
+    .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
+    .sk-modal-error.show { display: block; }
+</style>
+
+@await Html.PartialAsync("_LangSwitcher")
+
+<div class="rw-page" id="reworkPage" style="display:none">
+
+    <header class="rw-header">
+        <div>
+            <h1 data-i18n="rework.title">REWORK</h1>
+        </div>
+        <div class="rw-badge">SAKURA</div>
+    </header>
+
+    <div class="rw-layout">
+
+        <!-- ── Left: Printer Configuration + Print Mode ── -->
+        <div class="rw-left">
+
+            <div class="t-section" id="printerConfigSection" style="position:relative">
+                <div class="t-section-label" data-i18n="rework.printerConfig">Printer Configuration</div>
+
+                <div class="snl-config-topright">
+                    <div class="node-indicator">
+                        <div class="node-dot" id="nodeDot"></div>
+                        <span id="nodeTxt" data-i18n="rework.serviceChecking">Service …</span>
+                    </div>
+                    <button type="button" class="snl-collapse-btn" id="btnTogglePrinterConfig" data-i18n-title="rework.printerConfigToggleTitle" title="Show/hide printer configuration" aria-expanded="false">
+                        <span id="printerConfigChevron">▾</span>
+                    </button>
+                </div>
+
+                <div id="printerConfigBody" style="display:none">
+                    <div class="mode-toggle" id="printerModeToggle" style="margin-bottom:18px">
+                        <label id="lblTcp" class="active">
+                            <input type="radio" name="rework-print-mode" value="tcp" checked />
+                            <span class="mode-icon">🌐</span>
+                            <span>TCP / IP</span>
+                        </label>
+                        <label id="lblUsb">
+                            <input type="radio" name="rework-print-mode" value="usb" />
+                            <span class="mode-icon">🔌</span>
+                            <span>USB</span>
+                        </label>
+                    </div>
+
+                    <div id="tcpBlock">
+                        <div class="t-grid t-grid-2 printer-grid">
+                            <div class="t-field">
+                                <label data-i18n="rework.printerIp">Printer IP</label>
+                                <input type="text" id="printerIp" placeholder="192.168.1.100" />
+                            </div>
+                            <div class="t-field">
+                                <label data-i18n="rework.port">Port</label>
+                                <input type="number" id="printerPort" value="9100" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="usbBlock" style="display:none">
+                        <div class="usb-row">
+                            <div class="t-field" style="margin-bottom:0">
+                                <label data-i18n="rework.usbPrinter">USB Printer</label>
+                                <select id="usbSelect" disabled>
+                                    <option value="" data-i18n="rework.usbScanHint">— Click 🔄 to scan —</option>
+                                </select>
+                            </div>
+                            <button class="btn-icon" id="btnRefreshUsb" type="button" data-i18n-title="rework.refreshUsbTitle" title="Rescan printers">
+                                <span data-i18n="rework.refreshUsb">🔄 Refresh</span>
+                            </button>
+                        </div>
+                        <div class="usb-status" id="usbStatus"></div>
+                    </div>
+
+                    <div class="t-grid t-grid-2" style="margin-top:14px">
+                        <div class="t-field">
+                            <label data-i18n="rework.copies">Copies</label>
+                            <input type="number" id="copies" value="1" min="1" max="10" />
+                        </div>
+                    </div>
+                    <div class="t-actions" style="margin-top:16px">
+                        <button class="t-btn t-btn-ghost" id="btnSavePrinter" data-i18n="rework.save">Save</button>
+                        <span class="rw-inline-saved" id="printerSavedHint" data-i18n="rework.savedHint">✓ Saved</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-section">
+                <div class="t-section-label" data-i18n="rework.printModeLabel">Print Mode</div>
+
+                <div class="sk-mode-tabs" id="modeTabs">
+                    <button type="button" class="sk-mode-tab active" data-mode="wo">
+                        <span class="mode-icon">🏭</span>
+                        <span data-i18n="rework.modeWorkOrder">Work Order</span>
+                    </button>
+                    <button type="button" class="sk-mode-tab" data-mode="reprint">
+                        <span class="mode-icon">🔁</span>
+                        <span data-i18n="rework.modeReprint">Reprint</span>
+                    </button>
+                </div>
+
+                <div id="woPanel" style="margin-top:18px">
+                    <div style="display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px">
+                        <div class="t-field" style="flex:1;min-width:200px;margin-bottom:0">
+                            <label data-i18n="rework.workOrder">Work Order</label>
+                            <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="rework.workOrderPlaceholder" placeholder="Scan or type Work Order…" style="min-height:40px" />
+                        </div>
+                        <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" data-i18n="rework.lookupBtn" style="min-height:40px">🔍 Lookup</button>
+                        <button type="button" class="t-btn t-btn-ghost" id="btnSaveWo" data-i18n="rework.saveWoBtn" style="min-height:40px">💾 Save</button>
+                        <button type="button" class="t-btn t-btn-ghost" id="btnResetWo" data-i18n="rework.resetWoBtn" style="min-height:40px">✕ Reset</button>
+                    </div>
+                    <div class="t-field" style="margin-top:14px;margin-bottom:0">
+                        <label data-i18n="rework.ean">EAN</label>
+                        <input type="text" id="eanInput" autocomplete="off" disabled data-i18n-placeholder="rework.eanPlaceholder" placeholder="Scan or type EAN…" style="min-height:40px" />
+                    </div>
+                    <div id="eanStatus" class="t-status"></div>
+                    <div id="woStatus" class="t-status"></div>
+                    <div class="rw-readout" id="woResolved" style="display:none">
+                        <div class="rw-readout-row">
+                            <span class="k" data-i18n="rework.productCode">Product Code</span>
+                            <span class="v" id="woProductCode">—</span>
+                        </div>
+                        <div class="rw-readout-row">
+                            <span class="k" data-i18n="rework.ean">EAN</span>
+                            <span class="v" id="woEan">—</span>
+                        </div>
+                        <div class="rw-readout-row">
+                            <span class="k" data-i18n="rework.color">Color</span>
+                            <span class="v" id="woColor">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reprintPanel" style="display:none;margin-top:18px">
+                    <div style="display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px">
+                        <div class="t-field" style="flex:1;min-width:200px;margin-bottom:0">
+                            <label data-i18n="rework.reprintSerialLabel">Serial Number</label>
+                            <input type="text" id="reprintSerial" autocomplete="off" data-i18n-placeholder="rework.reprintSerialPlaceholder" placeholder="Scan or type an existing serial…" style="min-height:40px" />
+                        </div>
+                        <button type="button" class="t-btn t-btn-outline" id="btnReprint" data-i18n="rework.reprintBtn" style="min-height:40px">🔁 Reprint</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:18px">
+                <a class="rw-back" href="@Url.Content("~/sakura")" data-i18n="rework.backHome">← Sakura Home</a>
+            </div>
+
+        </div>
+
+        <!-- ── Right: Result (circle) + Process (steps), merged into one section ── -->
+        <div class="rw-right">
+            <div class="t-section">
+                <div class="t-section-label" data-i18n="rework.resultSection">Result</div>
+                <div class="rw-result-grid">
+                    <div class="rw-circle-wrap">
+                        <div class="rw-circle idle" id="rwCircle">
+                            <span id="rwCircleText">—</span>
+                        </div>
+                    </div>
+                    <div class="rw-steps" id="rwSteps">
+                        <div class="rw-step" id="rwStep1Row">
+                            <div class="rw-step-icon" id="rwStep1Icon">1</div>
+                            <div class="rw-step-label" data-i18n="rework.step1Label">Check Work Order</div>
+                        </div>
+                        <div class="rw-step" id="rwStep2Row">
+                            <div class="rw-step-icon" id="rwStep2Icon">2</div>
+                            <div class="rw-step-label" data-i18n="rework.step2Label">Check Color &amp; EAN of The Gift Box</div>
+                        </div>
+                        <div class="rw-step" id="rwStep3Row">
+                            <div class="rw-step-icon" id="rwStep3Icon">3</div>
+                            <div class="rw-step-label" data-i18n="rework.step3Label">Print Label</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rw-retry-actions" id="rwRetryBox" style="display:none">
+                    <button type="button" class="rw-retry-btn primary" id="btnRwTryAgain" data-i18n="rework.tryAgainBtn">🔄 Try Again</button>
+                    <button type="button" class="rw-retry-btn ghost" id="btnRwSkip" data-i18n="rework.skipBtn">Skip →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="sk-modal-overlay" id="pwModalOverlay">
+    <div class="sk-modal">
+        <div class="sk-modal-title" data-i18n="rework.loginTitle">Log in to open Rework.</div>
+        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="rework.loginUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
+        <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="rework.loginPasswordPlaceholder" placeholder="Password" autocomplete="off" />
+        <div class="sk-modal-error" id="pwError" data-i18n="rework.loginWrong">Incorrect username or password.</div>
+        <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
+            <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="rework.cancel">Cancel</button>
+            <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="rework.confirm">Confirm</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+    <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+    <script>
+    (function () {
+        const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+
+        // ── Login gate — bắt buộc đăng nhập lại MỖI LẦN vào trang này (không lưu trạng thái
+        // đăng nhập ở đâu cả), dùng chung tài khoản SM_UserPermission với tab Reprint ở
+        // SnLabel.cshtml / CartonSnReprint.cshtml (endpoint verify-reprint-login).
+        const $reworkPage = document.getElementById('reworkPage');
+        const $pwOverlay  = document.getElementById('pwModalOverlay');
+        const $pwUsername = document.getElementById('pwUsername');
+        const $pwInput    = document.getElementById('pwInput');
+        const $pwError    = document.getElementById('pwError');
+        const $btnPwCancel= document.getElementById('btnPwCancel');
+        const $btnPwSubmit= document.getElementById('btnPwSubmit');
+
+        function openPasswordModal() {
+            $pwUsername.value = '';
+            $pwInput.value = '';
+            $pwError.classList.remove('show');
+            $pwOverlay.classList.add('show');
+            $pwUsername.focus();
+        }
+
+        async function submitLogin() {
+            const username = $pwUsername.value.trim();
+            const pw = $pwInput.value;
+            if (!username || !pw) return;
+            $btnPwSubmit.disabled = true;
+            try {
+                const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password: pw })
+                });
+                const body = await res.json().catch(() => null);
+                if (!res.ok || !body || body.ok === false) {
+                    $pwError.classList.add('show');
+                    return;
+                }
+                $pwOverlay.classList.remove('show');
+                $reworkPage.style.display = '';
+                restoreSavedWorkOrder();
+            } catch {
+                $pwError.classList.add('show');
+            } finally {
+                $btnPwSubmit.disabled = false;
+            }
+        }
+
+        $btnPwCancel.addEventListener('click', () => { window.location.href = `${BASE}/sakura`; });
+        $btnPwSubmit.addEventListener('click', submitLogin);
+        $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+        $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+
+        openPasswordModal();
+
+        function t(key, fallback) {
+            return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
+        }
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ── Printer Configuration — same logic/localStorage pattern as CartonSnReprint.cshtml
+        // (bridge health-check, USB scan, TCP/USB toggle, persisted settings). Work Order /
+        // Reprint print-mode panels below are still UI-only — no lookup/print/reprint calls
+        // wired up yet. ─────────────────────────────────────────────────────────────────────
+        const NODE_SERVICE = 'http://localhost:8021';
+
+        const $btnTogglePrinterConfig = document.getElementById('btnTogglePrinterConfig');
+        const $printerConfigBody = document.getElementById('printerConfigBody');
+        let printerConfigOpen = false;
+        function setPrinterConfigOpen(open) {
+            printerConfigOpen = open;
+            $printerConfigBody.style.display = open ? '' : 'none';
+            $btnTogglePrinterConfig.classList.toggle('open', open);
+            $btnTogglePrinterConfig.setAttribute('aria-expanded', String(open));
+        }
+        $btnTogglePrinterConfig.addEventListener('click', () => setPrinterConfigOpen(!printerConfigOpen));
+
+        const $nodeDot = document.getElementById('nodeDot');
+        const $nodeTxt = document.getElementById('nodeTxt');
+        const $lblTcp   = document.getElementById('lblTcp');
+        const $lblUsb   = document.getElementById('lblUsb');
+        const $tcpBlock = document.getElementById('tcpBlock');
+        const $usbBlock = document.getElementById('usbBlock');
+        const $usbSelect = document.getElementById('usbSelect');
+        const $usbStatus = document.getElementById('usbStatus');
+        const $btnRefreshUsb = document.getElementById('btnRefreshUsb');
+        const $printerIp = document.getElementById('printerIp');
+        const $printerPort = document.getElementById('printerPort');
+        const $copies = document.getElementById('copies');
+        const $btnSavePrinter = document.getElementById('btnSavePrinter');
+        const $printerSavedHint = document.getElementById('printerSavedHint');
+
+        let printMode = 'tcp';
+        let bridgeOnline = false;
+
+        const LS = {
+            ip: 'sakura_rework_ip',
+            port: 'sakura_rework_port',
+            copies: 'sakura_rework_copies',
+            mode: 'sakura_rework_print_mode',
+            usbName: 'sakura_rework_usb_name',
+            saved: 'sakura_rework_printer_saved'
+        };
+
+        function loadPrinterConfig() {
+            const v = k => localStorage.getItem(k);
+            if (v(LS.ip)) $printerIp.value = v(LS.ip);
+            if (v(LS.port)) $printerPort.value = v(LS.port);
+            if (v(LS.copies)) $copies.value = v(LS.copies);
+            setPrinterMode(v(LS.mode) === 'usb' ? 'usb' : 'tcp');
+            if (v(LS.saved) === '1') $printerSavedHint.classList.add('show');
+        }
+
+        $btnSavePrinter.addEventListener('click', () => {
+            localStorage.setItem(LS.ip, $printerIp.value.trim());
+            localStorage.setItem(LS.port, $printerPort.value.trim());
+            localStorage.setItem(LS.copies, $copies.value.trim());
+            localStorage.setItem(LS.usbName, $usbSelect.value || '');
+            localStorage.setItem(LS.saved, '1');
+            $printerSavedHint.classList.add('show');
+        });
+
+        function setPrinterMode(mode) {
+            printMode = mode;
+            $lblTcp.classList.toggle('active', mode === 'tcp');
+            $lblUsb.classList.toggle('active', mode === 'usb');
+            $tcpBlock.style.display = mode === 'tcp' ? '' : 'none';
+            $usbBlock.style.display = mode === 'usb' ? '' : 'none';
+            localStorage.setItem(LS.mode, mode);
+            if (mode === 'usb' && $usbSelect.options.length <= 1) loadUsbPrinters();
+        }
+        $lblTcp.addEventListener('click', () => setPrinterMode('tcp'));
+        $lblUsb.addEventListener('click', () => setPrinterMode('usb'));
+
+        async function loadUsbPrinters() {
+            $usbSelect.innerHTML = `<option value="">${t('rework.usbScanning', '⏳ Scanning…')}</option>`;
+            $usbSelect.disabled = true;
+            $usbStatus.textContent = '';
+            $usbStatus.className = 'usb-status';
+
+            try {
+                const r = await fetch(`${NODE_SERVICE}/usb-printers`, { signal: AbortSignal.timeout(6000) });
+                const data = await r.json();
+
+                if (!data.printers || data.printers.length === 0) {
+                    $usbSelect.innerHTML = `<option value="">${t('rework.usbNoPrinterFound', '— No printer found —')}</option>`;
+                    $usbStatus.textContent = t('rework.usbNoPrinterDetected', 'No USB printer detected.');
+                    $usbStatus.className = 'usb-status bad';
+                    return;
+                }
+
+                $usbSelect.innerHTML = `<option value="">${t('rework.usbSelectPrinter', '— Select printer —')}</option>` +
+                    data.printers.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+                $usbSelect.disabled = false;
+                $usbStatus.textContent = t('rework.usbFoundCount', '✓ Found {n} printer(s).').replace('{n}', data.printers.length);
+                $usbStatus.className = 'usb-status ok';
+
+                const savedUsbName = localStorage.getItem(LS.usbName);
+                if (savedUsbName && data.printers.includes(savedUsbName)) $usbSelect.value = savedUsbName;
+            } catch (err) {
+                $usbSelect.innerHTML = `<option value="">${t('rework.usbLoadError', '— Load error —')}</option>`;
+                $usbStatus.textContent = t('rework.usbCannotConnect', 'Cannot connect to localhost:8021.');
+                $usbStatus.className = 'usb-status bad';
+            }
+        }
+        $btnRefreshUsb.addEventListener('click', () => {
+            $printerSavedHint.classList.remove('show');
+            loadUsbPrinters();
+        });
+
+        async function checkNode() {
+            try {
+                const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
+                if (r.ok) {
+                    $nodeDot.className = 'node-dot alive';
+                    $nodeTxt.textContent = t('rework.bridgeOnline', 'Service — Online');
+                    bridgeOnline = true;
+                    return;
+                }
+            } catch { /* offline */ }
+            $nodeDot.className = 'node-dot dead';
+            $nodeTxt.textContent = t('rework.bridgeOffline', 'Service — Offline');
+            bridgeOnline = false;
+        }
+        checkNode();
+        setInterval(checkNode, 8000);
+        loadPrinterConfig();
+
+        const $modeTabs = document.getElementById('modeTabs');
+        const $woPanel = document.getElementById('woPanel');
+        const $reprintPanel = document.getElementById('reprintPanel');
+        $modeTabs.addEventListener('click', (e) => {
+            const btn = e.target.closest('.sk-mode-tab');
+            if (!btn) return;
+            const mode = btn.dataset.mode;
+            document.querySelectorAll('.sk-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            $woPanel.style.display = mode === 'wo' ? '' : 'none';
+            $reprintPanel.style.display = mode === 'reprint' ? '' : 'none';
+        });
+
+        function showStatus(el, msg, type) {
+            el.textContent = msg;
+            el.className = `t-status show ${type}`;
+        }
+
+        // ── Print Mode: Work Order lookup — tra Work Order trên Odoo để lấy Mã sản phẩm
+        // (bracket code, vd "[RM15A-1001RW] Sakura - Desert Pink (Rework)" -> "RM15A-1001RW")
+        // và mã EAN của đúng sản phẩm đó (xem SakuraController.ReworkWorkOrderLookup). Save/Reset
+        // theo đúng pattern SnLabel/CartonSN — nút Save chuyển xanh (is-saved) và giữ nguyên tới
+        // khi WO đổi hoặc bấm Reset. ─────────────────────────────────────────────────────────
+        const $workOrder    = document.getElementById('workOrder');
+        const $btnLookupWo  = document.getElementById('btnLookupWo');
+        const $btnSaveWo    = document.getElementById('btnSaveWo');
+        const $btnResetWo   = document.getElementById('btnResetWo');
+        const $woStatus     = document.getElementById('woStatus');
+        const $woResolved   = document.getElementById('woResolved');
+        const $woProductCode= document.getElementById('woProductCode');
+        const $woEan        = document.getElementById('woEan');
+        const $woColor      = document.getElementById('woColor');
+        const $eanInput     = document.getElementById('eanInput');
+        const $eanStatus    = document.getElementById('eanStatus');
+        const $rwCircle     = document.getElementById('rwCircle');
+        const $rwCircleText = document.getElementById('rwCircleText');
+        const $rwRetryBox   = document.getElementById('rwRetryBox');
+        const $btnRwTryAgain= document.getElementById('btnRwTryAgain');
+        const $btnRwSkip    = document.getElementById('btnRwSkip');
+
+        const LS_WO = 'sakura_rework_workorder';
+        let woResolvedOk = false;    // true nếu Work Order đã lookup thành công (không nhất thiết pass bước 1)
+        let step1Passed = false;    // true nếu productCode có hậu tố "RW"
+        let expectedColor = null;   // màu của Work Order — so khớp với màu suy ra từ EAN ở bước 2
+        let pendingRetryStage = null; // khác null khi đang khoá chờ Try Again/Skip (chỉ bước 3 - Print Label)
+        let woStatusHideTimer = null;
+        let eanStatusHideTimer = null;
+
+        // ── Process step tracker (1 Check Work Order / 2 Check Color & EAN / 3 Print Label) +
+        // Result circle — mirrors SnLabel.cshtml's setStepState/flashResult. ────────────────────
+        const STEP_PENDING_TEXT = { '1': '1', '2': '2', '3': '3' };
+        function setStepState(key, state) {
+            const $icon = document.getElementById(`rwStep${key}Icon`);
+            const $row = document.getElementById(`rwStep${key}Row`);
+            if (!$icon || !$row) return;
+            $icon.classList.remove('done', 'fail');
+            $row.classList.remove('is-done', 'is-fail');
+            if (state === 'done') {
+                $icon.classList.add('done');
+                $row.classList.add('is-done');
+                $icon.textContent = '✓';
+            } else if (state === 'fail') {
+                $icon.classList.add('fail');
+                $row.classList.add('is-fail');
+                $icon.textContent = '✕';
+            } else {
+                $icon.textContent = STEP_PENDING_TEXT[key] || key;
+            }
+        }
+        function resetSteps() { ['1', '2', '3'].forEach(k => setStepState(k, 'pending')); }
+
+        let resultTimer = null;
+        function setResult(state, text) {
+            $rwCircle.className = 'rw-circle ' + state;
+            $rwCircleText.textContent = text;
+        }
+        // Hiện PASS/FAIL vài giây rồi tự quay lại idle — không liên quan tới trạng thái khoá
+        // Try Again/Skip (đó là $rwRetryBox riêng).
+        function flashResult(state, text) {
+            if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
+            setResult(state, text);
+            resultTimer = setTimeout(() => setResult('idle', '—'), 4000);
+        }
+
+        // EAN chỉ mở khoá khi Work Order đã pass bước 1 (Check Work Order) VÀ không đang khoá
+        // chờ Try Again/Skip của bước 3 (Print Label).
+        function updateEanLock() {
+            $eanInput.disabled = !step1Passed || !!pendingRetryStage;
+        }
+
+        // Chỉ bước 3 (Print Label) mới có Try Again/Skip — bước 1/2 fail là lỗi dữ liệu tất
+        // định (sai WO/sai EAN), quét lại là đủ, không cần khoá lại chờ thao tác thêm.
+        function lockForRetry() {
+            pendingRetryStage = 'print';
+            $rwRetryBox.style.display = 'flex';
+            updateEanLock();
+        }
+        function unlockRetry() {
+            pendingRetryStage = null;
+            $rwRetryBox.style.display = 'none';
+            updateEanLock();
+        }
+
+        function resetWoState() {
+            woResolvedOk = false;
+            step1Passed = false;
+            expectedColor = null;
+            $woResolved.style.display = 'none';
+            resetSteps();
+            unlockRetry();
+            $eanInput.value = '';
+            updateEanLock();
+            $eanStatus.className = 't-status';
+        }
+
+        async function lookupWorkOrder() {
+            const wo = $workOrder.value.trim();
+            resetWoState();
+
+            if (wo !== localStorage.getItem(LS_WO)) $btnSaveWo.classList.remove('is-saved');
+            clearTimeout(woStatusHideTimer);
+
+            if (!wo) {
+                showStatus($woStatus, `✗ ${t('rework.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+                return;
+            }
+
+            showStatus($woStatus, `⏳ ${t('rework.woLookingUp', 'Looking up…')}`, 'ok');
+            try {
+                const res = await fetch(`${BASE}/api/sakura/rework/workorder-lookup?workOrder=${encodeURIComponent(wo)}`);
+                const body = await res.json();
+                if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('rework.lookupFailed', 'Lookup failed.')));
+
+                $woProductCode.textContent = body.data.productCode || '—';
+                $woEan.textContent = body.data.ean || '—';
+                $woColor.textContent = body.data.color || '—';
+                $woResolved.style.display = 'flex';
+                woResolvedOk = true;
+                expectedColor = body.data.color || null;
+
+                // Lookup thành công (quét WO xong hoặc Enter) -> tự Save luôn, khỏi phải bấm tay
+                // nút Save riêng — Save vẫn giữ nguyên để bấm lại thủ công nếu cần (idempotent).
+                localStorage.setItem(LS_WO, wo);
+                $btnSaveWo.classList.add('is-saved');
+
+                // Bước 1 (Check Work Order) PASS khi mã sản phẩm có hậu tố "RW" (vd
+                // "RM15A-1001RW") — đây là dấu hiệu hàng Rework, không dựa vào field nào khác.
+                const productCode = (body.data.productCode || '').trim().toUpperCase();
+                if (productCode.endsWith('RW')) {
+                    step1Passed = true;
+                    setStepState('1', 'done');
+                    updateEanLock();
+                    // WO đã pass bước 1 (kể cả khi tự lookup lại lúc vào trang từ WO đã Save) ->
+                    // tự nhảy xuống EAN để người vận hành quét ngay, khỏi phải bấm tay vào ô.
+                    $eanInput.focus();
+                    showStatus($woStatus, `✓ ${t('rework.woLookupSuccess', 'Found product info.')}`, 'ok');
+                    woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
+                } else {
+                    step1Passed = false;
+                    setStepState('1', 'fail');
+                    updateEanLock();
+                    flashResult('fail', t('rework.fail', 'FAIL'));
+                    showStatus($woStatus, `✗ ${t('rework.step1FailMsg', 'This Work Order is not a Rework item — the product code has no "RW" suffix.')}`, 'err');
+                }
+            } catch (e) {
+                showStatus($woStatus, `✗ ${e.message}`, 'err');
+            }
+        }
+
+        $btnLookupWo.addEventListener('click', lookupWorkOrder);
+        $workOrder.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); lookupWorkOrder(); }
+        });
+        $workOrder.addEventListener('input', () => {
+            if ($workOrder.value.trim() !== localStorage.getItem(LS_WO)) $btnSaveWo.classList.remove('is-saved');
+            if (woResolvedOk) resetWoState();
+        });
+
+        // ── Process — Step 2: Check Color & EAN. Quét EAN xong Enter -> tra ngược EAN đó ra
+        // màu của đúng sản phẩm sở hữu EAN (KHÔNG dựa vào product_id của WO — phát hiện được
+        // trường hợp quét nhầm EAN của sản phẩm khác màu), rồi so với màu của WO (bước 1). ─────
+        async function checkEanColor() {
+            const ean = $eanInput.value.trim();
+            if (!step1Passed) {
+                showStatus($eanStatus, `✗ ${t('rework.eanNeedWoFirst', 'Check the Work Order first.')}`, 'err');
+                return;
+            }
+            if (!ean) {
+                showStatus($eanStatus, `✗ ${t('rework.eanEnterFirst', 'Enter an EAN first.')}`, 'err');
+                return;
+            }
+
+            clearTimeout(eanStatusHideTimer);
+            setStepState('2', 'pending');
+            setStepState('3', 'pending');
+            unlockRetry();
+            showStatus($eanStatus, `⏳ ${t('rework.eanChecking', 'Checking…')}`, 'ok');
+
+            try {
+                const res = await fetch(`${BASE}/api/sakura/rework/ean-color-lookup?ean=${encodeURIComponent(ean)}`);
+                const body = await res.json();
+                if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('rework.eanColorLookupFailed', 'Could not determine the color for this EAN.')));
+
+                const eanColor = body.data.color;
+                if (expectedColor && eanColor && eanColor.toLowerCase() === expectedColor.toLowerCase()) {
+                    setStepState('2', 'done');
+                    showStatus($eanStatus, `✓ ${t('rework.eanColorMatch', '{color} — matches this Work Order.').replace('{color}', eanColor)}`, 'ok');
+                    eanStatusHideTimer = setTimeout(() => { $eanStatus.className = 't-status'; }, 5000);
+                    await attemptPrintLabel();
+                } else {
+                    setStepState('2', 'fail');
+                    flashResult('fail', t('rework.fail', 'FAIL'));
+                    const msg = t('rework.eanColorMismatch', 'EAN color ({eanColor}) does not match this Work Order ({woColor}).')
+                        .replace('{eanColor}', eanColor || '—').replace('{woColor}', expectedColor || '—');
+                    showStatus($eanStatus, `✗ ${msg}`, 'err');
+                    $eanInput.value = '';
+                    $eanInput.focus();
+                }
+            } catch (e) {
+                setStepState('2', 'fail');
+                flashResult('fail', t('rework.fail', 'FAIL'));
+                showStatus($eanStatus, `✗ ${e.message}`, 'err');
+                $eanInput.value = '';
+                $eanInput.focus();
+            }
+        }
+
+        $eanInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); checkEanColor(); }
+        });
+        $eanInput.addEventListener('input', () => {
+            // Sửa lại EAN sau khi đã check -> kết quả bước 2/3 cũ không còn đúng nữa.
+            setStepState('2', 'pending');
+            setStepState('3', 'pending');
+            unlockRetry();
+        });
+
+        // ── Process — Step 3: Print Label — CHƯA có mẫu tem/logic in thật (đang chờ thiết kế
+        // tem), nên luôn fail có kiểm soát (khoá lại + Try Again/Skip) — cấu trúc if/else giữ y
+        // hệt SnLabel.cshtml's attemptPrint() để sau này chỉ cần thay `const printOk = false`
+        // bằng lệnh gọi API in thật, không phải đổi lại UI/luồng gọi. ─────────────────────────
+        async function attemptPrintLabel() {
+            const printOk = false;
+            if (printOk) {
+                setStepState('3', 'done');
+                flashResult('pass', t('rework.pass', 'PASS'));
+                showStatus($eanStatus, `✓ ${t('rework.pass', 'PASS')}`, 'ok');
+                unlockRetry();
+                $eanInput.value = '';
+                $eanInput.focus();
+            } else {
+                setStepState('3', 'fail');
+                flashResult('fail', t('rework.fail', 'FAIL'));
+                const failMsg = t('rework.printNotConfigured', 'Print Label is not configured yet — waiting on the label design.');
+                showStatus($eanStatus, `✗ ${t('rework.fail', 'FAIL')} — ${failMsg}`, 'err');
+                lockForRetry();
+            }
+        }
+
+        $btnRwTryAgain.addEventListener('click', async () => {
+            if (!pendingRetryStage) return;
+            $btnRwTryAgain.disabled = true;
+            showStatus($eanStatus, `⏳ ${t('rework.retryInProgress', 'Retrying…')}`, 'ok');
+            unlockRetry();
+            await attemptPrintLabel();
+            $btnRwTryAgain.disabled = false;
+        });
+
+        $btnRwSkip.addEventListener('click', () => {
+            if (!pendingRetryStage) return;
+            unlockRetry();
+            setStepState('3', 'pending');
+            showStatus($eanStatus, `⚠ ${t('rework.skippedMsg', 'Skipped — you can scan the next EAN.')}`, 'err');
+            $eanInput.value = '';
+            $eanInput.focus();
+        });
+
+        $btnSaveWo.addEventListener('click', () => {
+            const wo = $workOrder.value.trim();
+            if (!wo) {
+                showStatus($woStatus, `✗ ${t('rework.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+                return;
+            }
+            localStorage.setItem(LS_WO, wo);
+            showStatus($woStatus, `✓ ${t('rework.woSavedMsg', 'Work Order saved.')}`, 'ok');
+            clearTimeout(woStatusHideTimer);
+            woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
+            $btnSaveWo.classList.add('is-saved');
+        });
+
+        $btnResetWo.addEventListener('click', () => {
+            clearTimeout(woStatusHideTimer);
+            $workOrder.value = '';
+            resetWoState();
+            localStorage.removeItem(LS_WO);
+            $woStatus.className = 't-status';
+            $btnSaveWo.classList.remove('is-saved');
+            $workOrder.focus();
+        });
+
+        // Chỉ được gọi SAU khi đăng nhập thành công (xem submitLogin ở trên) — gọi lúc trang còn
+        // đang display:none sau modal login sẽ khiến $eanInput.focus() trong lookupWorkOrder()
+        // không có tác dụng (trình duyệt bỏ qua focus() trên phần tử chưa hiển thị).
+        function restoreSavedWorkOrder() {
+            const savedWo = localStorage.getItem(LS_WO);
+            if (savedWo) {
+                $workOrder.value = savedWo;
+                $btnSaveWo.classList.add('is-saved');
+                lookupWorkOrder();
+            }
+        }
+    })();
+    </script>
+}
