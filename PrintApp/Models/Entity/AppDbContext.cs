@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<PalletInfoTemplate> PalletInfoTemplates { get; set; }
     public DbSet<ExternalPrintQueueItem> ExternalPrintQueueItems { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
+    public DbSet<LabelPvidEanLog> LabelPvidEanLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

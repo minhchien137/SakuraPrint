@@ -227,7 +227,10 @@ public class ExternalPrintController : Controller
             return BadRequest(new { ok = false, error = ex.Message });
         }
 
-        var now = SakuraService.VietnamNow();
+        // Lưu giờ Trung Quốc (UTC+8) — đồng bộ với toàn bộ timestamp khác trong hệ thống. Chỉ là
+        // mốc thời gian hiển thị/sắp xếp FIFO (OrderBy CreatedAt) — cộng cùng 1 offset cho mọi
+        // dòng không đổi thứ tự tương đối, nên an toàn.
+        var now = SakuraService.VietnamNow().AddHours(1);
         var items = Enumerable.Range(0, copies).Select(_ => new ExternalPrintQueueItem
         {
             Serial = lotNumber,
@@ -276,7 +279,7 @@ public class ExternalPrintController : Controller
         if (items.Count == 0)
             return Ok(new { ok = true, items = Array.Empty<object>() });
 
-        var now = SakuraService.VietnamNow();
+        var now = SakuraService.VietnamNow().AddHours(1);
         foreach (var item in items)
         {
             item.Status = "Claimed";
@@ -302,7 +305,7 @@ public class ExternalPrintController : Controller
             return NotFound(new { ok = false, error = $"Không tìm thấy lệnh in Id={id}." });
 
         item.Status = req.Success ? "Printed" : "Failed";
-        item.CompletedAt = SakuraService.VietnamNow();
+        item.CompletedAt = SakuraService.VietnamNow().AddHours(1);
         item.ErrorMessage = req.Success ? null : req.Error;
         await _db.SaveChangesAsync();
 

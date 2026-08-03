@@ -237,7 +237,10 @@ public class SakuraService
                 }
 
                 var batchId = Guid.NewGuid();
-                var printedAt = VietnamNow();
+                // PrintedAt hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu
+                // riêng. KHÔNG đụng tới ProductionDate (prodDate) — đó là ngày người dùng tự
+                // chọn/khoá cho Work Order, không phải giờ hệ thống, nên vẫn giữ nguyên.
+                var printedAt = VietnamNow().AddHours(1);
                 var rows = new List<SnLabelPrint>(quantity);
 
                 for (int i = 0; i < quantity; i++)
@@ -385,7 +388,8 @@ public class SakuraService
             }
         }
 
-        var scanDate = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        var scanDate = VietnamNow().AddHours(1);
         var row = new CartonSnScanLog
         {
             Serial = string.Join(",", nonEmpty),
@@ -746,7 +750,7 @@ public class SakuraService
             InboundReference = req.InboundReference?.Trim() ?? "",
             WarehouseReference = req.WarehouseReference?.Trim() ?? "",
             DeliveryAddress = req.DeliveryAddress?.Trim() ?? "",
-            UpdatedAt = VietnamNow()
+            UpdatedAt = VietnamNow().AddHours(1)
         };
         _context.PalletInfoTemplates.Add(row);
         await _context.SaveChangesAsync();
@@ -771,7 +775,7 @@ public class SakuraService
         row.InboundReference = req.InboundReference?.Trim() ?? "";
         row.WarehouseReference = req.WarehouseReference?.Trim() ?? "";
         row.DeliveryAddress = req.DeliveryAddress?.Trim() ?? "";
-        row.UpdatedAt = VietnamNow();
+        row.UpdatedAt = VietnamNow().AddHours(1);
         await _context.SaveChangesAsync();
         return row;
     }
@@ -989,7 +993,8 @@ public class SakuraService
         string zpl = await RenderCartonZplAsync(row.CartonNumber, meta, row.Condition ?? "New", slots, slots);
 
         row.IsReprint = true;
-        row.LastReprintAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        row.LastReprintAt = VietnamNow().AddHours(1);
         row.ReprintCount++;
         await _context.SaveChangesAsync();
 
@@ -1030,7 +1035,8 @@ public class SakuraService
             .Replace("{palletNumber}", trimmed)
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(rows[0].DeliveryAddress ?? ""));
 
-        var reprintAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        var reprintAt = VietnamNow().AddHours(1);
         foreach (var row in rows)
         {
             row.IsPalletReprint = true;
@@ -1197,6 +1203,79 @@ public class SakuraService
         };
     }
 
+    // Đọc từ SM_LabelPvidEANLog — audit trail của trạm Rework (mỗi lần thử 1 bước trong Process
+    // đều ghi 1 dòng mới, kể cả FAIL — xem SakuraController.ReworkLogAttempt).
+    public async Task<ReworkHistoryPageDto> GetReworkHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? ean, string? status, int page, int pageSize)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
+
+        var query = _context.LabelPvidEanLogs.AsNoTracking().AsQueryable();
+
+        if (dateFrom.HasValue)
+        {
+            DateTime rangeStart = dateFrom.Value.Date;
+            query = query.Where(x => x.Timeline >= rangeStart);
+        }
+
+        if (dateTo.HasValue)
+        {
+            DateTime rangeEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.Timeline < rangeEnd);
+        }
+
+        if (!string.IsNullOrWhiteSpace(workOrder))
+        {
+            string wo = workOrder.Trim();
+            query = query.Where(x => x.WorkOrder.Contains(wo));
+        }
+
+        if (!string.IsNullOrWhiteSpace(ean))
+        {
+            // Tìm khớp cả EanRW (EAN thật của sản phẩm) lẫn EanGiftBox (EAN đã quét) — người
+            // dùng có thể không nhớ rõ đang tìm theo mã nào.
+            string eanFilter = ean.Trim();
+            query = query.Where(x =>
+                (x.EanRw != null && x.EanRw.Contains(eanFilter)) ||
+                (x.EanGiftBox != null && x.EanGiftBox.Contains(eanFilter)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            string statusFilter = status.Trim();
+            query = query.Where(x => x.Status == statusFilter);
+        }
+
+        int totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(x => x.Timeline)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new ReworkHistoryItemDto
+            {
+                Id = x.Id,
+                WorkOrder = x.WorkOrder,
+                Pvid = x.Pvid,
+                WoColor = x.WoColor,
+                EanRw = x.EanRw,
+                EanGiftBox = x.EanGiftBox,
+                EanColor = x.EanColor,
+                Status = x.Status,
+                FailedStep = x.FailedStep,
+                Timeline = x.Timeline
+            })
+            .ToListAsync();
+
+        return new ReworkHistoryPageDto
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     // Danh sách Work Order khác nhau đã in — nếu có ngày thì chỉ lấy WO của ngày đó
     // (dùng để đổ vào dropdown filter Work Order trên trang History).
     public async Task<List<string>> GetWorkOrdersAsync(DateTime? date)
@@ -1236,7 +1315,8 @@ public class SakuraService
         if (row == null) return null;
 
         row.ReprintCount += 1;
-        row.LastReprintedAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        row.LastReprintedAt = VietnamNow().AddHours(1);
         row.LastReprintedBy = reprintedBy;
         await _context.SaveChangesAsync();
         return row;
@@ -1271,7 +1351,7 @@ public class SakuraService
         var row = await _context.SakuraZplTemplates
             .FirstOrDefaultAsync(x => x.TemplateKey == templateKey);
 
-        var now = VietnamNow();
+        var now = VietnamNow().AddHours(1);
         if (row == null)
         {
             row = new SakuraZplTemplate

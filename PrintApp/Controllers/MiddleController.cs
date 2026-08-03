@@ -494,7 +494,10 @@ public class MiddleController : Controller
                 FailedStep = failedStep,
                 ProductionResultSubName = subName,
                 FailReason = failedStep != null ? Truncate(failReason, 500) : null,
-                Timeline = SakuraService.VietnamNow()
+                // Log/audit trail thuần tuý -> lưu giờ Trung Quốc (UTC+8, sớm hơn giờ Việt Nam
+                // đúng 1 tiếng) theo yêu cầu riêng. Dữ liệu nghiệp vụ thật (ProductionInputLog...)
+                // vẫn giữ nguyên giờ Việt Nam.
+                Timeline = SakuraService.VietnamNow().AddHours(1)
             };
             _db.MiddleLogs.Add(logEntry);
             await _db.SaveChangesAsync();

@@ -236,8 +236,17 @@ public class SakuraController : Controller
                         Key = "rework",
                         Icon = "🔁",
                         Title = "Rework",
-                        Subtitle = "Rework station (coming soon)",
+                        Subtitle = "Scan Work Order & EAN",
                         Href = Url.Content("~/sakura/rework"),
+                        Enabled = true
+                    },
+                    new SakuraAppTile
+                    {
+                        Key = "reworkhistory",
+                        Icon = "🕘",
+                        Title = "EAN and Pvid Label Print History",
+                        Subtitle = "Rework scan history",
+                        Href = Url.Content("~/sakura/rework/history"),
                         Enabled = true
                     }
                 }
@@ -290,6 +299,12 @@ public class SakuraController : Controller
     public IActionResult ReworkIndex()
     {
         return View("~/Views/Sakura/Rework.cshtml");
+    }
+
+    [HttpGet("/sakura/rework/history")]
+    public IActionResult ReworkHistoryPage()
+    {
+        return View("~/Views/Sakura/ReworkHistory.cshtml");
     }
 
     // ── API: printer list (for other Sakura pages that need it) ────────────────
@@ -459,6 +474,55 @@ public class SakuraController : Controller
         }
     }
 
+    // ── API: Rework — ghi log audit trail (SM_LabelPvidEANLog). Front-end gọi tại mỗi điểm kết
+    // thúc 1 lần thử trong Process (1 Check Work Order fail, 2 Check Color & EAN of The Gift Box
+    // fail, hoặc 3 Print Label pass/fail) — LUÔN insert dòng MỚI, không tìm/ghi đè dòng cũ, để
+    // giữ lại toàn bộ lịch sử mọi lần thử (kể cả FAIL), giống SM_SNLabelScanLog ở trạm SnLabel. ──
+
+    [HttpPost("/api/sakura/rework/log-attempt")]
+    public async Task<IActionResult> ReworkLogAttempt([FromBody] ReworkLogAttemptRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.WorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu Work Order.", errorCode = "workOrder.missing" });
+
+        var entry = new LabelPvidEanLog
+        {
+            WorkOrder = req.WorkOrder.Trim(),
+            Pvid = req.Pvid?.Trim(),
+            WoColor = req.WoColor?.Trim(),
+            EanRw = req.EanRw?.Trim(),
+            EanGiftBox = req.EanGiftBox?.Trim(),
+            EanColor = req.EanColor?.Trim(),
+            Status = string.IsNullOrWhiteSpace(req.Status) ? "FAIL" : req.Status.Trim(),
+            FailedStep = req.FailedStep,
+            // Bảng này lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng — sớm hơn giờ Việt Nam
+            // (UTC+7, VietnamNow()) đúng 1 tiếng. Khác với mọi log khác trong Sakura (SnLabel,
+            // Laser, Middle...) đều lưu giờ Việt Nam.
+            Timeline = SakuraService.VietnamNow().AddHours(1)
+        };
+
+        try
+        {
+            _db.LabelPvidEanLogs.Add(entry);
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, BuildError(ex));
+        }
+
+        return Ok(new { ok = true, data = new { logId = entry.Id } });
+    }
+
+    // ── API: Rework — history (trang /sakura/rework/history), đọc từ SM_LabelPvidEANLog. ───────
+
+    [HttpGet("/api/sakura/rework/history")]
+    public async Task<IActionResult> ReworkHistory([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder, [FromQuery] string? ean, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _snLabel.GetReworkHistoryAsync(dateFrom, dateTo, workOrder, ean, status, page, pageSize);
+        return Ok(new { ok = true, data = result });
+    }
+
     // ── API: ghi log 1 lần Check EAN bị FAIL ngay ở bước quét EAN — bước này chặn không cho
     // quét sang Serial Number nên KHÔNG đi qua verify-serial, phải ghi log riêng ở đây,
     // nếu không lần fail EAN sẽ mất dấu hoàn toàn trong SM_SNLabelScanLog. ─────────────────
@@ -476,7 +540,10 @@ public class SakuraController : Controller
             SerialNumber = "", // chưa quét tới Serial Number ở bước này
             Status = "FAIL",
             FailedStep = 1,
-            Timeline = SakuraService.VietnamNow()
+            // Log/audit trail thuần tuý -> lưu giờ Trung Quốc (UTC+8, sớm hơn giờ Việt Nam đúng
+            // 1 tiếng) theo yêu cầu riêng. KHÔNG áp dụng cho dữ liệu nghiệp vụ thật (SnLabelPrint,
+            // CartonSnScanLog...) — những bảng đó vẫn giữ nguyên giờ Việt Nam.
+            Timeline = SakuraService.VietnamNow().AddHours(1)
         };
 
         try
@@ -587,7 +654,8 @@ public class SakuraController : Controller
             RunningNumberInt = runningNumberInt,
             Status = status,
             FailedStep = failedStep,
-            Timeline = SakuraService.VietnamNow()
+            // Log/audit trail thuần tuý -> lưu giờ Trung Quốc (UTC+8), xem chú thích ở LogEanFail.
+            Timeline = SakuraService.VietnamNow().AddHours(1)
         };
 
         try
@@ -783,10 +851,10 @@ public class SakuraController : Controller
                 Variant = entry.Variant ?? "",
                 Color = entry.Color ?? "",
                 ProductionLine = entry.ProductionLine ?? "",
-                ProductionDate = SakuraService.VietnamNow().Date,
+                ProductionDate = SakuraService.VietnamNow().AddHours(1).Date,
                 RunningNumber = entry.RunningNumber ?? "",
                 RunningNumberInt = entry.RunningNumberInt ?? 0,
-                PrintedAt = SakuraService.VietnamNow(),
+                PrintedAt = SakuraService.VietnamNow().AddHours(1),
                 BatchId = Guid.NewGuid(),
                 WorkOrder = entry.WorkOrder,
                 Ean = entry.Ean,

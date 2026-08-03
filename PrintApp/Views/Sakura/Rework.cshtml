@@ -446,6 +446,7 @@
 
             <div style="display:flex;gap:18px">
                 <a class="rw-back" href="@Url.Content("~/sakura")" data-i18n="rework.backHome">← Sakura Home</a>
+                <a class="rw-back" href="@Url.Content("~/sakura/rework/history")" data-i18n="rework.viewHistory">View History →</a>
             </div>
 
         </div>
@@ -734,10 +735,34 @@
         const LS_WO = 'sakura_rework_workorder';
         let woResolvedOk = false;    // true nếu Work Order đã lookup thành công (không nhất thiết pass bước 1)
         let step1Passed = false;    // true nếu productCode có hậu tố "RW"
+        let expectedProductCode = null; // mã sản phẩm (Pvid) của Work Order — gửi kèm log-attempt
+        let expectedEan = null;     // EAN thật của sản phẩm Rework (EANRW) — lấy từ lookup Work Order
         let expectedColor = null;   // màu của Work Order — so khớp với màu suy ra từ EAN ở bước 2
         let pendingRetryStage = null; // khác null khi đang khoá chờ Try Again/Skip (chỉ bước 3 - Print Label)
+        let pendingRetryEan = null;      // EAN của lần thử đang chờ Try Again (bước 3 fail)
+        let pendingRetryEanColor = null; // màu suy ra từ EAN đó — gửi kèm log-attempt khi Try Again resolve
         let woStatusHideTimer = null;
         let eanStatusHideTimer = null;
+
+        // Ghi 1 dòng audit trail vào SM_LabelPvidEANLog mỗi khi 1 lần thử (Check Work Order /
+        // Check Color & EAN of The Gift Box / Print Label) kết thúc — kể cả FAIL. Fire-and-forget
+        // (không chặn UI chờ log) giống log-ean-fail ở SnLabel.cshtml.
+        function logAttempt(status, failedStep, eanGiftBox, eanColor) {
+            fetch(`${BASE}/api/sakura/rework/log-attempt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    workOrder: $workOrder.value.trim(),
+                    pvid: expectedProductCode,
+                    woColor: expectedColor,
+                    eanRw: expectedEan,
+                    eanGiftBox: eanGiftBox || null,
+                    eanColor: eanColor || null,
+                    status,
+                    failedStep
+                })
+            }).catch(() => {});
+        }
 
         // ── Process step tracker (1 Check Work Order / 2 Check Color & EAN / 3 Print Label) +
         // Result circle — mirrors SnLabel.cshtml's setStepState/flashResult. ────────────────────
@@ -783,13 +808,17 @@
 
         // Chỉ bước 3 (Print Label) mới có Try Again/Skip — bước 1/2 fail là lỗi dữ liệu tất
         // định (sai WO/sai EAN), quét lại là đủ, không cần khoá lại chờ thao tác thêm.
-        function lockForRetry() {
+        function lockForRetry(ean, eanColor) {
             pendingRetryStage = 'print';
+            pendingRetryEan = ean;
+            pendingRetryEanColor = eanColor;
             $rwRetryBox.style.display = 'flex';
             updateEanLock();
         }
         function unlockRetry() {
             pendingRetryStage = null;
+            pendingRetryEan = null;
+            pendingRetryEanColor = null;
             $rwRetryBox.style.display = 'none';
             updateEanLock();
         }
@@ -797,6 +826,8 @@
         function resetWoState() {
             woResolvedOk = false;
             step1Passed = false;
+            expectedProductCode = null;
+            expectedEan = null;
             expectedColor = null;
             $woResolved.style.display = 'none';
             resetSteps();
@@ -829,6 +860,8 @@
                 $woColor.textContent = body.data.color || '—';
                 $woResolved.style.display = 'flex';
                 woResolvedOk = true;
+                expectedProductCode = body.data.productCode || null;
+                expectedEan = body.data.ean || null;
                 expectedColor = body.data.color || null;
 
                 // Lookup thành công (quét WO xong hoặc Enter) -> tự Save luôn, khỏi phải bấm tay
@@ -854,6 +887,7 @@
                     updateEanLock();
                     flashResult('fail', t('rework.fail', 'FAIL'));
                     showStatus($woStatus, `✗ ${t('rework.step1FailMsg', 'This Work Order is not a Rework item — the product code has no "RW" suffix.')}`, 'err');
+                    logAttempt('FAIL', 1, null, null);
                 }
             } catch (e) {
                 showStatus($woStatus, `✗ ${e.message}`, 'err');
@@ -899,13 +933,14 @@
                     setStepState('2', 'done');
                     showStatus($eanStatus, `✓ ${t('rework.eanColorMatch', '{color} — matches this Work Order.').replace('{color}', eanColor)}`, 'ok');
                     eanStatusHideTimer = setTimeout(() => { $eanStatus.className = 't-status'; }, 5000);
-                    await attemptPrintLabel();
+                    await attemptPrintLabel(ean, eanColor);
                 } else {
                     setStepState('2', 'fail');
                     flashResult('fail', t('rework.fail', 'FAIL'));
                     const msg = t('rework.eanColorMismatch', 'EAN color ({eanColor}) does not match this Work Order ({woColor}).')
                         .replace('{eanColor}', eanColor || '—').replace('{woColor}', expectedColor || '—');
                     showStatus($eanStatus, `✗ ${msg}`, 'err');
+                    logAttempt('FAIL', 2, ean, eanColor || null);
                     $eanInput.value = '';
                     $eanInput.focus();
                 }
@@ -913,6 +948,7 @@
                 setStepState('2', 'fail');
                 flashResult('fail', t('rework.fail', 'FAIL'));
                 showStatus($eanStatus, `✗ ${e.message}`, 'err');
+                logAttempt('FAIL', 2, ean, null);
                 $eanInput.value = '';
                 $eanInput.focus();
             }
@@ -932,12 +968,13 @@
         // tem), nên luôn fail có kiểm soát (khoá lại + Try Again/Skip) — cấu trúc if/else giữ y
         // hệt SnLabel.cshtml's attemptPrint() để sau này chỉ cần thay `const printOk = false`
         // bằng lệnh gọi API in thật, không phải đổi lại UI/luồng gọi. ─────────────────────────
-        async function attemptPrintLabel() {
+        async function attemptPrintLabel(ean, eanColor) {
             const printOk = false;
             if (printOk) {
                 setStepState('3', 'done');
                 flashResult('pass', t('rework.pass', 'PASS'));
                 showStatus($eanStatus, `✓ ${t('rework.pass', 'PASS')}`, 'ok');
+                logAttempt('PASS', null, ean, eanColor);
                 unlockRetry();
                 $eanInput.value = '';
                 $eanInput.focus();
@@ -946,16 +983,19 @@
                 flashResult('fail', t('rework.fail', 'FAIL'));
                 const failMsg = t('rework.printNotConfigured', 'Print Label is not configured yet — waiting on the label design.');
                 showStatus($eanStatus, `✗ ${t('rework.fail', 'FAIL')} — ${failMsg}`, 'err');
-                lockForRetry();
+                logAttempt('FAIL', 3, ean, eanColor);
+                lockForRetry(ean, eanColor);
             }
         }
 
         $btnRwTryAgain.addEventListener('click', async () => {
             if (!pendingRetryStage) return;
+            const ean = pendingRetryEan;
+            const eanColor = pendingRetryEanColor;
             $btnRwTryAgain.disabled = true;
             showStatus($eanStatus, `⏳ ${t('rework.retryInProgress', 'Retrying…')}`, 'ok');
             unlockRetry();
-            await attemptPrintLabel();
+            await attemptPrintLabel(ean, eanColor);
             $btnRwTryAgain.disabled = false;
         });
 

@@ -48,7 +48,9 @@ public class ToastSerialService
         if (exists)
             return (false, $"Serial đã tồn tại: {serial}", null, null);
 
-        var now = VietnamNow();
+        // Lưu giờ Trung Quốc (UTC+8, sớm hơn giờ Việt Nam đúng 1 tiếng) — đồng bộ với toàn bộ
+        // timestamp khác lưu vào database trong hệ thống.
+        var now = VietnamNow().AddHours(1);
         var rec = new SVNToastSerialInfo
         {
             SerialNumber = serial,
@@ -92,7 +94,8 @@ public class ToastSerialService
         if (!string.IsNullOrWhiteSpace(rec.FQCStatus))
             return (false, $"Serial {serialNumber} đã có FQC status.");
 
-        var now = VietnamNow();
+        // Lưu giờ Trung Quốc (UTC+8) — đồng bộ với FCTStatusDatetime ở trên.
+        var now = VietnamNow().AddHours(1);
         rec.FQCStatus = status;
         rec.FQCStatusDatetime = now;
 
