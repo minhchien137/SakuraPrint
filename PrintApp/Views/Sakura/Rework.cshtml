@@ -39,7 +39,7 @@
     }
     body::before { content: none !important; }
 
-    .rw-page { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+    .rw-page { max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
 
     /* ── Header — same treatment as SnLabel.cshtml's .snl-header: big title, no subtitle/bar ── */
     .rw-header { display: block; position: relative; text-align: center; margin-bottom: 28px; }
@@ -479,6 +479,14 @@
         const BASE = '@Url.Content("~")'.replace(/\/$/, '');
         const NODE_SERVICE = 'http://localhost:8021';
 
+        // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. Bật tạm để test luồng Repack khi chưa
+        // có máy in/bridge thật kết nối: giả lập "đã kết nối máy in", coi mỗi lần in là thành
+        // công (report-result vẫn được gọi, Condition đổi Refurb/Unpack Log chuyển REPACKED bình
+        // thường), NHƯNG thay vì gửi ZPL cho máy in thật thì tải về file .zpl để bạn tự test ở
+        // trang test riêng (VD Labelary). Test xong đổi lại false hoặc xoá khối liên quan tới
+        // biến này (search "TEST ONLY" trong file) để khôi phục đúng logic thật.
+        const TEST_FAKE_PRINT_OK = true;
+
         // ── Login gate — bắt buộc đăng nhập lại MỖI LẦN vào trang này (không lưu trạng thái
         // đăng nhập ở đâu cả), dùng chung tài khoản SM_UserPermission với tab Reprint ở
         // SnLabel.cshtml / CartonSnReprint.cshtml (endpoint verify-reprint-login).
@@ -653,6 +661,12 @@
         });
 
         async function checkNode() {
+            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — giả lập bridge luôn online
+                $nodeDot.className = 'node-dot alive';
+                $nodeTxt.textContent = t('rework.bridgeOnline', 'Service — Online');
+                bridgeOnline = true;
+                return;
+            }
             try {
                 const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
                 if (r.ok) {
@@ -671,6 +685,7 @@
         loadPrinterConfig();
 
         function isPrinterConfigured() {
+            if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY
             return printMode === 'usb' ? !!$usbSelect.value : !!$printerIp.value.trim();
         }
         function printerNotReadyMessage() {
@@ -711,6 +726,10 @@
         // Gửi zpl tới bridge theo đúng số Copies đã cấu hình — trả về {sentOk, msgSuffix}, tải
         // file .zpl thay thế nếu chưa cấu hình máy in (không tính là đã in).
         async function printZpl(zpl, filenamePrefix) {
+            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — tải file .zpl thật (để test ở trang khác) thay vì gửi máy in, nhưng vẫn coi là đã in thành công để luồng chạy tiếp bình thường (report-result vẫn được gọi)
+                downloadZplFile(zpl, `${filenamePrefix}.zpl`);
+                return { sentOk: true, msgSuffix: ' [TEST] Downloaded .zpl file instead of printing — treated as sent OK.' };
+            }
             const copies = parseInt($copies.value) || 1;
             if (printMode === 'usb') {
                 const printerName = $usbSelect.value;
@@ -960,13 +979,23 @@
                 const body = await res.json();
                 if (!res.ok || !body.ok) throw new Error(apiError(body, t('rework.cartonLookupFailed', 'Could not find this Carton Number.')));
 
+                // Carton này phải có ít nhất 1 serial đang REWORKED (đã qua Unpack + Rework, chờ
+                // Repack) mới cho quét tiếp — Carton Number chưa từng Unpack thì không có gì để
+                // Repack cả, báo lỗi + xóa dữ liệu đã quét + cho quét lại từ đầu.
+                if (!body.data.pendingReworkedSerials || body.data.pendingReworkedSerials.length === 0) {
+                    resetRepackScanState();
+                    showStatus($repackCartonStatus, `✗ ${t('rework.repackCartonNotUnpacked', 'This Carton Number has not been Unpacked — nothing to Repack yet.')}`, 'err');
+                    $repackCartonNumber.value = '';
+                    $repackCartonNumber.focus();
+                    return;
+                }
+
                 repackCartonData = body.data;
                 repackScanned = [];
-                $repackReworkWo.disabled = false;
                 $repackSerialInput.disabled = false;
                 hideStatus($repackCartonStatus);
                 renderRepackScanList();
-                $repackReworkWo.focus();
+                $repackSerialInput.focus();
             } catch (e) {
                 showStatus($repackCartonStatus, `✗ ${e.message}`, 'err');
             }
@@ -1009,7 +1038,7 @@
                 localStorage.setItem(LS_REPACK_WO, wo);
                 $btnSaveRepackWo.classList.add('is-saved');
 
-                $repackSerialInput.focus();
+                $repackCartonNumber.focus();
             } catch (e) {
                 showStatus($repackWoStatus, `✗ ${e.message}`, 'err');
             }

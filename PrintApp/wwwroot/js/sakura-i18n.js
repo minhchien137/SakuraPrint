@@ -180,6 +180,7 @@
             'rework.repackPrintFailed': 'Print failed.',
             'rework.repackPrintSuccess': 'Refurb Carton Label generated for {carton}.',
             'rework.repackReportFailed': 'Could not save the repack record to the server.',
+            'rework.repackCartonNotUnpacked': 'This Carton Number has not been Unpacked — nothing to Repack yet.',
 
             'reworkHistory.title': 'UNPACK / REWORK / REPACK HISTORY',
             'reworkHistory.filter': 'Filter',
@@ -1072,6 +1073,7 @@
             'rework.repackPrintFailed': '打印失败。',
             'rework.repackPrintSuccess': '已为纸箱 {carton} 生成返修纸箱标签。',
             'rework.repackReportFailed': '无法将重新装箱记录保存到服务器。',
+            'rework.repackCartonNotUnpacked': '此纸箱编号尚未拆箱 — 目前没有需要重新装箱的内容。',
 
             'reworkHistory.title': '拆箱 / 返工 / 重新装箱历史记录',
             'reworkHistory.filter': '筛选',
