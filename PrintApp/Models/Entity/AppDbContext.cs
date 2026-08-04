@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<ExternalPrintQueueItem> ExternalPrintQueueItems { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<LabelPvidEanLog> LabelPvidEanLogs { get; set; }
+    public DbSet<CartonUnpackLog> CartonUnpackLogs { get; set; }
+    public DbSet<SerialNumberRework> SerialNumberReworks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +59,17 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<UserPermission>(e =>
         {
             e.HasIndex(x => x.Username).IsUnique();
+        });
+
+        modelBuilder.Entity<CartonUnpackLog>(e =>
+        {
+            e.HasIndex(x => x.CartonNumber);
+            e.HasIndex(x => x.SerialNumber);
+        });
+
+        modelBuilder.Entity<SerialNumberRework>(e =>
+        {
+            e.HasIndex(x => x.SerialNumber);
         });
     }
 }

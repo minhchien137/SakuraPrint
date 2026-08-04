@@ -382,7 +382,8 @@ public class SakuraController : Controller
                 PrintedQuantity = printedQuantity,
                 RemainingQuantity = remainingQuantity,
                 LockedProductionDate = lockedDate,
-                ProductId = result.ProductId
+                ProductId = result.ProductId,
+                ProductCode = result.ProductCode
             };
             return Ok(new { ok = true, data = response });
         }
@@ -514,13 +515,125 @@ public class SakuraController : Controller
         return Ok(new { ok = true, data = new { logId = entry.Id } });
     }
 
-    // ── API: Rework — history (trang /sakura/rework/history), đọc từ SM_LabelPvidEANLog. ───────
+    // ── API: Rework — history (trang /sakura/rework/history), đọc từ SM_CartonUnpack_Log —
+    // trạm Unpack/Repack mới (thay cho SM_LabelPvidEANLog của tính năng EAN/PVID Label cũ, tắt
+    // đi nhưng KHÔNG xoá — GetReworkHistoryAsync/SM_LabelPvidEANLog vẫn còn nguyên trong service
+    // nếu cần bật lại). ─────────────────────────────────────────────────────────────────────
 
     [HttpGet("/api/sakura/rework/history")]
-    public async Task<IActionResult> ReworkHistory([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder, [FromQuery] string? ean, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> ReworkHistory([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? cartonNumber, [FromQuery] string? serialNumber, [FromQuery] string? reworkWorkOrder, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await _snLabel.GetReworkHistoryAsync(dateFrom, dateTo, workOrder, ean, status, page, pageSize);
+        var result = await _snLabel.GetUnpackHistoryAsync(dateFrom, dateTo, cartonNumber, serialNumber, reworkWorkOrder, status, page, pageSize);
         return Ok(new { ok = true, data = result });
+    }
+
+    // ── API: Rework — Unpack Carton (bước 1). Quét 1 Carton Number đã in để xem N serial hiện
+    // có, rồi gỡ k serial ra rework — xem SakuraService.GetCartonForUnpackAsync/UnpackCartonSerialsAsync. ──
+
+    [HttpGet("/api/sakura/rework/carton-lookup")]
+    public async Task<IActionResult> UnpackCartonLookup([FromQuery] string cartonNumber)
+    {
+        try
+        {
+            var result = await _snLabel.GetCartonForUnpackAsync(cartonNumber);
+            return Ok(new { ok = true, data = result });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+    }
+
+    [HttpPost("/api/sakura/rework/unpack")]
+    public async Task<IActionResult> UnpackCarton([FromBody] UnpackCartonRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.CartonNumber))
+            return BadRequest(new { ok = false, error = "Thiếu Carton Number.", errorCode = "unpackCarton.cartonNumberMissing" });
+
+        try
+        {
+            var result = await _snLabel.UnpackCartonSerialsAsync(req.CartonNumber, req.SerialNumbers ?? new List<string>());
+            return Ok(new { ok = true, data = new { count = result.Count, serials = result.Select(x => x.SerialNumber) } });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
+    }
+
+    // ── API: Rework — Repack Carton (bước 3). Quét lại ĐỦ N serial gốc của carton, in lại tem
+    // Carton với Condition=Refurb + SKU/PVID/EAN theo Rework WO — xem
+    // SakuraService.GetRepackStatusAsync/BuildRepackCartonZplAsync/RecordRepackResultAsync. ─────
+
+    [HttpGet("/api/sakura/rework/repack-status")]
+    public async Task<IActionResult> RepackStatus([FromQuery] string cartonNumber)
+    {
+        try
+        {
+            var result = await _snLabel.GetRepackStatusAsync(cartonNumber);
+            return Ok(new { ok = true, data = result });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+    }
+
+    [HttpGet("/api/sakura/rework/verify-repack-serial")]
+    public async Task<IActionResult> VerifyRepackSerial([FromQuery] string cartonNumber, [FromQuery] string serial)
+    {
+        bool ok = await _snLabel.VerifyRepackSerialAsync(cartonNumber, serial);
+        if (!ok)
+            return BadRequest(new { ok = false, error = $"Serial '{serial}' không thuộc Carton '{cartonNumber}'.", errorCode = "unpackCarton.serialNotInCarton", errorParams = new { serial, cartonNumber } });
+        return Ok(new { ok = true });
+    }
+
+    [HttpPost("/api/sakura/rework/repack-print")]
+    public async Task<IActionResult> RepackPrint([FromBody] RepackPrintRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.CartonNumber) || string.IsNullOrWhiteSpace(req.ReworkWorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu Carton Number hoặc Rework WO.", errorCode = "common.missingData" });
+
+        try
+        {
+            var wo = await _viidoo.SearchAsync(req.ReworkWorkOrder.Trim());
+            if (wo == null)
+                return BadRequest(new { ok = false, error = $"Không tìm thấy Work Order '{req.ReworkWorkOrder}' trên Odoo.", errorCode = "workOrder.notFoundOdoo", errorParams = new { wo = req.ReworkWorkOrder } });
+
+            string? ean = wo.ProductId is int productId ? await _viidoo.GetProductEanAsync(productId) : null;
+
+            string zpl = await _snLabel.BuildRepackCartonZplAsync(req.CartonNumber, req.ScannedSerials ?? new List<string>(), wo.ProductCode ?? "", ean);
+            return Ok(new { ok = true, zpl, productCode = wo.ProductCode, ean, color = wo.Color });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(BuildError(ex));
+        }
+    }
+
+    [HttpPost("/api/sakura/rework/repack-report-result")]
+    public async Task<IActionResult> RepackReportResult([FromBody] RepackReportResultRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.CartonNumber) || string.IsNullOrWhiteSpace(req.ReworkWorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+
+        try
+        {
+            await _snLabel.RecordRepackResultAsync(req.CartonNumber, req.ReworkWorkOrder);
+            return Ok(new { ok = true });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
     }
 
     // ── API: ghi log 1 lần Check EAN bị FAIL ngay ở bước quét EAN — bước này chặn không cho
@@ -1023,6 +1136,104 @@ public class SakuraController : Controller
         });
     }
 
+    // ── API: SN Label — reprint dưới Rework WO (mode "Rework" ở trang /sakura/snlabel). Reprint
+    // tem gift box Y NGUYÊN nội dung cho 1 serial đã qua Unpack (đang chờ rework ở
+    // /sakura/rework) — gắn ReworkWorkOrder trên dòng SnLabelPrint, insert 1 dòng vào
+    // SM_SerialNumber_Rework TRƯỚC khi nhập kết quả sản xuất dưới Rework WO (hệ thống nhập kết
+    // quả sản xuất bên ngoài tự check bảng đó để bỏ qua validate trùng serial), rồi chuyển dòng
+    // Unpack Log tương ứng UNPACKED -> REWORKED. ───────────────────────────────────────────────
+
+    [HttpPost("/api/sakura/snlabel/rework-reprint")]
+    public async Task<IActionResult> ReworkReprintSnLabel([FromBody] ReworkReprintRequest req)
+    {
+        if (req == null || string.IsNullOrWhiteSpace(req.SerialNumber) || string.IsNullOrWhiteSpace(req.ReworkWorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu Serial Number hoặc Rework WO.", errorCode = "common.missingData" });
+
+        string serial = req.SerialNumber.Trim();
+        string reworkWo = req.ReworkWorkOrder.Trim();
+
+        var pending = await _snLabel.FindPendingUnpackLogAsync(serial);
+        if (pending == null)
+            return BadRequest(new { ok = false, error = $"Serial '{serial}' chưa được Unpack hoặc đã qua Rework rồi.", errorCode = "unpackCarton.serialNotPending", errorParams = new { serial } });
+
+        var wo = await _viidoo.SearchAsync(reworkWo);
+        if (wo == null || wo.ProductId is not int productId)
+            return BadRequest(new { ok = false, error = $"Không tìm thấy Work Order '{reworkWo}' trên Odoo.", errorCode = "workOrder.notFoundOdoo", errorParams = new { wo = reworkWo } });
+
+        // Re-check EAN ngay tại server (không tin riêng client đã so khớp) — giống bước Check EAN
+        // của tab Work Order (verify-serial), áp dụng cho đúng Rework WO đang dùng.
+        string? realEan = await _viidoo.GetProductEanAsync(productId);
+        string scannedEan = (req.Ean ?? "").Trim();
+        if (string.IsNullOrEmpty(realEan) || !string.Equals(realEan.Trim(), scannedEan, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { ok = false, error = $"EAN '{scannedEan}' không khớp với Rework WO '{reworkWo}'.", errorCode = "rework.eanMismatch", errorParams = new { ean = scannedEan, expected = realEan ?? "" } });
+
+        // Check Color — màu embed trong Serial (theo TryResolveColorFromSerial) phải khớp màu của
+        // Rework WO, giống hệt Bước 2 "Check Color" của luồng verify-serial thông thường. EAN đúng
+        // không đủ đảm bảo — quét nhầm 1 serial khác màu (nhưng gõ đúng EAN theo trí nhớ) vẫn phải
+        // bị chặn ở đây.
+        string? serialColor = SakuraService.TryResolveColorFromSerial(serial);
+        if (serialColor == null || !string.Equals(serialColor, wo.Color, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { ok = false, error = $"Màu của Serial '{serial}' ({serialColor ?? "?"}) không khớp với Rework WO '{reworkWo}' ({wo.Color}).", errorCode = "rework.colorMismatch", errorParams = new { serial, actual = serialColor ?? "", expected = wo.Color ?? "" } });
+
+        var printRow = await _snLabel.MarkReworkedReprintAsync(serial, reworkWo, reprintedBy: null);
+        if (printRow == null)
+            return NotFound(new { ok = false, error = $"Không tìm thấy tem SN Label đã in cho serial '{serial}'.", errorCode = "reprint.notFound", errorParams = new { serial } });
+
+        // Insert TRƯỚC khi gọi bước nhập kết quả sản xuất, đúng yêu cầu.
+        _db.SerialNumberReworks.Add(new SerialNumberRework
+        {
+            WorkOrder = reworkWo,
+            SerialNumber = serial,
+            CreatedAt = SakuraService.VietnamNow().AddHours(1)
+        });
+        await _db.SaveChangesAsync();
+
+        // Nhập kết quả sản xuất dưới Rework WO — KHÔNG gọi CheckLotSerialFgAsync (bỏ qua bước
+        // Check trùng): serial này chắc chắn đã có bản ghi KQSX từ lần sản xuất gốc (đó là lý do
+        // nó tồn tại để rework), Check trùng chắc chắn sẽ báo "đã nhập" và chặn mất Input. Gọi
+        // thẳng InputProductionResultLogAsync để thêm 1 bản ghi KQSX MỚI song song, dưới Rework
+        // WO (khác WO gốc) — dòng vừa insert vào SM_SerialNumber_Rework ở trên là để hệ thống
+        // nhập KQSX bên ngoài (nếu có validate trùng ở phía họ) biết đây là serial rework hợp lệ.
+        // KHÔNG chặn chuyển trạng thái Unpack Log nếu bước Input fail — tem gift box đã reprint
+        // xong là việc chính, KQSX chỉ báo kèm để operator biết.
+        bool inputResultOk;
+        string? inputResultMessage;
+        try
+        {
+            string subName = await BuildNextSubNameAsync(reworkWo);
+            var inputResult = await _productionApi.InputProductionResultLogAsync(
+                reworkWo, subName, serial, productId, 0,
+                new[] { new ProductionResultProduct { Product_id = productId, Has_tracking = "serial", Serial_code = serial } });
+            inputResultOk = inputResult.Ok;
+            inputResultMessage = inputResult.Message;
+        }
+        catch (Exception ex)
+        {
+            inputResultOk = false;
+            inputResultMessage = ex.Message;
+        }
+
+        await _snLabel.MarkSerialReworkedAsync(pending.Id, reworkWo);
+
+        string reworkTemplate = await _snLabel.GetZplTemplateAsync("SnLabel");
+        string reworkZpl = SakuraService.BuildConcatenatedZpl(reworkTemplate, new[] { serial });
+
+        return Ok(new
+        {
+            ok = true,
+            data = new
+            {
+                serialNumber = serial,
+                reworkWorkOrder = reworkWo,
+                printRow.Color,
+                printRow.ReprintCount,
+                inputResultOk,
+                inputResultMessage,
+                zpl = reworkZpl
+            }
+        });
+    }
+
     // ── API: history ──────────────────────────────────────────────────────────
 
     [HttpGet("/api/sakura/snlabel/history")]
@@ -1123,12 +1334,12 @@ public class SakuraController : Controller
     // string/array, không cần gọi server. ───────────────────────────────────────────────────
 
     [HttpGet("/api/sakura/cartonsn/verify-serial")]
-    public async Task<IActionResult> CartonVerifySerial([FromQuery] string serial)
+    public async Task<IActionResult> CartonVerifySerial([FromQuery] string serial, [FromQuery] string? color)
     {
         if (string.IsNullOrWhiteSpace(serial))
             return BadRequest(new { ok = false, error = "Thiếu Serial Number.", errorCode = "serial.missing" });
 
-        var (ok, errorCode, message) = await _snLabel.ValidateCartonSerialAsync(serial.Trim());
+        var (ok, errorCode, message) = await _snLabel.ValidateCartonSerialAsync(serial.Trim(), color);
         if (!ok)
         {
             var body = new { ok = false, error = message, errorCode };

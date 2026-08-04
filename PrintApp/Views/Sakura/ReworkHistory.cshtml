@@ -22,6 +22,7 @@
         --gray-700:   #374151;
         --gray-900:   #111827;
         --success:    #059669;
+        --warning:    #B45309;
         --danger:     #DC2626;
         --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
         --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
@@ -64,7 +65,7 @@
     .t-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
 
     .t-grid { display: grid; gap: 16px 20px; }
-    .t-grid-auto { grid-template-columns: 150px 150px 1fr 1fr 130px 120px auto; align-items: end; }
+    .t-grid-auto { grid-template-columns: 150px 150px 1fr 1fr 1fr 130px 120px auto; align-items: end; }
 
     .t-field label {
         display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
@@ -104,20 +105,17 @@
     .t-table td { padding: 8px 10px; border-bottom: 1px dashed var(--gray-200); vertical-align: middle; white-space: nowrap; }
     .t-table tr:hover td { background: var(--gray-50); }
 
-    /* ── PASS / FAIL status badge — mirrors History.cshtml ────────────────────── */
+    /* ── Unpack/Rework/Repack status badge ────────────────────────────────────── */
     .status-badge {
         display: inline-flex; align-items: center; gap: 4px;
         font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px;
         padding: 3px 10px; border-radius: 10px; text-transform: uppercase;
     }
-    .status-badge.pass { color: #065F46; background: #ECFDF5; border: 1px solid rgba(5,150,105,0.35); }
-    .status-badge.fail { color: #7F1D1D; background: var(--red-xlight); border: 1px solid rgba(220,38,38,0.35); }
+    .status-badge.unpacked { color: var(--warning); background: #FEF3C7; border: 1px solid rgba(180,83,9,0.35); }
+    .status-badge.reworked { color: #1D4ED8; background: #EFF6FF; border: 1px solid rgba(29,78,216,0.35); }
+    .status-badge.repacked { color: #065F46; background: #ECFDF5; border: 1px solid rgba(5,150,105,0.35); }
 
-    .failstep-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--red-dark);
-    }
-    .failstep-none { color: var(--gray-400); }
+    .cell-none { color: var(--gray-400); }
 
     /* Pagination footer */
     .hist-pagination {
@@ -165,7 +163,7 @@
 
     <header class="snl-header">
         <div>
-            <h1 data-i18n="reworkHistory.title">EAN AND PVID LABEL PRINT HISTORY</h1>
+            <h1 data-i18n="reworkHistory.title">UNPACK / REWORK / REPACK HISTORY</h1>
         </div>
         <div class="snl-badge">SAKURA</div>
     </header>
@@ -182,19 +180,24 @@
                 <input type="date" id="histDateTo" />
             </div>
             <div class="t-field">
-                <label data-i18n="reworkHistory.filterWorkOrder">Work Order</label>
-                <input type="text" id="histWorkOrder" autocomplete="off" data-i18n-placeholder="reworkHistory.filterWorkOrderPlaceholder" placeholder="Search Work Order…" />
+                <label data-i18n="reworkHistory.filterCartonNumber">Carton Number</label>
+                <input type="text" id="histCartonNumber" autocomplete="off" data-i18n-placeholder="reworkHistory.filterCartonNumberPlaceholder" placeholder="Search Carton Number…" />
             </div>
             <div class="t-field">
-                <label data-i18n="reworkHistory.filterEan">EAN (RW or Gift Box)</label>
-                <input type="text" id="histEan" autocomplete="off" data-i18n-placeholder="reworkHistory.filterEanPlaceholder" placeholder="Search EAN…" />
+                <label data-i18n="reworkHistory.filterSerialNumber">Serial Number</label>
+                <input type="text" id="histSerialNumber" autocomplete="off" data-i18n-placeholder="reworkHistory.filterSerialNumberPlaceholder" placeholder="Search Serial Number…" />
+            </div>
+            <div class="t-field">
+                <label data-i18n="reworkHistory.filterReworkWo">Rework Work Order</label>
+                <input type="text" id="histReworkWo" autocomplete="off" data-i18n-placeholder="reworkHistory.filterReworkWoPlaceholder" placeholder="Search Rework WO…" />
             </div>
             <div class="t-field">
                 <label data-i18n="reworkHistory.filterStatus">Status</label>
                 <select id="histStatus">
                     <option value="" data-i18n="reworkHistory.filterStatusAll">All</option>
-                    <option value="PASS" data-i18n="reworkHistory.filterStatusPass">PASS</option>
-                    <option value="FAIL" data-i18n="reworkHistory.filterStatusFail">FAIL</option>
+                    <option value="UNPACKED" data-i18n="reworkHistory.filterStatusUnpacked">UNPACKED</option>
+                    <option value="REWORKED" data-i18n="reworkHistory.filterStatusReworked">REWORKED</option>
+                    <option value="REPACKED" data-i18n="reworkHistory.filterStatusRepacked">REPACKED</option>
                 </select>
             </div>
             <div class="t-field">
@@ -211,24 +214,23 @@
     </div>
 
     <div class="t-section">
-        <div class="t-section-label" data-i18n="reworkHistory.tableTitle">Scan Log</div>
+        <div class="t-section-label" data-i18n="reworkHistory.tableTitle">Unpack / Rework / Repack Log</div>
         <div class="t-table-wrap">
             <table class="t-table">
                 <thead>
                     <tr>
+                        <th data-i18n="reworkHistory.colCartonNumber">Carton Number</th>
+                        <th data-i18n="reworkHistory.colSerialNumber">Serial Number</th>
                         <th data-i18n="reworkHistory.colWorkOrder">Work Order</th>
-                        <th data-i18n="reworkHistory.colPvid">Product Code</th>
-                        <th data-i18n="reworkHistory.colWoColor">WO Color</th>
-                        <th data-i18n="reworkHistory.colEanRw">EAN RW</th>
-                        <th data-i18n="reworkHistory.colEanGiftBox">EAN Gift Box</th>
-                        <th data-i18n="reworkHistory.colEanColor">EAN Color</th>
+                        <th data-i18n="reworkHistory.colReworkWo">Rework WO</th>
                         <th data-i18n="reworkHistory.colStatus">Status</th>
-                        <th data-i18n="reworkHistory.colFailedStep">Failed Step</th>
-                        <th data-i18n="reworkHistory.colTimeline">Timeline</th>
+                        <th data-i18n="reworkHistory.colUnpackedAt">Unpacked At</th>
+                        <th data-i18n="reworkHistory.colReworkedAt">Reworked At</th>
+                        <th data-i18n="reworkHistory.colRepackedAt">Repacked At</th>
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -274,8 +276,9 @@
 
     const $histDateFrom = document.getElementById('histDateFrom');
     const $histDateTo = document.getElementById('histDateTo');
-    const $histWorkOrder = document.getElementById('histWorkOrder');
-    const $histEan = document.getElementById('histEan');
+    const $histCartonNumber = document.getElementById('histCartonNumber');
+    const $histSerialNumber = document.getElementById('histSerialNumber');
+    const $histReworkWo = document.getElementById('histReworkWo');
     const $histStatus = document.getElementById('histStatus');
     const $histPageSize = document.getElementById('histPageSize');
     const $btnHistRefresh = document.getElementById('btnHistRefresh');
@@ -304,11 +307,12 @@
         const params = new URLSearchParams({ page: currentPage, pageSize: pageSize() });
         if ($histDateFrom.value) params.set('dateFrom', $histDateFrom.value);
         if ($histDateTo.value) params.set('dateTo', $histDateTo.value);
-        if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
-        if ($histEan.value.trim()) params.set('ean', $histEan.value.trim());
+        if ($histCartonNumber.value.trim()) params.set('cartonNumber', $histCartonNumber.value.trim());
+        if ($histSerialNumber.value.trim()) params.set('serialNumber', $histSerialNumber.value.trim());
+        if ($histReworkWo.value.trim()) params.set('reworkWorkOrder', $histReworkWo.value.trim());
         if ($histStatus.value) params.set('status', $histStatus.value);
 
-        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/rework/history?${params}`);
             const body = await res.json();
@@ -321,7 +325,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -348,52 +352,44 @@
         if (currentPage < totalPages) { currentPage = totalPages; loadHistory(); }
     });
 
-    // 1=Check Work Order, 2=Check Color & EAN of The Gift Box, 3=Print Label — xem
-    // SakuraController.ReworkLogAttempt / Rework.cshtml's setStepState.
-    function stepLabel(n) {
-        if (n === 1) return t('rework.step1Label', 'Check Work Order');
-        if (n === 2) return t('rework.step2Label', 'Check Color & EAN of The Gift Box');
-        if (n === 3) return t('rework.step3Label', 'Print Label');
-        return '—';
+    function statusBadge(status) {
+        if (!status) return `<span class="cell-none">—</span>`;
+        const cls = status === 'UNPACKED' ? 'unpacked' : (status === 'REWORKED' ? 'reworked' : (status === 'REPACKED' ? 'repacked' : ''));
+        return `<span class="status-badge ${cls}">${status}</span>`;
+    }
+    function dateCell(v) {
+        return v ? new Date(v).toLocaleString() : `<span class="cell-none">—</span>`;
     }
 
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
-        $histRows.innerHTML = rows.map(r => {
-            const timeline = new Date(r.timeline).toLocaleString();
-            const statusCls = r.status === 'PASS' ? 'pass' : (r.status === 'FAIL' ? 'fail' : '');
-            const statusCell = r.status
-                ? `<span class="status-badge ${statusCls}">${r.status}</span>`
-                : `<span class="failstep-none">—</span>`;
-            const failedStepCell = r.failedStep
-                ? `<span class="failstep-badge">✕ ${r.failedStep} — ${stepLabel(r.failedStep)}</span>`
-                : `<span class="failstep-none">—</span>`;
-            return `
+        $histRows.innerHTML = rows.map(r => `
                 <tr>
-                    <td>${r.workOrder ? escHtml(r.workOrder) : '—'}</td>
-                    <td>${r.pvid ? escHtml(r.pvid) : '—'}</td>
-                    <td>${r.woColor ? escHtml(r.woColor) : '—'}</td>
-                    <td>${r.eanRw ? escHtml(r.eanRw) : '—'}</td>
-                    <td>${r.eanGiftBox ? escHtml(r.eanGiftBox) : '—'}</td>
-                    <td>${r.eanColor ? escHtml(r.eanColor) : '—'}</td>
-                    <td>${statusCell}</td>
-                    <td>${failedStepCell}</td>
-                    <td>${timeline}</td>
-                </tr>`;
-        }).join('');
+                    <td>${escHtml(r.cartonNumber)}</td>
+                    <td>${escHtml(r.serialNumber)}</td>
+                    <td>${escHtml(r.workOrder)}</td>
+                    <td>${r.reworkWorkOrder ? escHtml(r.reworkWorkOrder) : '<span class="cell-none">—</span>'}</td>
+                    <td>${statusBadge(r.status)}</td>
+                    <td>${dateCell(r.unpackedAt)}</td>
+                    <td>${dateCell(r.reworkedAt)}</td>
+                    <td>${dateCell(r.repackedAt)}</td>
+                </tr>`).join('');
     }
 
     $histDateFrom.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histDateTo.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histStatus.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histPageSize.addEventListener('change', () => { currentPage = 1; loadHistory(); });
-    $histWorkOrder.addEventListener('keydown', (e) => {
+    $histCartonNumber.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
     });
-    $histEan.addEventListener('keydown', (e) => {
+    $histSerialNumber.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
+    });
+    $histReworkWo.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
     });
     $btnHistRefresh.addEventListener('click', () => { currentPage = 1; loadHistory(); });
