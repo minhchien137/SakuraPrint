@@ -71,6 +71,11 @@ public class SnLabelPrint
     // NULL nếu PASS toàn bộ; 1=Check EAN, 2=Check Color, 3=Check Serial (đã nhập KQSX chưa),
     // 4=Print Label — cùng quy ước với SM_BackPanelLaserLog.
     public int? FailedStep { get; set; }
+
+    // Rework Work Order gắn vào lúc tem này được reprint dưới trạm Rework (POST
+    // /api/sakura/snlabel/rework-reprint) — WorkOrder gốc ở trên giữ nguyên không đổi.
+    [StringLength(50)]
+    public string? ReworkWorkOrder { get; set; }
 }
 
 // ── Request / response DTOs ──────────────────────────────────────────────────
@@ -93,6 +98,11 @@ public class WorkOrderLookupResponse
     public int TotalQuantity { get; set; }
     public int PrintedQuantity { get; set; }
     public int RemainingQuantity { get; set; }
+
+    // Mã sản phẩm (bracket code từ Odoo, vd "RM15A-1001RW") — client tự suy ra WO này có phải
+    // Rework WO không (hậu tố "RW") để rẽ nhánh luồng Check EAN/Serial ngay trong tab Work Order,
+    // không cần tab Rework riêng — xem SnLabel.cshtml's lookupWorkOrder().
+    public string? ProductCode { get; set; }
 
     // Ngày sản xuất của lần in ĐẦU TIÊN cho Work Order này (null nếu đây là lần in đầu tiên).
     // Toàn bộ nhãn của cùng 1 WO phải dùng chung 1 ngày này — server sẽ tự khóa theo

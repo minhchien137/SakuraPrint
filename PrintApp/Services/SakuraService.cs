@@ -237,7 +237,10 @@ public class SakuraService
                 }
 
                 var batchId = Guid.NewGuid();
-                var printedAt = VietnamNow();
+                // PrintedAt hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu
+                // riêng. KHÔNG đụng tới ProductionDate (prodDate) — đó là ngày người dùng tự
+                // chọn/khoá cho Work Order, không phải giờ hệ thống, nên vẫn giữ nguyên.
+                var printedAt = VietnamNow().AddHours(1);
                 var rows = new List<SnLabelPrint>(quantity);
 
                 for (int i = 0; i < quantity; i++)
@@ -330,17 +333,26 @@ public class SakuraService
         return await _context.CartonSnScanLogs.AsNoTracking().AnyAsync(x => x.CartonNumber == cartonNumber);
     }
 
-    // 3 điều kiện check khi quét 1 SN vào carton: (1) định dạng — dùng lại TryParseSerialParts
+    // 4 điều kiện check khi quét 1 SN vào carton: (1) định dạng — dùng lại TryParseSerialParts
     // (cùng logic serial RM15A đang dùng ở SnLabel), (2) trùng trong lần quét hiện tại — client tự
     // check bằng string/array, không cần tới server, (3) đã được quét/in ở carton khác chưa —
-    // check tại đây (đã in thành công không thể chọn lại, kể cả khác Work Order).
-    public async Task<(bool Ok, string? ErrorCode, string? ErrorMessage)> ValidateCartonSerialAsync(string serial)
+    // check tại đây (đã in thành công không thể chọn lại, kể cả khác Work Order), (4) màu embed
+    // trong Serial phải khớp màu của Work Order/Carton đang in (tránh quét nhầm serial khác màu
+    // vào carton — trước đây KHÔNG check bước này nên lọt được serial sai màu).
+    public async Task<(bool Ok, string? ErrorCode, string? ErrorMessage)> ValidateCartonSerialAsync(string serial, string? expectedColor)
     {
         if (!TryParseSerialParts(serial, out _, out _, out _, out _))
             return (false, "cartonLabel.invalidSerialFormat", $"Serial '{serial}' không đúng định dạng.");
 
         if (await IsCartonSerialAlreadyUsedAsync(serial))
             return (false, "cartonLabel.serialAlreadyUsed", $"Serial '{serial}' đã được quét/in trước đó.");
+
+        if (!string.IsNullOrWhiteSpace(expectedColor))
+        {
+            string? serialColor = TryResolveColorFromSerial(serial);
+            if (serialColor == null || !string.Equals(serialColor, expectedColor, StringComparison.OrdinalIgnoreCase))
+                return (false, "cartonLabel.colorMismatch", $"Serial '{serial}' là màu {serialColor ?? "?"}, không khớp màu {expectedColor} của carton.");
+        }
 
         return (true, null, null);
     }
@@ -385,7 +397,8 @@ public class SakuraService
             }
         }
 
-        var scanDate = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        var scanDate = VietnamNow().AddHours(1);
         var row = new CartonSnScanLog
         {
             Serial = string.Join(",", nonEmpty),
@@ -746,7 +759,7 @@ public class SakuraService
             InboundReference = req.InboundReference?.Trim() ?? "",
             WarehouseReference = req.WarehouseReference?.Trim() ?? "",
             DeliveryAddress = req.DeliveryAddress?.Trim() ?? "",
-            UpdatedAt = VietnamNow()
+            UpdatedAt = VietnamNow().AddHours(1)
         };
         _context.PalletInfoTemplates.Add(row);
         await _context.SaveChangesAsync();
@@ -771,7 +784,7 @@ public class SakuraService
         row.InboundReference = req.InboundReference?.Trim() ?? "";
         row.WarehouseReference = req.WarehouseReference?.Trim() ?? "";
         row.DeliveryAddress = req.DeliveryAddress?.Trim() ?? "";
-        row.UpdatedAt = VietnamNow();
+        row.UpdatedAt = VietnamNow().AddHours(1);
         await _context.SaveChangesAsync();
         return row;
     }
@@ -853,8 +866,12 @@ public class SakuraService
 
         if (!string.IsNullOrWhiteSpace(palletNumber))
         {
-            string pn = palletNumber.Trim();
-            query = query.Where(x => x.PalletNumber != null && x.PalletNumber.Contains(pn));
+            // Cho phép nhập nhiều Pallet Number cách nhau bằng dấu phẩy (VD "P-RM15A-00150,
+            // P-RM15A-00151") để lọc/export đúng nhiều lô cùng lúc — khớp OR theo từng giá trị
+            // (vẫn dùng Contains như trước cho từng giá trị, không bắt buộc khớp tuyệt đối).
+            var terms = palletNumber.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct().ToList();
+            if (terms.Count > 0)
+                query = query.Where(x => x.PalletNumber != null && terms.Any(term => x.PalletNumber.Contains(term)));
         }
 
         if (isReprint.HasValue)
@@ -989,7 +1006,8 @@ public class SakuraService
         string zpl = await RenderCartonZplAsync(row.CartonNumber, meta, row.Condition ?? "New", slots, slots);
 
         row.IsReprint = true;
-        row.LastReprintAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        row.LastReprintAt = VietnamNow().AddHours(1);
         row.ReprintCount++;
         await _context.SaveChangesAsync();
 
@@ -1030,7 +1048,8 @@ public class SakuraService
             .Replace("{palletNumber}", trimmed)
             .Replace("{deliveryTo}", FormatZplDeliveryAddress(rows[0].DeliveryAddress ?? ""));
 
-        var reprintAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        var reprintAt = VietnamNow().AddHours(1);
         foreach (var row in rows)
         {
             row.IsPalletReprint = true;
@@ -1197,6 +1216,79 @@ public class SakuraService
         };
     }
 
+    // Đọc từ SM_LabelPvidEANLog — audit trail của trạm Rework (mỗi lần thử 1 bước trong Process
+    // đều ghi 1 dòng mới, kể cả FAIL — xem SakuraController.ReworkLogAttempt).
+    public async Task<ReworkHistoryPageDto> GetReworkHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? workOrder, string? ean, string? status, int page, int pageSize)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
+
+        var query = _context.LabelPvidEanLogs.AsNoTracking().AsQueryable();
+
+        if (dateFrom.HasValue)
+        {
+            DateTime rangeStart = dateFrom.Value.Date;
+            query = query.Where(x => x.Timeline >= rangeStart);
+        }
+
+        if (dateTo.HasValue)
+        {
+            DateTime rangeEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.Timeline < rangeEnd);
+        }
+
+        if (!string.IsNullOrWhiteSpace(workOrder))
+        {
+            string wo = workOrder.Trim();
+            query = query.Where(x => x.WorkOrder.Contains(wo));
+        }
+
+        if (!string.IsNullOrWhiteSpace(ean))
+        {
+            // Tìm khớp cả EanRW (EAN thật của sản phẩm) lẫn EanGiftBox (EAN đã quét) — người
+            // dùng có thể không nhớ rõ đang tìm theo mã nào.
+            string eanFilter = ean.Trim();
+            query = query.Where(x =>
+                (x.EanRw != null && x.EanRw.Contains(eanFilter)) ||
+                (x.EanGiftBox != null && x.EanGiftBox.Contains(eanFilter)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            string statusFilter = status.Trim();
+            query = query.Where(x => x.Status == statusFilter);
+        }
+
+        int totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(x => x.Timeline)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new ReworkHistoryItemDto
+            {
+                Id = x.Id,
+                WorkOrder = x.WorkOrder,
+                Pvid = x.Pvid,
+                WoColor = x.WoColor,
+                EanRw = x.EanRw,
+                EanGiftBox = x.EanGiftBox,
+                EanColor = x.EanColor,
+                Status = x.Status,
+                FailedStep = x.FailedStep,
+                Timeline = x.Timeline
+            })
+            .ToListAsync();
+
+        return new ReworkHistoryPageDto
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     // Danh sách Work Order khác nhau đã in — nếu có ngày thì chỉ lấy WO của ngày đó
     // (dùng để đổ vào dropdown filter Work Order trên trang History).
     public async Task<List<string>> GetWorkOrdersAsync(DateTime? date)
@@ -1236,7 +1328,8 @@ public class SakuraService
         if (row == null) return null;
 
         row.ReprintCount += 1;
-        row.LastReprintedAt = VietnamNow();
+        // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
+        row.LastReprintedAt = VietnamNow().AddHours(1);
         row.LastReprintedBy = reprintedBy;
         await _context.SaveChangesAsync();
         return row;
@@ -1271,7 +1364,7 @@ public class SakuraService
         var row = await _context.SakuraZplTemplates
             .FirstOrDefaultAsync(x => x.TemplateKey == templateKey);
 
-        var now = VietnamNow();
+        var now = VietnamNow().AddHours(1);
         if (row == null)
         {
             row = new SakuraZplTemplate
@@ -1353,6 +1446,10 @@ public class SakuraService
         {
             if (!TryParseSerialParts(s, out _, out _, out _, out _))
                 throw new SakuraValidationException("cartonLabel.invalidSerialFormat", $"Serial '{s}' không đúng định dạng.", new { serial = s });
+
+            string? serialColor = TryResolveColorFromSerial(s);
+            if (serialColor == null || !string.Equals(serialColor, color, StringComparison.OrdinalIgnoreCase))
+                throw new SakuraValidationException("cartonLabel.colorMismatch", $"Serial '{s}' là màu {serialColor ?? "?"}, không khớp màu {color} của carton.", new { serial = s, actual = serialColor ?? "", expected = color });
         }
 
         // Serial giờ lưu dạng CSV nhiều serial/carton trong 1 dòng nên không thể query 1 phát
@@ -1409,6 +1506,326 @@ public class SakuraService
 
         return zpl;
     }
+
+    // ── Rework — Unpack / Repack (/sakura/rework) ────────────────────────────
+    // Quy trình: (1) Unpack — gỡ k serial ra khỏi 1 carton đã in để đi rework; (2) Rework — SN
+    // Label được reprint dưới 1 Rework WO (xem SakuraController.ReworkReprintSnLabel); (3) Repack —
+    // quét lại ĐỦ N serial gốc (không đổi Carton Number/số lượng), in lại tem Carton với
+    // Condition=Refurb + SKU/PVID/EAN theo Rework WO. Toàn bộ lịch sử insert-only ở
+    // SM_CartonUnpack_Log — 1 dòng theo dõi trọn vòng đời 1 lần rework của 1 serial
+    // (UNPACKED -> REWORKED -> REPACKED), không ghi đè khi chuyển bước.
+
+    // Bước 1 (đọc): load carton đang có N serial hiện tại — dùng cho cả màn Unpack lẫn để biết
+    // WorkOrder/Color gốc của carton.
+    public async Task<CartonForUnpackDto> GetCartonForUnpackAsync(string cartonNumber)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber))
+            throw new SakuraValidationException("unpackCarton.cartonNumberMissing", "Thiếu Carton Number.");
+
+        string trimmed = cartonNumber.Trim();
+        var row = await _context.CartonSnScanLogs.AsNoTracking().FirstOrDefaultAsync(x => x.CartonNumber == trimmed);
+        if (row == null)
+            throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmed}'.", new { cartonNumber = trimmed });
+
+        return new CartonForUnpackDto
+        {
+            CartonNumber = row.CartonNumber,
+            WorkOrder = row.WorkOrder,
+            Color = row.Color,
+            Serials = SplitCartonSerials(row.Serial)
+        };
+    }
+
+    // Bước 1 (ghi): gỡ serialsToUnpack ra khỏi carton — mỗi serial hợp lệ insert 1 dòng MỚI
+    // Status=UNPACKED vào SM_CartonUnpack_Log. KHÔNG sửa gì trên CartonSnScanLog ở bước này —
+    // carton vẫn "nguyên" N serial trong DB, chỉ Unpack Log biết k serial nào đang tạm rời đi
+    // rework (đúng thiết kế đã chốt: quay lại ĐÚNG carton cũ ở bước Repack).
+    public async Task<List<CartonUnpackLog>> UnpackCartonSerialsAsync(string cartonNumber, IReadOnlyList<string> serialsToUnpack)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber))
+            throw new SakuraValidationException("unpackCarton.cartonNumberMissing", "Thiếu Carton Number.");
+
+        string trimmedCarton = cartonNumber.Trim();
+        var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.CartonNumber == trimmedCarton);
+        if (row == null)
+            throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmedCarton}'.", new { cartonNumber = trimmedCarton });
+
+        var serialsInCarton = SplitCartonSerials(row.Serial);
+        var requested = (serialsToUnpack ?? Array.Empty<string>())
+            .Select(s => (s ?? "").Trim())
+            .Where(s => s.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (requested.Count == 0)
+            throw new SakuraValidationException("unpackCarton.noSerialsSelected", "Chưa chọn serial nào để gỡ.");
+
+        foreach (string s in requested)
+        {
+            if (!serialsInCarton.Any(x => string.Equals(x, s, StringComparison.OrdinalIgnoreCase)))
+                throw new SakuraValidationException("unpackCarton.serialNotInCarton", $"Serial '{s}' không thuộc Carton '{trimmedCarton}'.", new { serial = s, cartonNumber = trimmedCarton });
+        }
+
+        // Chưa có dòng UNPACKED/REWORKED nào đang mở (chưa REPACKED) cho đúng cặp Carton+Serial —
+        // tránh gỡ trùng 1 serial 2 lần cùng lúc.
+        var openStatuses = new[] { "UNPACKED", "REWORKED" };
+        var alreadyOpen = await _context.CartonUnpackLogs
+            .Where(x => x.CartonNumber == trimmedCarton && requested.Contains(x.SerialNumber) && openStatuses.Contains(x.Status))
+            .Select(x => x.SerialNumber)
+            .ToListAsync();
+        if (alreadyOpen.Count > 0)
+            throw new SakuraConflictException("unpackCarton.alreadyUnpacked", $"Serial đã đang được gỡ ra rework: {string.Join(", ", alreadyOpen)}.", new { serial = string.Join(", ", alreadyOpen) });
+
+        var now = VietnamNow().AddHours(1);
+        var newLogs = requested.Select(s => new CartonUnpackLog
+        {
+            CartonNumber = trimmedCarton,
+            SerialNumber = s,
+            WorkOrder = row.WorkOrder,
+            Status = "UNPACKED",
+            UnpackedAt = now
+        }).ToList();
+
+        _context.CartonUnpackLogs.AddRange(newLogs);
+        await _context.SaveChangesAsync();
+        return newLogs;
+    }
+
+    // Bước 2: dòng UNPACKED mới nhất của 1 serial — dùng ở trạm SN Label (Rework mode) để biết
+    // serial này có đang hợp lệ để reprint dưới Rework WO không (null = chưa qua Unpack, hoặc
+    // đã Rework/Repack rồi).
+    public async Task<CartonUnpackLog?> FindPendingUnpackLogAsync(string serialNumber)
+    {
+        if (string.IsNullOrWhiteSpace(serialNumber)) return null;
+        string trimmed = serialNumber.Trim();
+        return await _context.CartonUnpackLogs
+            .Where(x => x.SerialNumber == trimmed && x.Status == "UNPACKED")
+            .OrderByDescending(x => x.UnpackedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    // Bước 2: chuyển dòng Unpack Log UNPACKED -> REWORKED sau khi SN Label đã reprint xong dưới
+    // reworkWorkOrder.
+    public async Task<CartonUnpackLog> MarkSerialReworkedAsync(int unpackLogId, string reworkWorkOrder)
+    {
+        var row = await _context.CartonUnpackLogs.FindAsync(unpackLogId);
+        if (row == null || row.Status != "UNPACKED")
+            throw new SakuraValidationException("unpackCarton.unpackLogNotFound", $"Không tìm thấy dòng Unpack đang chờ rework (Id={unpackLogId}).");
+
+        row.Status = "REWORKED";
+        row.ReworkWorkOrder = reworkWorkOrder.Trim();
+        row.ReworkedAt = VietnamNow().AddHours(1);
+        await _context.SaveChangesAsync();
+        return row;
+    }
+
+    // Bước 3 (đọc): N serial bắt buộc phải quét lại (= CSV hiện tại của carton, không đổi) +
+    // danh sách đang REWORKED chưa REPACKED (để FE highlight khi quét).
+    public async Task<RepackStatusDto> GetRepackStatusAsync(string cartonNumber)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber))
+            throw new SakuraValidationException("unpackCarton.cartonNumberMissing", "Thiếu Carton Number.");
+
+        string trimmed = cartonNumber.Trim();
+        var row = await _context.CartonSnScanLogs.AsNoTracking().FirstOrDefaultAsync(x => x.CartonNumber == trimmed);
+        if (row == null)
+            throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmed}'.", new { cartonNumber = trimmed });
+
+        var pending = await _context.CartonUnpackLogs
+            .AsNoTracking()
+            .Where(x => x.CartonNumber == trimmed && x.Status == "REWORKED")
+            .Select(x => x.SerialNumber)
+            .ToListAsync();
+
+        return new RepackStatusDto
+        {
+            CartonNumber = row.CartonNumber,
+            WorkOrder = row.WorkOrder,
+            Color = row.Color,
+            RequiredSerials = SplitCartonSerials(row.Serial),
+            PendingReworkedSerials = pending
+        };
+    }
+
+    // Bước 3: 1 serial quét vào có thuộc đúng N serial bắt buộc của carton không (verify từng ô
+    // lúc quét, giống pattern verify-serial của CartonSN).
+    public async Task<bool> VerifyRepackSerialAsync(string cartonNumber, string serial)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber) || string.IsNullOrWhiteSpace(serial)) return false;
+        var dto = await GetCartonForUnpackAsync(cartonNumber);
+        return dto.Serials.Any(x => string.Equals(x, serial.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    // Bước 3 (ghi): validate tập scannedSerials khớp CHÍNH XÁC N serial bắt buộc (thiếu/thừa đều
+    // chặn — quét thiếu sẽ ảnh hưởng sai số lượng carton/pallet). Trả về row carton để caller
+    // build ZPL.
+    private async Task<CartonSnScanLog> ValidateRepackScanAsync(string cartonNumber, IReadOnlyList<string> scannedSerials)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber))
+            throw new SakuraValidationException("unpackCarton.cartonNumberMissing", "Thiếu Carton Number.");
+
+        string trimmed = cartonNumber.Trim();
+        var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.CartonNumber == trimmed);
+        if (row == null)
+            throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmed}'.", new { cartonNumber = trimmed });
+
+        var required = SplitCartonSerials(row.Serial);
+        var scanned = (scannedSerials ?? Array.Empty<string>())
+            .Select(s => (s ?? "").Trim())
+            .Where(s => s.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var missing = required.Where(r => !scanned.Any(s => string.Equals(s, r, StringComparison.OrdinalIgnoreCase))).ToList();
+        var unknown = scanned.Where(s => !required.Any(r => string.Equals(r, s, StringComparison.OrdinalIgnoreCase))).ToList();
+        if (missing.Count > 0 || unknown.Count > 0)
+            throw new SakuraValidationException("unpackCarton.incompleteScan", $"Chưa quét đủ {required.Count} serial của Carton '{trimmed}' (thiếu {missing.Count}, không thuộc carton {unknown.Count}).", new { cartonNumber = trimmed, required = required.Count, missing = missing.Count, unknown = unknown.Count });
+
+        return row;
+    }
+
+    // Bước 3: build ZPL tem Carton dưới Condition=Refurb — SkuPvId/Ean lấy động từ Rework WO
+    // (caller tra qua ViidooService, giống ReworkWorkOrderLookup), Description tái dùng từ
+    // ZplTemplates.CartonColorMeta theo đúng màu gốc của carton (Odoo không trả mô tả rời để in
+    // tem, nên giữ nguyên chữ mô tả cũ — chỉ SKU/PVID + EAN đổi theo Rework WO).
+    public async Task<string> BuildRepackCartonZplAsync(string cartonNumber, IReadOnlyList<string> scannedSerials, string skuPvId, string? ean)
+    {
+        var row = await ValidateRepackScanAsync(cartonNumber, scannedSerials);
+
+        string description = ZplTemplates.CartonColorMeta.TryGetValue(row.Color ?? "", out var baseMeta)
+            ? baseMeta.Description
+            : "";
+
+        var slots = SplitCartonSerials(row.Serial);
+        var meta = (SkuPvId: skuPvId, Description: description, Ean: ean ?? "");
+        return await RenderCartonZplAsync(row.CartonNumber, meta, "Refurb", slots, slots);
+    }
+
+    // Bước 3: gọi SAU KHI ZPL đã gửi tới máy in thành công (đúng pattern report-print-result của
+    // CartonSN, không gọi lúc mới preview) — chốt Condition=Refurb + ReworkWorkOrder trên carton,
+    // chuyển toàn bộ dòng REWORKED của carton này trong Unpack Log sang REPACKED.
+    public async Task RecordRepackResultAsync(string cartonNumber, string reworkWorkOrder)
+    {
+        if (string.IsNullOrWhiteSpace(cartonNumber))
+            throw new SakuraValidationException("unpackCarton.cartonNumberMissing", "Thiếu Carton Number.");
+
+        string trimmedCarton = cartonNumber.Trim();
+        string trimmedWo = (reworkWorkOrder ?? "").Trim();
+
+        var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.CartonNumber == trimmedCarton);
+        if (row == null)
+            throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmedCarton}'.", new { cartonNumber = trimmedCarton });
+
+        row.Condition = "Refurb";
+        row.ReworkWorkOrder = trimmedWo;
+
+        var now = VietnamNow().AddHours(1);
+        var reworkedLogs = await _context.CartonUnpackLogs
+            .Where(x => x.CartonNumber == trimmedCarton && x.Status == "REWORKED")
+            .ToListAsync();
+        foreach (var log in reworkedLogs)
+        {
+            log.Status = "REPACKED";
+            log.RepackedAt = now;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    // Bước 2: reprint tem SN Label y nguyên nội dung dưới 1 Rework WO — như MarkReprintedAsync
+    // (Manual mode) nhưng gắn thêm ReworkWorkOrder trên đúng dòng SnLabelPrint. WorkOrder gốc của
+    // serial giữ nguyên không đổi, phục vụ tra cứu/báo cáo cả 2 chiều sau này.
+    public async Task<SnLabelPrint?> MarkReworkedReprintAsync(string serialNumber, string reworkWorkOrder, string? reprintedBy)
+    {
+        var row = await _context.SnLabelPrints.FirstOrDefaultAsync(x => x.SerialNumber == serialNumber.Trim());
+        if (row == null) return null;
+
+        row.ReprintCount += 1;
+        row.LastReprintedAt = VietnamNow().AddHours(1);
+        row.LastReprintedBy = reprintedBy;
+        row.ReworkWorkOrder = reworkWorkOrder.Trim();
+        await _context.SaveChangesAsync();
+        return row;
+    }
+
+    // Lịch sử Unpack/Rework/Repack (/sakura/rework/history) — đọc từ SM_CartonUnpack_Log, thay
+    // cho GetReworkHistoryAsync cũ (bảng SM_LabelPvidEANLog vẫn còn nguyên, chỉ không còn được
+    // trang History mới đọc tới).
+    public async Task<CartonUnpackHistoryPageDto> GetUnpackHistoryAsync(DateTime? dateFrom, DateTime? dateTo, string? cartonNumber, string? serialNumber, string? reworkWorkOrder, string? status, int page, int pageSize)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
+
+        var query = _context.CartonUnpackLogs.AsNoTracking().AsQueryable();
+
+        if (dateFrom.HasValue)
+        {
+            DateTime rangeStart = dateFrom.Value.Date;
+            query = query.Where(x => x.UnpackedAt >= rangeStart);
+        }
+
+        if (dateTo.HasValue)
+        {
+            DateTime rangeEnd = dateTo.Value.Date.AddDays(1);
+            query = query.Where(x => x.UnpackedAt < rangeEnd);
+        }
+
+        if (!string.IsNullOrWhiteSpace(cartonNumber))
+        {
+            string filter = cartonNumber.Trim();
+            query = query.Where(x => x.CartonNumber.Contains(filter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(serialNumber))
+        {
+            string filter = serialNumber.Trim();
+            query = query.Where(x => x.SerialNumber.Contains(filter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(reworkWorkOrder))
+        {
+            string filter = reworkWorkOrder.Trim();
+            query = query.Where(x => x.ReworkWorkOrder != null && x.ReworkWorkOrder.Contains(filter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            string filter = status.Trim();
+            query = query.Where(x => x.Status == filter);
+        }
+
+        int totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(x => x.UnpackedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new CartonUnpackHistoryItemDto
+            {
+                Id = x.Id,
+                CartonNumber = x.CartonNumber,
+                SerialNumber = x.SerialNumber,
+                WorkOrder = x.WorkOrder,
+                ReworkWorkOrder = x.ReworkWorkOrder,
+                Status = x.Status,
+                UnpackedAt = x.UnpackedAt,
+                ReworkedAt = x.ReworkedAt,
+                RepackedAt = x.RepackedAt
+            })
+            .ToListAsync();
+
+        return new CartonUnpackHistoryPageDto
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    // Parse CSV serial của 1 dòng CartonSnScanLog.Serial — dùng chung cho toàn bộ region Unpack/Repack.
+    private static List<string> SplitCartonSerials(string? csv) =>
+        (csv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
     // ── Direct TCP send (raw port 9100) ──────────────────────────────────────
 

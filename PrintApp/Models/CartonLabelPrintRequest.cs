@@ -29,6 +29,12 @@ public class CartonWorkOrderLookupResponse
     public int TotalCarton { get; set; }
     public int RemainingCarton { get; set; }
     public int? ProductId { get; set; }
+
+    // Mã sản phẩm (bracket code từ Odoo, vd "RM15A-1001RW") + EAN thật của WO — client tự suy ra
+    // WO này có phải Rework WO không (hậu tố "RW") để rẽ nhánh sang chế độ Repack ngay trong
+    // trang CartonSN, không cần trang riêng — xem CartonSN.cshtml's lookupWorkOrder().
+    public string? ProductCode { get; set; }
+    public string? Ean { get; set; }
 }
 
 // Trình duyệt gọi SAU KHI đã gửi ZPL thành công tới bridge cục bộ (in thật, không phải Preview)

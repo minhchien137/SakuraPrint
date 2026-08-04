@@ -94,4 +94,10 @@ public class CartonSnScanLog
 
     [StringLength(500)]
     public string? DeliveryAddress { get; set; }
+
+    // Rework Work Order gắn vào lần Repack gần nhất (đổi Condition sang "Refurb" cùng lúc) —
+    // xem SakuraService.RecordRepackResultAsync. Chỉ phản ánh lần rework GẦN NHẤT của carton
+    // này; lịch sử đầy đủ (từng serial rework lúc nào, dưới WO nào) tra ở SM_CartonUnpack_Log.
+    [StringLength(50)]
+    public string? ReworkWorkOrder { get; set; }
 }

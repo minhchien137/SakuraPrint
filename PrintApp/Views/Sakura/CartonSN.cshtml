@@ -43,13 +43,14 @@
     .snl-page { max-width: 1040px; margin: 0 auto; position: relative; z-index: 1; }
 
     .snl-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        display: block;
+        position: relative;
+        text-align: center;
         margin-bottom: 28px;
     }
     .snl-header h1 { font-family: var(--font-head); font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--red-dark); line-height: 1.1; }
     .snl-badge {
+        position: absolute; top: 0; right: 0;
         background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
         font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
         text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
@@ -264,6 +265,35 @@
         color: var(--gray-500); display: flex; align-items: center; gap: 6px;
     }
     .count-pill strong { color: var(--red-dark); font-size: 15px; font-family: var(--font-head); }
+
+    /* ── Repack mode (Rework WO phát hiện ngay trong trang này) — copy pattern từ Rework.cshtml. ── */
+    .rw-readout-inline { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .rw-readout-inline .chip {
+        display: flex; flex-direction: row; align-items: baseline; gap: 5px;
+        background: var(--red-xlight); border: 1px solid var(--red-light); border-radius: 20px;
+        padding: 6px 14px;
+    }
+    .rw-readout-inline .k { font-family: var(--font-body); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--red-dark); opacity: 0.75; }
+    .rw-readout-inline .k::after { content: ':'; }
+    .rw-readout-inline .v { font-family: var(--font-body); font-size: 14px; color: var(--red-dark); font-weight: 700; }
+
+    .rw-scan-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-height: 340px; overflow-y: auto; }
+    .rw-scan-item {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        padding: 9px 12px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--gray-900);
+    }
+    .rw-scan-item.reworked { background: #FFFBEB; border-color: #FCD34D; }
+    .rw-scan-item .rw-scan-serial { flex: 1; word-break: break-all; }
+    .rw-scan-item .rw-scan-tag {
+        font-family: var(--font-body); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+        color: #B45309; background: #FEF3C7; padding: 2px 7px; border-radius: 10px; margin-left: 6px; flex-shrink: 0;
+    }
+    .rw-scan-item .rm-btn {
+        background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 15px; line-height: 1;
+        padding: 2px 5px; border-radius: 6px; transition: color 0.2s ease, background 0.2s ease; flex-shrink: 0;
+    }
+    .rw-scan-item .rm-btn:hover { color: var(--danger); background: var(--red-xlight); }
 
     @@media (max-width: 860px) {
         .t-grid-2, .t-grid-3 { grid-template-columns: 1fr; }
@@ -668,7 +698,7 @@
                 </div>
             </div>
 
-            <div class="t-section">
+            <div class="t-section" id="normalCartonPrintSection">
                 <div class="t-section-label">
                     <span data-i18n="cartonsn.serialNumbers">Print Label Carton</span>
                     <span class="hint" data-i18n="cartonsn.serialHint">— quét barcode hoặc nhập tay</span>
@@ -709,6 +739,56 @@
                     <button type="button" class="t-btn t-btn-primary" id="btnPrint" data-i18n="cartonsn.printBtn" style="display:none">🖨️ Print Carton Label</button>
                 </div>
                 <div id="printStatus" class="t-status"></div>
+            </div>
+
+            <!-- ── Repack mode — hiện thay cho section trên khi Work Order vừa lookup là Rework WO
+                 (mã sản phẩm hậu tố "RW", xem lookupWorkOrder()). Không tạo carton mới — quét lại
+                 1 Carton Number ĐÃ TỒN TẠI (đã qua Unpack+Rework ở /sakura/rework), quét đủ serial
+                 gốc của nó, in lại tem Carton với Condition=Refurb + SKU/PVID/EAN theo Rework WO.
+                 Tái dùng đúng API repack-status/repack-print/repack-report-result đã có sẵn ở
+                 /sakura/rework — không đụng gì tới Pallet. ────────────────────────────────────── -->
+            <div class="t-section" id="repackCartonSection" style="display:none">
+                <div class="t-section-label">
+                    <span data-i18n="cartonsn.repackTitle">Repack Carton (Refurb)</span>
+                    <span class="hint" data-i18n="cartonsn.repackHint">— Rework Work Order detected</span>
+                </div>
+
+                <div class="rw-readout-inline" id="repackCnWoReadout" style="display:none">
+                    <span class="chip">
+                        <span class="k" data-i18n="rework.productCode">Product Code</span>
+                        <span class="v" id="repackCnProductCode">—</span>
+                    </span>
+                    <span class="chip">
+                        <span class="k" data-i18n="snlabel.ean">EAN</span>
+                        <span class="v" id="repackCnEan">—</span>
+                    </span>
+                    <span class="chip">
+                        <span class="k" data-i18n="snlabel.color">Color</span>
+                        <span class="v" id="repackCnColor">—</span>
+                    </span>
+                </div>
+
+                <div class="t-field" style="margin-bottom:18px">
+                    <label data-i18n="cartonsn.cartonNumber">Carton Number</label>
+                    <input type="text" id="repackCnCartonNumber" autocomplete="off" data-i18n-placeholder="cartonsn.cartonNumberPlaceholder" placeholder="Scan or type Carton Number…" style="min-height:40px" />
+                    <div id="repackCnCartonStatus" class="t-status t-status-inline"></div>
+                </div>
+
+                <div class="t-field" style="margin-bottom:10px">
+                    <label data-i18n="rework.repackScanLabel">Scan all required serials</label>
+                    <input type="text" id="repackCnSerialInput" autocomplete="off" disabled data-i18n-placeholder="rework.repackSerialPlaceholder" placeholder="Scan serial…" style="min-height:40px" />
+                    <div id="repackCnSerialStatus" class="t-status t-status-inline"></div>
+                </div>
+
+                <div class="rw-scan-list" id="repackCnScanList"></div>
+                <div class="count-pill" style="margin-top:10px">
+                    <span data-i18n="rework.repackScannedCount">Scanned</span>: <strong id="repackCnScannedCount">0</strong> / <span id="repackCnTotalCount">0</span>
+                </div>
+
+                <div class="t-actions" style="margin-top:18px">
+                    <button type="button" class="t-btn t-btn-primary" id="btnRepackCnPrint" data-i18n="rework.repackPrintBtn" disabled>🖨️ Print Carton Label (Refurb)</button>
+                </div>
+                <div id="repackCnPrintStatus" class="t-status"></div>
             </div>
 
             <div style="display:flex;gap:18px">
@@ -859,6 +939,10 @@
     let woRemainingQuantity = null;
     let expectedQuantityThisCarton = null;
     let woStatusHideTimer = null;
+    // WO vừa lookup có phải Rework WO không (mã sản phẩm hậu tố "RW") — quyết định hiện section
+    // Repack (carton đã tồn tại, in lại Refurb) thay cho section Print Label Carton bình thường
+    // (tạo carton mới) — xem lookupWorkOrder()/resetWoState().
+    let isReworkWo = false;
 
     // Pallet ID của WO đang resolve — 1 WO chỉ có ĐÚNG 1 Pallet ID, tự sinh/lấy lại qua
     // /api/sakura/cartonsn/pallet/resolve ngay sau khi lookupWorkOrder() pass, KHÔNG còn nhập
@@ -881,6 +965,14 @@
         resolvedPalletId = null;
         palletLockedForMissingTemplate = false; // WO mới -> không giữ lại khoá thiếu Template của WO trước.
         $woResolved.style.display = 'none';
+
+        // WO mới -> mặc định về chế độ bình thường (section Print Label Carton), chỉ chuyển
+        // sang Repack nếu lookupWorkOrder() phát hiện đúng là Rework WO.
+        isReworkWo = false;
+        $normalCartonPrintSection.style.display = '';
+        $repackCartonSection.style.display = 'none';
+        $palletSection.style.display = ''; // Repack không đụng Pallet -> mặc định hiện lại như luồng thường
+        resetRepackCnState();
 
         // Chưa có Work Order hợp lệ (WO đã in hết, chưa lookup, hoặc đang gõ WO khác) -> không
         // cho nhập Carton Number/Serial Number, tránh quét nhầm vào 1 WO không rõ ràng. Chỉ mở
@@ -919,6 +1011,28 @@
             const res = await fetch(`${BASE}/api/sakura/cartonsn/workorder-lookup?workOrder=${encodeURIComponent(wo)}`);
             const body = await res.json();
             if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonsn.lookupFailed', 'Lookup failed.')));
+
+            // Mã sản phẩm có hậu tố "RW" (vd "RM15A-1001RW") -> đây là Rework WO -> rẽ hẳn sang
+            // chế độ Repack (carton đã tồn tại, in lại Refurb), KHÔNG phải luồng tạo carton mới
+            // bên dưới — bỏ qua toàn bộ resolve Pallet/buildSerialGrid/Template vốn không có ý
+            // nghĩa gì với Rework WO (xem SakuraController.CartonWorkOrderLookup).
+            isReworkWo = (body.data.productCode || '').trim().toUpperCase().endsWith('RW');
+            if (isReworkWo) {
+                woResolvedOk = true;
+                $normalCartonPrintSection.style.display = 'none';
+                $repackCartonSection.style.display = '';
+                $palletSection.style.display = 'none'; // Repack không đụng gì tới Pallet
+                $repackCnProductCode.textContent = body.data.productCode || '—';
+                $repackCnEan.textContent = body.data.ean || '—';
+                $repackCnColor.textContent = body.data.color || '—';
+                $repackCnWoReadout.style.display = 'flex';
+                $repackCnCartonNumber.disabled = false;
+
+                showStatus($woStatus, `✓ ${t('cartonsn.reworkWoDetected', 'Rework Work Order detected — switched to Repack mode below.')}`, 'ok');
+                woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
+                $repackCnCartonNumber.focus();
+                return;
+            }
 
             resolvedColor = body.data.color;
             woTotalQuantity = body.data.totalQuantity;
@@ -974,6 +1088,231 @@
             $btnSaveWo.classList.remove('is-saved');
         }
         if (woResolvedOk) resetWoState();
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════════════
+    // ── Repack mode — carton ĐÃ TỒN TẠI (đã qua Unpack+Rework ở /sakura/rework), quét đủ
+    // serial gốc của nó, in lại tem Carton với Condition=Refurb + SKU/PVID/EAN theo Rework WO.
+    // Tái dùng đúng API repack-status/repack-print/repack-report-result đã có sẵn — logic gần
+    // như y hệt tab Repack ở Rework.cshtml, chỉ khác Rework WO lấy thẳng từ $workOrder ở trên
+    // (không có ô Rework WO riêng — trang này chỉ có 1 ô Work Order duy nhất). ═════════════════
+    const $normalCartonPrintSection = document.getElementById('normalCartonPrintSection');
+    const $repackCartonSection = document.getElementById('repackCartonSection');
+    const $palletSection = document.getElementById('palletSection');
+    const $repackCnWoReadout = document.getElementById('repackCnWoReadout');
+    const $repackCnProductCode = document.getElementById('repackCnProductCode');
+    const $repackCnEan = document.getElementById('repackCnEan');
+    const $repackCnColor = document.getElementById('repackCnColor');
+    const $repackCnCartonNumber = document.getElementById('repackCnCartonNumber');
+    const $repackCnCartonStatus = document.getElementById('repackCnCartonStatus');
+    const $repackCnSerialInput = document.getElementById('repackCnSerialInput');
+    const $repackCnSerialStatus = document.getElementById('repackCnSerialStatus');
+    const $repackCnScanList = document.getElementById('repackCnScanList');
+    const $repackCnScannedCount = document.getElementById('repackCnScannedCount');
+    const $repackCnTotalCount = document.getElementById('repackCnTotalCount');
+    const $btnRepackCnPrint = document.getElementById('btnRepackCnPrint');
+    const $repackCnPrintStatus = document.getElementById('repackCnPrintStatus');
+
+    let repackCnCartonData = null; // { cartonNumber, workOrder, color, requiredSerials: [...], pendingReworkedSerials: [...] }
+    let repackCnScanned = [];
+    let repackCnPrinting = false;
+
+    function resetRepackCnState() {
+        repackCnCartonData = null;
+        repackCnScanned = [];
+        $repackCnWoReadout.style.display = 'none';
+        $repackCnCartonNumber.value = '';
+        $repackCnCartonNumber.disabled = true;
+        $repackCnSerialInput.value = '';
+        $repackCnSerialInput.disabled = true;
+        hideStatus($repackCnCartonStatus);
+        hideStatus($repackCnSerialStatus);
+        hideStatus($repackCnPrintStatus);
+        renderRepackCnScanList();
+    }
+
+    function renderRepackCnScanList() {
+        const pending = (repackCnCartonData && repackCnCartonData.pendingReworkedSerials) || [];
+        $repackCnScanList.innerHTML = repackCnScanned.map(sn => {
+            const isReworked = pending.some(p => p.toLowerCase() === sn.toLowerCase());
+            return `
+                <div class="rw-scan-item ${isReworked ? 'reworked' : ''}">
+                    <span class="rw-scan-serial">${escHtml(sn)}</span>
+                    ${isReworked ? `<span class="rw-scan-tag" data-i18n="rework.repackTag">REWORKED</span>` : ''}
+                    <button type="button" class="rm-btn" data-serial="${escHtml(sn)}" data-i18n-title="rework.removeFromList" title="Remove">✕</button>
+                </div>`;
+        }).join('');
+        const total = repackCnCartonData ? repackCnCartonData.requiredSerials.length : 0;
+        $repackCnScannedCount.textContent = repackCnScanned.length;
+        $repackCnTotalCount.textContent = total;
+        $btnRepackCnPrint.disabled = !(repackCnCartonData && total > 0 && repackCnScanned.length === total);
+    }
+    $repackCnScanList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.rm-btn');
+        if (!btn) return;
+        repackCnScanned = repackCnScanned.filter(s => s !== btn.dataset.serial);
+        renderRepackCnScanList();
+    });
+
+    let repackCnCartonDebounce;
+    async function lookupRepackCnCarton() {
+        clearTimeout(repackCnCartonDebounce);
+        const cartonNumber = $repackCnCartonNumber.value.trim();
+        repackCnCartonData = null;
+        repackCnScanned = [];
+        $repackCnSerialInput.value = '';
+        $repackCnSerialInput.disabled = true;
+        hideStatus($repackCnSerialStatus);
+        renderRepackCnScanList();
+        hideStatus($repackCnCartonStatus);
+        if (!cartonNumber) return;
+
+        showStatus($repackCnCartonStatus, `⏳ ${t('rework.lookingUp', 'Looking up…')}`, 'ok');
+        try {
+            const res = await fetch(`${BASE}/api/sakura/rework/repack-status?cartonNumber=${encodeURIComponent(cartonNumber)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('rework.cartonLookupFailed', 'Could not find this Carton Number.')));
+
+            // Carton này phải có ít nhất 1 serial đang REWORKED (đã qua Unpack + Rework, chờ
+            // Repack) mới cho quét tiếp — giống hệt check ở tab Repack của Rework.cshtml.
+            if (!body.data.pendingReworkedSerials || body.data.pendingReworkedSerials.length === 0) {
+                showStatus($repackCnCartonStatus, `✗ ${t('rework.repackCartonNotUnpacked', 'This Carton Number has not been Unpacked — nothing to Repack yet.')}`, 'err');
+                $repackCnCartonNumber.value = '';
+                $repackCnCartonNumber.focus();
+                return;
+            }
+
+            repackCnCartonData = body.data;
+            $repackCnSerialInput.disabled = false;
+            hideStatus($repackCnCartonStatus);
+            renderRepackCnScanList();
+            $repackCnSerialInput.focus();
+        } catch (e) {
+            showStatus($repackCnCartonStatus, `✗ ${e.message}`, 'err');
+        }
+    }
+    $repackCnCartonNumber.addEventListener('input', () => {
+        clearTimeout(repackCnCartonDebounce);
+        repackCnCartonDebounce = setTimeout(lookupRepackCnCarton, 250);
+    });
+    $repackCnCartonNumber.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); lookupRepackCnCarton(); }
+    });
+
+    function handleRepackCnScan() {
+        const val = $repackCnSerialInput.value.trim();
+        if (!val || !repackCnCartonData) return;
+        $repackCnSerialInput.value = '';
+
+        if (repackCnScanned.some(s => s.toLowerCase() === val.toLowerCase())) {
+            showStatus($repackCnSerialStatus, `✗ ${t('rework.repackDuplicateScanned', 'Already scanned')}: ${val}`, 'err');
+            return;
+        }
+        const belongs = repackCnCartonData.requiredSerials.some(s => s.toLowerCase() === val.toLowerCase());
+        if (!belongs) {
+            showStatus($repackCnSerialStatus, `✗ ${t('rework.repackSerialNotInCarton', 'Serial does not belong to this Carton')}: ${val}`, 'err');
+            return;
+        }
+        repackCnScanned.push(val);
+        renderRepackCnScanList();
+        hideStatus($repackCnSerialStatus);
+    }
+    let repackCnSerialDebounce;
+    $repackCnSerialInput.addEventListener('input', () => {
+        clearTimeout(repackCnSerialDebounce);
+        repackCnSerialDebounce = setTimeout(handleRepackCnScan, 200);
+    });
+    $repackCnSerialInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); clearTimeout(repackCnSerialDebounce); handleRepackCnScan(); }
+    });
+
+    $btnRepackCnPrint.addEventListener('click', async () => {
+        if (repackCnPrinting || $btnRepackCnPrint.disabled) return;
+        if (!TEST_FAKE_PRINT_OK && (!bridgeOnline || !isPrinterConfigured())) { // ⚠️ TEST ONLY bypass — chỉ nút này
+            showStatus($repackCnPrintStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+
+        repackCnPrinting = true;
+        $btnRepackCnPrint.disabled = true;
+        try {
+            const cartonNumber = repackCnCartonData.cartonNumber;
+            const reworkWorkOrder = $workOrder.value.trim();
+            const res = await fetch(`${BASE}/api/sakura/rework/repack-print`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cartonNumber, reworkWorkOrder, scannedSerials: repackCnScanned })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('rework.repackPrintFailed', 'Print failed.')));
+
+            const zpl = body.zpl;
+            const copies = parseInt($copies.value) || 1;
+            let sentOk = false;
+            let msg = `✓ ${t('rework.repackPrintSuccess', 'Refurb Carton Label generated for {carton}.').replace('{carton}', cartonNumber)}`;
+            let statusType = 'ok';
+
+            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — tải file .zpl thật để test, coi như đã gửi máy in thành công
+                downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
+                msg += ' [TEST] Downloaded .zpl file instead of printing — treated as sent OK.';
+                sentOk = true;
+            } else if (printMode === 'usb') {
+                const printerName = $usbSelect.value;
+                if (printerName) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridgeUsb(zpl, printerName);
+                        msg += t('cartonsn.sentToUsbPrinter', ' Sent to USB printer "{name}" (Local Bridge).').replace('{name}', printerName);
+                        sentOk = true;
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
+                    msg += t('cartonsn.noUsbSelected', ' No USB printer selected — downloaded .zpl file instead.');
+                }
+            } else {
+                const printerIp = $printerIp.value.trim();
+                const printerPort = parseInt($printerPort.value) || 9100;
+                if (printerIp) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridge(zpl, printerIp, printerPort);
+                        msg += t('cartonsn.sentToTcpPrinter', ' Sent to {ip}:{port} (Local Bridge).').replace('{ip}', printerIp).replace('{port}', printerPort);
+                        sentOk = true;
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('cartonsn.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
+                    msg += t('cartonsn.noIpSet', ' No printer IP set — downloaded .zpl file instead.');
+                }
+            }
+
+            if (sentOk) {
+                const reportRes = await fetch(`${BASE}/api/sakura/rework/repack-report-result`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cartonNumber, reworkWorkOrder })
+                });
+                const reportBody = await reportRes.json().catch(() => null);
+                if (!reportRes.ok || !reportBody || !reportBody.ok) {
+                    msg += ` ⚠ ${t('rework.repackReportFailed', 'Could not save the repack record to the server.')}`;
+                    statusType = 'err';
+                } else {
+                    $repackCnCartonNumber.value = '';
+                    resetRepackCnState();
+                    $repackCnCartonNumber.disabled = false;
+                    $repackCnCartonNumber.focus();
+                }
+            }
+            showStatus($repackCnPrintStatus, msg, statusType);
+        } catch (e) {
+            showStatus($repackCnPrintStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            repackCnPrinting = false;
+            renderRepackCnScanList();
+        }
     });
 
     // ── Save / Reset Work Order — Save ghi WO+Carton Number hiện tại vào localStorage để
@@ -1862,12 +2201,14 @@
         // Check (1) + (3): định dạng + đã quét/in ở carton khác chưa.
         inp.disabled = true;
         try {
-            const res = await fetch(`${BASE}/api/sakura/cartonsn/verify-serial?serial=${encodeURIComponent(val)}`);
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/verify-serial?serial=${encodeURIComponent(val)}&color=${encodeURIComponent(resolvedColor || '')}`);
             const verify = await res.json();
             if (!res.ok || !verify.ok) {
                 const shortLabel = verify.errorCode === 'cartonLabel.serialAlreadyUsed'
                     ? t('cartonsn.serialAlreadyUsedShort', 'Already used')
-                    : t('cartonsn.invalidFormatShort', 'Invalid format');
+                    : verify.errorCode === 'cartonLabel.colorMismatch'
+                        ? t('cartonsn.colorMismatchShort', 'Wrong color')
+                        : t('cartonsn.invalidFormatShort', 'Invalid format');
                 markInvalid(inp, badge, shortLabel);
                 showStatus($printStatus, `✗ ${window.SakuraI18n.translateApiError(verify, t('cartonsn.serialCheckFailed', 'Serial check failed.'))}`, 'err');
                 return;
@@ -1903,8 +2244,21 @@
         inp.className = 'invalid';
         badge.textContent = msg;
         badge.className = 'serial-badge err';
-        setTimeout(() => { inp.value = ''; inp.className = ''; badge.className = 'serial-badge'; }, 1400);
+        setTimeout(() => {
+            inp.value = '';
+            inp.className = '';
+            badge.className = 'serial-badge';
+            inp.focus(); // xóa xong tự focus lại ô đó luôn để quét lại ngay, khỏi phải click tay
+        }, 1400);
     }
+
+    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. CHỈ áp dụng cho nút "Print Carton Label
+    // (Refurb)" ở chế độ Repack (WO là Rework WO) — luồng WO thường (tạo carton mới) KHÔNG bị
+    // ảnh hưởng, vẫn đòi máy in/bridge thật như cũ. Bật tạm để test Repack khi chưa có máy in
+    // thật: giả lập "đã kết nối máy in" + "gửi in luôn thành công" mà không thật sự gọi bridge,
+    // CHỈ trong $btnRepackCnPrint. Test xong đổi lại false (hoặc xoá khối liên quan tới biến này
+    // — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
+    const TEST_FAKE_PRINT_OK = true;
 
     // ── Print Carton Label — build ZPL server-side, send to Local Bridge ──────
     const CARTON_REAL_PRINT_ENABLED = true;

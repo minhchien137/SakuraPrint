@@ -48,13 +48,14 @@
     .snl-page { max-width: 1440px; margin: 0 auto; position: relative; z-index: 1; }
 
     .snl-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
+        display: block;
+        position: relative;
+        text-align: center;
         margin-bottom: 28px;
     }
     .snl-header h1 { font-family: var(--font-head); font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--red-dark); line-height: 1.1; }
     .snl-badge {
+        position: absolute; top: 0; right: 0;
         background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
         font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
         text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
@@ -288,6 +289,17 @@
     .snl-readout-row .v.big { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--red-dark); letter-spacing: 0.3px; }
     .snl-readout-row .v.muted { color: var(--gray-500); font-weight: 400; font-size: 12px; }
 
+    /* Readout gọn dạng pill 1 dòng — dùng cho khối tra Rework WO (Product Code/EAN/Color). */
+    .snl-readout-inline { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 4px; }
+    .snl-readout-inline .chip {
+        display: flex; flex-direction: row; align-items: baseline; gap: 5px;
+        background: var(--red-xlight); border: 1px solid var(--red-light); border-radius: 20px;
+        padding: 6px 14px;
+    }
+    .snl-readout-inline .k { font-family: var(--font-body); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--red-dark); opacity: 0.75; }
+    .snl-readout-inline .k::after { content: ':'; }
+    .snl-readout-inline .v { font-family: var(--font-body); font-size: 14px; color: var(--red-dark); font-weight: 700; }
+
     /* Per-color summary cards */
     .snl-summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
     .snl-summary-card {
@@ -477,6 +489,16 @@
                         <span class="mode-icon">🔁</span>
                         <span data-i18n="snlabel.modeManual">Reprint</span>
                     </button>
+                    <!-- Tab Rework riêng đã TẮT (không xóa) — chức năng gộp thẳng vào tab Work
+                         Order ở trên: WO có mã sản phẩm hậu tố "RW" thì tự rẽ nhánh sang luồng
+                         Rework ngay trong đó (xem lookupWorkOrder()/checkSerialAndReworkPrint()).
+                         Cần bật lại tab riêng thì bỏ comment khối dưới đây. -->
+                    <!--
+                    <button type="button" class="sk-mode-tab" data-mode="rework">
+                        <span class="mode-icon">🔧</span>
+                        <span data-i18n="snlabel.modeRework">Rework</span>
+                    </button>
+                    -->
                 </div>
 
                 <div id="woPanel" style="margin-top:18px">
@@ -493,15 +515,19 @@
                     </div>
                     <div id="woStatus" class="t-status"></div>
                     <div class="snl-readout" id="woResolved" style="display:none;margin-top:14px">
+                        <div class="snl-readout-row" id="woReworkRow" style="display:none">
+                            <span class="k" data-i18n="snlabel.reworkModeDetected">Mode</span>
+                            <span class="v" style="color:var(--red-dark)">🔧 REWORK</span>
+                        </div>
                         <div class="snl-readout-row">
                             <span class="k" data-i18n="snlabel.color">Color</span>
                             <span class="v" id="woColor">—</span>
                         </div>
-                        <div class="snl-readout-row">
+                        <div class="snl-readout-row" id="woPrintedRow">
                             <span class="k" data-i18n="snlabel.woPrinted">Already Printed</span>
                             <span class="v big" id="woPrinted">—</span>
                         </div>
-                        <div class="snl-readout-row" style="border-bottom:none;padding-bottom:0">
+                        <div class="snl-readout-row" id="woRemainingRow" style="border-bottom:none;padding-bottom:0">
                             <span class="k" data-i18n="snlabel.woRemaining">Remaining</span>
                             <span class="v big" id="woRemaining">—</span>
                         </div>
@@ -576,6 +602,45 @@
                 </div>
                 <div id="reprintHint" class="t-status"></div>
                 <div id="reprintStatus" class="t-status"></div>
+            </div>
+
+            <!-- ── Rework mode — reprint tem gift box Y NGUYÊN nội dung cho 1 serial đã qua
+                 Unpack ở /sakura/rework (đang chờ rework), gắn thêm Rework WO — xem
+                 SakuraController.ReworkReprintSnLabel / SM_SerialNumber_Rework. ──────────── -->
+            <div class="t-section" id="reworkModeSection" style="display:none">
+                <div class="t-section-label" data-i18n="snlabel.reworkLabel">Reprint under Rework WO</div>
+                <div class="t-field">
+                    <label data-i18n="snlabel.reworkWoLabel">Rework Work Order</label>
+                    <input type="text" id="reworkWo" autocomplete="off" data-i18n-placeholder="snlabel.reworkWoPlaceholder" placeholder="Scan or type Rework WO…" />
+                </div>
+                <div id="reworkWoStatus" class="t-status"></div>
+                <div class="snl-readout-inline" id="reworkWoReadout" style="display:none">
+                    <span class="chip">
+                        <span class="k" data-i18n="rework.productCode">Product Code</span>
+                        <span class="v" id="reworkWoProductCode">—</span>
+                    </span>
+                    <span class="chip">
+                        <span class="k" data-i18n="snlabel.ean">EAN</span>
+                        <span class="v" id="reworkWoEan">—</span>
+                    </span>
+                    <span class="chip">
+                        <span class="k" data-i18n="snlabel.color">Color</span>
+                        <span class="v" id="reworkWoColor">—</span>
+                    </span>
+                </div>
+                <div class="t-field">
+                    <label data-i18n="snlabel.reworkEanLabel">EAN</label>
+                    <input type="text" id="reworkEan" autocomplete="off" disabled data-i18n-placeholder="snlabel.reworkEanPlaceholder" placeholder="Scan or type EAN…" />
+                </div>
+                <div class="t-field">
+                    <label data-i18n="snlabel.reworkSerialLabel">Serial Number</label>
+                    <input type="text" id="reworkSerial" autocomplete="off" disabled data-i18n-placeholder="snlabel.reworkSerialPlaceholder" placeholder="Scan or type serial to rework…" />
+                </div>
+                <div class="t-actions">
+                    <button type="button" class="t-btn t-btn-outline" id="btnReworkReprint" data-i18n="snlabel.reworkReprintBtn">🔧 Reprint under Rework WO</button>
+                </div>
+                <div id="reworkHint" class="t-status"></div>
+                <div id="reworkStatus" class="t-status"></div>
             </div>
 
             <div class="t-section" id="serialOutputSection" style="display:none">
@@ -764,12 +829,19 @@
 
     let expectedProductId = null; // product_id (Odoo) của WO đang chọn — lấy từ lookupWorkOrder
     let expectedColorValue = null; // màu (chuỗi "Blue"/"Pink"/"Green") của WO đang chọn
+    // WO có phải Rework WO không (mã sản phẩm có hậu tố "RW") — quyết định lúc quét Serial sẽ
+    // gọi rework-reprint (bypass check trùng KQSX, reprint y nguyên nội dung) hay verify-serial
+    // + enter-production-result thông thường (sinh/verify serial mới, chặn nếu đã in trước đó).
+    let isReworkWo = false;
     let eanVerified = false; // đã quét đúng EAN của WO này chưa
     let verifiedEan = ''; // giá trị EAN đã verify — gửi kèm lúc verify-serial
     let pendingRetrySerial = null; // khác null khi đang khóa chờ Try Again/Skip (bước 3 hoặc 4 fail)
-    let pendingRetryStage = null; // 'production' (bước 3 fail) hoặc 'print' (bước 4 fail) — quyết định Try Again gọi lại API nào
-    let pendingRetryZpl = null; // ZPL đã có sẵn từ lần verify-serial đã pass — 'print' stage dùng lại, KHÔNG verify lại
-    let pendingRetryLogId = null; // logId (PENDING) tương ứng — dùng cho cả 2 stage khi Try Again
+    // 'production'/'print' = luồng Work Order thường; 'rework-kqsx'/'rework-print' = luồng Rework
+    // (checkSerialAndReworkPrint) — quyết định Try Again gọi lại API nào.
+    let pendingRetryStage = null;
+    let pendingRetryZpl = null; // ZPL đã có sẵn từ lần verify-serial/rework-reprint đã pass — 'print'/'rework-print' dùng lại, KHÔNG verify lại
+    let pendingRetryLogId = null; // logId (PENDING) tương ứng trên SM_SNLabelScanLog — dùng cho cả 4 stage khi Try Again
+    let pendingReworkUnpackLogId = null; // Unpack Log Id (SM_CartonUnpack_Log) — chỉ dùng cho stage 'rework-kqsx'/'rework-print'
 
     // ── Print mode: Work Order (default) vs Manual (password-gated every time) ──
     const $modeTabs   = document.getElementById('modeTabs');
@@ -780,6 +852,9 @@
     const $btnResetWo = document.getElementById('btnResetWo');
     const $woStatus   = document.getElementById('woStatus');
     const $woResolved = document.getElementById('woResolved');
+    const $woReworkRow= document.getElementById('woReworkRow');
+    const $woPrintedRow = document.getElementById('woPrintedRow');
+    const $woRemainingRow = document.getElementById('woRemainingRow');
     const $woColor    = document.getElementById('woColor');
     const $woRemaining= document.getElementById('woRemaining');
     const $woPrinted  = document.getElementById('woPrinted');
@@ -802,6 +877,12 @@
     // Reprint by Serial trong tab này. Cần bật lại thì đổi true là đủ, không phải
     // sửa lại HTML/JS gì khác.
     const MANUAL_PRINT_ENABLED = false;
+
+    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. Bật tạm để test luồng (Rework/WO/Reprint)
+    // khi chưa có máy in/bridge thật kết nối — giả lập "đã kết nối máy in" + "gửi in luôn thành
+    // công" mà không thật sự gọi bridge. Test xong đổi lại false (hoặc xoá cả khối liên quan tới
+    // biến này — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
+    const TEST_FAKE_PRINT_OK = true;
 
     // Bắt buộc đăng nhập (Username + Password, xem SM_UserPermission) mỗi lần vào tab
     // Reprint — không "remember me": trạng thái đăng nhập KHÔNG được lưu ở đâu cả (không
@@ -901,6 +982,7 @@
         pendingRetryStage = null;
         pendingRetryZpl = null;
         pendingRetryLogId = null;
+        pendingReworkUnpackLogId = null;
         $snlRetryBox.style.display = 'none';
         updateEanSerialLock();
     }
@@ -924,6 +1006,7 @@
     // duyệt không tự mở được socket để kiểm tra thật sự có bắt tay được với máy in
     // hay không, việc đó do Local Bridge (agent chạy trên máy operator) đảm nhiệm.
     function isPrinterConfigured() {
+        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY
         return printMode === 'usb' ? !!$usbSelect.value : !!$printerIp.value.trim();
     }
 
@@ -970,7 +1053,7 @@
     // ── Flow gate 2: EAN + Serial Number stay locked until the Work Order has
     // been looked up successfully (also re-locked while a retry is pending). ──
     function updateEanSerialLock() {
-        const locked = !woResolvedOk || !!pendingRetrySerial;
+        const locked = !woResolvedOk || !!pendingRetrySerial || (isReworkWo && !reworkLoggedIn);
         $eanInput.disabled = locked;
         $snInput.disabled = locked;
     }
@@ -980,9 +1063,21 @@
         document.querySelectorAll('.sk-mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
         $woPanel.style.display = mode === 'wo' ? '' : 'none';
         $reprintSection.style.display = mode === 'manual' ? '' : 'none';
+        $reworkModeSection.style.display = mode === 'rework' ? '' : 'none';
         $printParamsSection.style.display = (mode === 'wo' || MANUAL_PRINT_ENABLED) ? '' : 'none';
         updatePrintButtonState();
     }
+
+    // Mode nào đang chờ đăng nhập xong mới thật sự chuyển sang — dùng chung 1 modal cho cả
+    // Manual (Reprint) lẫn Rework, đều bắt buộc đăng nhập lại mỗi lần vào (không "remember me").
+    let pendingMode = null;
+
+    // Rework giờ phát hiện NGAY TRONG tab Work Order (không qua tab riêng nữa) — vẫn bắt đăng
+    // nhập trước khi cho thao tác, nhưng KHÔNG mỗi lần lookup 1 WO rework là hỏi lại — chỉ hỏi
+    // 1 lần/phiên trang (reworkLoggedIn không lưu localStorage -> F5 lại vẫn phải đăng nhập lại,
+    // giữ đúng tinh thần "không remember me" nhưng không làm phiền khi quét nhiều Rework WO liên tục).
+    let reworkLoggedIn = false;
+    let pendingReworkLogin = false;
 
     $modeTabs.addEventListener('click', (e) => {
         const btn = e.target.closest('.sk-mode-tab');
@@ -990,9 +1085,8 @@
         const mode = btn.dataset.mode;
         if (mode === entryMode) return;
 
-        // Manual mode always requires the password again, every time it's entered —
-        // no "remember me" for this gate.
-        if (mode === 'manual' && MANUAL_PW_GATE_ENABLED) {
+        if ((mode === 'manual' || mode === 'rework') && MANUAL_PW_GATE_ENABLED) {
+            pendingMode = mode;
             openPasswordModal();
             return;
         }
@@ -1013,8 +1107,8 @@
         $pwOverlay.classList.remove('show');
     }
 
-    $btnPwCancel.addEventListener('click', closePasswordModal);
-    $pwOverlay.addEventListener('click', (e) => { if (e.target === $pwOverlay) closePasswordModal(); });
+    $btnPwCancel.addEventListener('click', () => { pendingReworkLogin = false; closePasswordModal(); });
+    $pwOverlay.addEventListener('click', (e) => { if (e.target === $pwOverlay) { pendingReworkLogin = false; closePasswordModal(); } });
 
     async function submitPassword() {
         const username = $pwUsername.value.trim();
@@ -1033,7 +1127,15 @@
                 return;
             }
             closePasswordModal();
-            setMode('manual');
+            if (pendingReworkLogin) {
+                pendingReworkLogin = false;
+                reworkLoggedIn = true;
+                updateEanSerialLock();
+                $eanInput.focus();
+            } else {
+                setMode(pendingMode || 'manual');
+                pendingMode = null;
+            }
         } catch {
             $pwError.classList.add('show');
         } finally {
@@ -1052,6 +1154,7 @@
         $woResolved.style.display = 'none';
         expectedProductId = null;
         expectedColorValue = null;
+        isReworkWo = false;
         resetVerifyState();
         updatePrintButtonState();
 
@@ -1078,12 +1181,33 @@
             expectedProductId = body.data.productId ?? null;
             expectedColorValue = body.data.color;
 
+            // Mã sản phẩm có hậu tố "RW" (vd "RM15A-1001RW") -> đây là Rework WO — rẽ nhánh
+            // ngay từ đây, không cần tab riêng. Ẩn Đã in/Còn lại (không có ý nghĩa với Rework WO
+            // — số lượng in không tính theo WO này, xem MarkReworkedReprintAsync), hiện badge.
+            isReworkWo = (body.data.productCode || '').trim().toUpperCase().endsWith('RW');
+            $woReworkRow.style.display = isReworkWo ? '' : 'none';
+            $woPrintedRow.style.display = isReworkWo ? 'none' : '';
+            $woRemainingRow.style.display = isReworkWo ? 'none' : '';
+
             $woColor.textContent = body.data.color;
             $woPrinted.textContent = `${body.data.printedQuantity} / ${body.data.totalQuantity}`;
             $woRemaining.textContent = body.data.remainingQuantity;
             $woResolved.style.display = 'flex';
             woResolvedOk = true;
-            updateEanSerialLock(); // WO hợp lệ -> mở khóa EAN + Serial Number
+            updateEanSerialLock(); // WO hợp lệ -> mở khóa EAN + Serial Number (trừ khi là Rework
+                                    // WO mà chưa đăng nhập — xem điều kiện trong updateEanSerialLock)
+
+            // Lookup thành công -> tự lưu WO luôn (như bấm nút Save) để F5 lại trang tự điền +
+            // lookup lại, khỏi phải gõ/bấm Save tay mỗi lần.
+            localStorage.setItem(LS_WO_KEY, wo);
+            $btnSaveWo.classList.add('is-saved');
+
+            // Rework WO -> bắt đăng nhập trước khi cho thao tác (1 lần/phiên trang, xem khai báo
+            // reworkLoggedIn) — EAN/Serial vẫn khoá cho tới khi đăng nhập xong.
+            if (isReworkWo && !reworkLoggedIn && MANUAL_PW_GATE_ENABLED) {
+                pendingReworkLogin = true;
+                openPasswordModal();
+            }
 
             const lookupMsg = t('snlabel.woLookupSuccess', '{color} — {qty} pcs remaining.')
                 .replace('{color}', body.data.color).replace('{qty}', body.data.remainingQuantity);
@@ -1109,6 +1233,7 @@
             woDateLocked = false;
             expectedProductId = null;
             expectedColorValue = null;
+            isReworkWo = false;
             $woResolved.style.display = 'none';
             resetVerifyState();
             updatePrintButtonState();
@@ -1147,6 +1272,7 @@
         woDateLocked = false;
         expectedProductId = null;
         expectedColorValue = null;
+        isReworkWo = false;
         $woResolved.style.display = 'none';
         resetVerifyState();
         localStorage.removeItem(LS_WO_KEY);
@@ -1224,6 +1350,7 @@
     // Gửi cả EAN + Serial cho server verify lại toàn bộ (không tin riêng client) — pass hết
     // thì server trả ZPL sẵn sàng in đúng Serial đã quét, không tự sinh serial mới.
     async function printGivenZpl(zpl) {
+        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY — giả lập gửi in luôn thành công
         const copies = parseInt($copies.value) || 1;
         try {
             if (printMode === 'usb') {
@@ -1297,6 +1424,10 @@
     }
 
     async function checkSerialAndPrint() {
+        // Rework WO -> rẽ nhánh hẳn sang luồng reprint (bypass check trùng KQSX), vì serial rework
+        // chắc chắn ĐÃ được in trước đó — verify-serial bình thường sẽ luôn chặn 409 "đã in".
+        if (isReworkWo) { await checkSerialAndReworkPrint(); return; }
+
         const serial = $snInput.value.trim();
         if (!eanVerified) {
             showStatus($printStatus, `✗ ${t('snlabel.serialNeedEanFirst', 'Scan a matching EAN first.')}`, 'err');
@@ -1369,6 +1500,150 @@
             $snInput.value = '';
             $snInput.focus();
         }
+    }
+
+    // Rework WO — quét Serial xong gọi thẳng rework-reprint: reprint tem y nguyên nội dung, gắn
+    // ReworkWorkOrder, insert SM_SerialNumber_Rework rồi nhập KQSX dưới Rework WO (KHÔNG qua
+    // verify-serial/enter-production-result bình thường — serial rework chắc chắn đã có KQSX từ
+    // lần sản xuất gốc nên sẽ luôn bị chặn "đã in" nếu đi qua luồng đó). Không có Try Again/Skip
+    // riêng — lỗi thì báo và cho quét lại serial (gọi lại rework-reprint là an toàn, chỉ tăng
+    // ReprintCount/ghi thêm 1 dòng SM_SerialNumber_Rework, không phá dữ liệu gì).
+    async function checkSerialAndReworkPrint() {
+        const serial = $snInput.value.trim();
+        if (!eanVerified) {
+            showStatus($printStatus, `✗ ${t('snlabel.serialNeedEanFirst', 'Scan a matching EAN first.')}`, 'err');
+            return;
+        }
+        if (!serial) {
+            showStatus($printStatus, `✗ ${t('snlabel.serialEnterFirst', 'Enter a Serial Number first.')}`, 'err');
+            return;
+        }
+        if (!bridgeOnline || !isPrinterConfigured()) {
+            showStatus($printStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+
+        setStepState('2', 'pending');
+        setStepState('3', 'pending');
+        setStepState('3a', 'pending');
+        setStepState('3b', 'pending');
+        setStepState('4', 'pending');
+        $resSerial.textContent = serial;
+        $snlResultResolved.style.display = 'flex';
+
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serialNumber: serial, reworkWorkOrder: $workOrder.value.trim(), ean: verifiedEan })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) {
+                setStepState('2', 'fail');
+                restartFromEan(window.SakuraI18n.translateApiError(body, t('snlabel.reworkReprintFailed', 'Rework reprint failed.')));
+                return;
+            }
+
+            setStepState('1', 'done');
+            setStepState('2', 'done');
+
+            // Bước 3.1/3.2 (nhập KQSX) fail -> KHOÁ lại giống luồng thường, KHÔNG cho in tem cho
+            // tới khi Try Again pass hoặc bấm Skip bỏ qua serial này.
+            if (body.data.inputResultOk === false) {
+                setStepState('3a', 'done');
+                setStepState('3b', 'fail');
+                updateParentStep3();
+                flashResult('fail', t('snlabel.fail', 'FAIL'));
+                const failMsg = body.data.inputResultMessage || t('snlabel.enterProductionResultFailed', 'Could not enter the production result.');
+                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}`, 'err');
+                pendingRetryZpl = body.data.zpl;
+                pendingRetryLogId = body.data.logId;
+                pendingReworkUnpackLogId = body.data.unpackLogId;
+                lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${failMsg}`);
+                return;
+            }
+            setStepState('3a', 'done');
+            setStepState('3b', 'done');
+            updateParentStep3();
+
+            await attemptReworkPrint(serial, body.data.zpl, body.data.logId, body.data.unpackLogId);
+        } catch (e) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+            $snInput.value = '';
+            $snInput.focus();
+        }
+    }
+
+    // Rework — Try Again cho bước 3.2 (nhập KQSX) fail: gọi lại ĐÚNG bước đó (không re-check
+    // EAN/Color, không insert lại SM_SerialNumber_Rework — đã có từ lần gọi rework-reprint đầu).
+    async function attemptReworkKqsx(serial, logId, zpl) {
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint-retry-kqsx`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logId, serialNumber: serial, reworkWorkOrder: $workOrder.value.trim() })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok || body.data.inputResultOk === false) {
+                setStepState('3b', 'fail');
+                updateParentStep3();
+                flashResult('fail', t('snlabel.fail', 'FAIL'));
+                const failMsg = (body.data && body.data.inputResultMessage) || t('snlabel.enterProductionResultFailed', 'Could not enter the production result.');
+                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}`, 'err');
+                pendingRetryZpl = zpl;
+                pendingRetryLogId = logId;
+                lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${failMsg}`);
+                return;
+            }
+            setStepState('3b', 'done');
+            updateParentStep3();
+            await attemptReworkPrint(serial, zpl, logId, pendingReworkUnpackLogId);
+        } catch (e) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${e.message}`);
+        }
+    }
+
+    // Rework — Step 4: gửi ZPL cho bridge cục bộ. CHỈ báo REWORKED (chuyển UNPACKED -> REWORKED
+    // + chốt log PASS) khi in THẬT SỰ thành công — không tin riêng việc gọi rework-reprint xong
+    // là coi như đã rework. In lỗi -> khoá lại, cho Try Again (gửi lại đúng zpl đã có, không gọi
+    // lại EAN/Color/KQSX) hoặc Skip; Unpack Log + log vẫn giữ nguyên (chưa REWORKED/PASS).
+    async function attemptReworkPrint(serial, zpl, logId, unpackLogId) {
+        const printOk = await printGivenZpl(zpl);
+        setStepState('4', printOk ? 'done' : 'fail');
+
+        // Luôn báo kết quả in về server (thành công LẪN thất bại) — giống reportPrintResult của
+        // luồng thường — để chốt Status PASS/FAIL ngay lập tức, không để log treo ở PENDING chờ
+        // Try Again/Skip (bug đã sửa: trước đây chỉ gọi khi in thành công).
+        const reportRes = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint-report-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logId, unpackLogId, reworkWorkOrder: $workOrder.value.trim(), success: printOk })
+        }).then(r => r.json()).catch(() => null);
+        const reportOk = !!(reportRes && reportRes.ok);
+        const reportWarning = reportOk ? '' : ` ⚠ ${t('snlabel.reportResultFailed', 'Could not confirm the result with the server — the history record may stay stuck at PENDING.')}`;
+
+        if (!printOk) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            const failMsg = t('snlabel.printSendFailed', 'Failed to send to printer.');
+            showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}${reportWarning}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            pendingReworkUnpackLogId = unpackLogId;
+            lockForRetry(serial, 'rework-print', `⚠ ${t('snlabel.step4Label', 'Print Label')} (SN ${serial}) — ${failMsg}`);
+            return;
+        }
+
+        let msg = `✓ ${t('snlabel.pass', 'PASS')} — ${serial}${reportWarning}`;
+        flashResult('pass', t('snlabel.pass', 'PASS'));
+        showStatus($printStatus, msg, reportOk ? 'ok' : 'err');
+        unlockRetry();
+        $snInput.value = '';
+        $snInput.focus();
     }
 
     // Process — Step 3: Enter Production Result. Tách riêng khỏi verify-serial để Try Again
@@ -1478,8 +1753,12 @@
 
         if (stage === 'production') {
             await attemptEnterProductionResult(serial, logId, zpl);
-        } else {
+        } else if (stage === 'print') {
             await attemptPrint(serial, zpl, logId);
+        } else if (stage === 'rework-kqsx') {
+            await attemptReworkKqsx(serial, logId, zpl);
+        } else if (stage === 'rework-print') {
+            await attemptReworkPrint(serial, zpl, logId);
         }
         $btnSnlTryAgain.disabled = false;
     });
@@ -1563,6 +1842,189 @@
     $btnReprint.addEventListener('click', reprintSerial);
     $reprintSerial.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); reprintSerial(); }
+    });
+
+    // ── Reprint under Rework WO (Rework mode) — chạy theo đúng kiểu tab Work Order: nhập Rework
+    // WO -> Check EAN (so với EAN thật của Rework WO tra từ Odoo) -> quét Serial Number -> Reprint.
+    // Nội dung tem KHÔNG đổi, chỉ gắn thêm Rework WO + nhập lại kết quả sản xuất dưới WO đó —
+    // xem SakuraController.ReworkReprintSnLabel. ──────────────────────────────────────────────
+    const $reworkModeSection = document.getElementById('reworkModeSection');
+    const $reworkWo      = document.getElementById('reworkWo');
+    const $reworkWoStatus= document.getElementById('reworkWoStatus');
+    const $reworkWoReadout = document.getElementById('reworkWoReadout');
+    const $reworkWoProductCode = document.getElementById('reworkWoProductCode');
+    const $reworkWoEan   = document.getElementById('reworkWoEan');
+    const $reworkWoColor = document.getElementById('reworkWoColor');
+    const $reworkEan     = document.getElementById('reworkEan');
+    const $reworkSerial  = document.getElementById('reworkSerial');
+    const $btnReworkReprint = document.getElementById('btnReworkReprint');
+    const $reworkStatus  = document.getElementById('reworkStatus');
+    const $reworkHint    = document.getElementById('reworkHint');
+
+    // Rework WO tự lưu lại (localStorage) mỗi khi quét/gõ xong — giống cơ chế Save/Restore các
+    // trang Sakura khác — khỏi phải gõ lại WO cho mỗi serial trong cùng phiên rework.
+    const LS_REWORK_WO_KEY = 'sakura_snlabel_rework_workorder';
+
+    let reworkExpectedEan = null;  // EAN thật của Rework WO (tra từ Odoo lúc lookup WO)
+    let reworkEanVerified = false; // true khi EAN quét vào khớp reworkExpectedEan
+
+    function resetReworkDownstream() {
+        reworkExpectedEan = null;
+        reworkEanVerified = false;
+        $reworkEan.value = '';
+        $reworkEan.disabled = true;
+        $reworkSerial.value = '';
+        $reworkSerial.disabled = true;
+        $reworkStatus.className = 't-status';
+        $reworkWoReadout.style.display = 'none';
+    }
+    resetReworkDownstream();
+
+    async function lookupReworkWo() {
+        const wo = $reworkWo.value.trim();
+        resetReworkDownstream();
+        $reworkWoStatus.className = 't-status';
+        if (!wo) return;
+
+        showStatus($reworkWoStatus, `⏳ ${t('snlabel.reworkLookingUp', 'Looking up…')}`, 'ok');
+        try {
+            const res = await fetch(`${BASE}/api/sakura/rework/workorder-lookup?workOrder=${encodeURIComponent(wo)}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('snlabel.reworkWoLookupFailed', 'Could not find this Rework Work Order.')));
+
+            reworkExpectedEan = body.data.ean || null;
+            $reworkEan.disabled = false;
+
+            $reworkWoProductCode.textContent = body.data.productCode || '—';
+            $reworkWoEan.textContent = reworkExpectedEan || '—';
+            $reworkWoColor.textContent = body.data.color || '—';
+            $reworkWoReadout.style.display = 'flex';
+
+            localStorage.setItem(LS_REWORK_WO_KEY, wo);
+            $reworkWoStatus.className = 't-status';
+            $reworkEan.focus();
+        } catch (e) {
+            showStatus($reworkWoStatus, `✗ ${e.message}`, 'err');
+        }
+    }
+    let reworkWoDebounce;
+    $reworkWo.addEventListener('input', () => {
+        clearTimeout(reworkWoDebounce);
+        reworkWoDebounce = setTimeout(lookupReworkWo, 250);
+    });
+    $reworkWo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); clearTimeout(reworkWoDebounce); lookupReworkWo(); }
+    });
+
+    // F5 lại trang -> tự khôi phục Rework WO đã lưu + tự lookup lại luôn (kể cả khi tab Rework
+    // đang ẩn — fetch không phụ thuộc hiển thị, sẵn dữ liệu ngay khi người dùng mở tab).
+    const savedReworkWo = localStorage.getItem(LS_REWORK_WO_KEY);
+    if (savedReworkWo) {
+        $reworkWo.value = savedReworkWo;
+        lookupReworkWo();
+    }
+
+    // Check EAN — so EAN quét vào với EAN thật của Rework WO (đã tra ở lookupReworkWo). Khớp thì
+    // mở khoá + nhảy xuống Serial Number; không khớp thì báo lỗi + xoá ô để quét lại.
+    function checkReworkEan() {
+        const ean = $reworkEan.value.trim();
+        if (!ean) return;
+        if (!reworkExpectedEan || ean.toLowerCase() !== reworkExpectedEan.toLowerCase()) {
+            reworkEanVerified = false;
+            $reworkSerial.disabled = true;
+            showStatus($reworkStatus, `✗ ${t('snlabel.reworkEanMismatch', 'EAN does not match this Rework Work Order ({expected}).').replace('{expected}', reworkExpectedEan || '—')}`, 'err');
+            $reworkEan.value = '';
+            $reworkEan.focus();
+            return;
+        }
+        reworkEanVerified = true;
+        $reworkSerial.disabled = false;
+        $reworkStatus.className = 't-status';
+        $reworkSerial.focus();
+    }
+    let reworkEanDebounce;
+    $reworkEan.addEventListener('input', () => {
+        clearTimeout(reworkEanDebounce);
+        reworkEanDebounce = setTimeout(checkReworkEan, 200);
+    });
+    $reworkEan.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); clearTimeout(reworkEanDebounce); checkReworkEan(); }
+    });
+
+    async function reworkReprintSerial() {
+        const wo = $reworkWo.value.trim();
+        const ean = $reworkEan.value.trim();
+        const sn = $reworkSerial.value.trim();
+        if (!wo || !reworkEanVerified || !sn) {
+            showStatus($reworkStatus, `✗ ${t('snlabel.reworkEnterFirst', 'Enter a Rework Work Order, check the EAN, then scan a serial number.')}`, 'err');
+            return;
+        }
+        if (!bridgeOnline || !isPrinterConfigured()) {
+            showStatus($reworkStatus, `✗ ${printerNotReadyMessage()}`, 'err');
+            return;
+        }
+
+        $btnReworkReprint.disabled = true;
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serialNumber: sn, reworkWorkOrder: wo, ean })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('snlabel.reworkReprintFailed', 'Rework reprint failed.')));
+
+            const zpl = body.data.zpl;
+            const copies = parseInt($copies.value) || 1;
+            let msg = `✓ ${body.data.serialNumber} (${body.data.color || ''}) — ${t('snlabel.reworkWoLabel', 'Rework Work Order')} ${body.data.reworkWorkOrder}.`;
+            if (body.data.inputResultOk === false) {
+                msg += ` ⚠ ${t('snlabel.reworkKqsxWarning', 'Production result entry: {message}').replace('{message}', body.data.inputResultMessage || '')}`;
+            }
+            let statusType = 'ok';
+
+            if (printMode === 'usb') {
+                const printerName = $usbSelect.value;
+                if (printerName) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridgeUsb(zpl, printerName);
+                        msg += t('snlabel.sentToUsbPrinter', ' Sent to USB printer "{name}" (Local Bridge).').replace('{name}', printerName);
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('snlabel.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `rework-${body.data.serialNumber}.zpl`);
+                    msg += t('snlabel.reprintNoUsbSelected', ' No USB printer selected — downloaded .zpl file instead.');
+                }
+            } else {
+                const printerIp = $printerIp.value.trim();
+                const printerPort = parseInt($printerPort.value) || 9100;
+                if (printerIp) {
+                    try {
+                        for (let i = 0; i < copies; i++) await sendToBridge(zpl, printerIp, printerPort);
+                        msg += t('snlabel.sentToTcpPrinter', ' Sent to {ip}:{port} (Local Bridge).').replace('{ip}', printerIp).replace('{port}', printerPort);
+                    } catch (e) {
+                        statusType = 'err';
+                        msg += t('snlabel.sendToPrinterFailed', ' ✗ Failed to send to printer: {error}').replace('{error}', e.message);
+                    }
+                } else {
+                    downloadZplFile(zpl, `rework-${body.data.serialNumber}.zpl`);
+                    msg += t('snlabel.reprintNoIpSet', ' No printer IP set — downloaded .zpl file instead.');
+                }
+            }
+            showStatus($reworkStatus, msg, statusType);
+            $reworkSerial.value = '';
+            $reworkSerial.focus();
+        } catch (e) {
+            showStatus($reworkStatus, `✗ ${e.message}`, 'err');
+        } finally {
+            $btnReworkReprint.disabled = false;
+        }
+    }
+
+    $btnReworkReprint.addEventListener('click', reworkReprintSerial);
+    $reworkSerial.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); reworkReprintSerial(); }
     });
 
     // ── Printer config — persisted in localStorage, same pattern as Toast / FQC pages ──
@@ -1682,6 +2144,13 @@
 
     // ── Local Bridge health check — same pattern as the /Print page ──────────
     async function checkNode() {
+        if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — giả lập bridge luôn online
+            $nodeDot.className = 'node-dot alive';
+            $nodeTxt.textContent = t('snlabel.bridgeOnline', 'Service — Online');
+            bridgeOnline = true;
+            updatePrintButtonState();
+            return;
+        }
         try {
             const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
             if (r.ok) {
