@@ -1143,6 +1143,34 @@ public class SakuraController : Controller
     // quả sản xuất bên ngoài tự check bảng đó để bỏ qua validate trùng serial), rồi chuyển dòng
     // Unpack Log tương ứng UNPACKED -> REWORKED. ───────────────────────────────────────────────
 
+    // Ghi 1 dòng MỚI vào SM_SNLabelScanLog cho lần thử Rework này — cùng bảng/cùng quy ước
+    // FailedStep với luồng Work Order bình thường (1=Check EAN, 2=Check Color, 4=Print Label,
+    // 6=nhập KQSX lỗi) để trang /sakura/snlabel/history hiển thị đúng nhãn có sẵn, không cần
+    // sửa gì thêm ở đó. Trả về entity đã lưu (có Id) để các bước sau (retry KQSX/report kết quả
+    // in) cập nhật TẠI CHỖ, không insert dòng mới — đúng 1 dòng/1 lần thử, y hệt verify-serial.
+    private async Task<SnLabelScanLog> LogReworkAttemptAsync(string reworkWo, string? ean, string serial, string? color, string status, int? failedStep)
+    {
+        SakuraService.TryParseSerialParts(serial, out string variant, out string line, out string runningNumber, out int runningNumberInt);
+        var entry = new SnLabelScanLog
+        {
+            WorkOrder = reworkWo,
+            Ean = ean,
+            SerialNumber = serial,
+            Model = SakuraService.Model,
+            Variant = variant,
+            Color = color,
+            ProductionLine = line,
+            RunningNumber = runningNumber,
+            RunningNumberInt = runningNumberInt,
+            Status = status,
+            FailedStep = failedStep,
+            Timeline = SakuraService.VietnamNow().AddHours(1)
+        };
+        _db.SnLabelScanLogs.Add(entry);
+        await _db.SaveChangesAsync();
+        return entry;
+    }
+
     [HttpPost("/api/sakura/snlabel/rework-reprint")]
     public async Task<IActionResult> ReworkReprintSnLabel([FromBody] ReworkReprintRequest req)
     {
@@ -1151,6 +1179,7 @@ public class SakuraController : Controller
 
         string serial = req.SerialNumber.Trim();
         string reworkWo = req.ReworkWorkOrder.Trim();
+        string scannedEan = (req.Ean ?? "").Trim();
 
         var pending = await _snLabel.FindPendingUnpackLogAsync(serial);
         if (pending == null)
@@ -1163,9 +1192,11 @@ public class SakuraController : Controller
         // Re-check EAN ngay tại server (không tin riêng client đã so khớp) — giống bước Check EAN
         // của tab Work Order (verify-serial), áp dụng cho đúng Rework WO đang dùng.
         string? realEan = await _viidoo.GetProductEanAsync(productId);
-        string scannedEan = (req.Ean ?? "").Trim();
         if (string.IsNullOrEmpty(realEan) || !string.Equals(realEan.Trim(), scannedEan, StringComparison.OrdinalIgnoreCase))
+        {
+            await LogReworkAttemptAsync(reworkWo, scannedEan, serial, wo.Color, "FAIL", 1);
             return BadRequest(new { ok = false, error = $"EAN '{scannedEan}' không khớp với Rework WO '{reworkWo}'.", errorCode = "rework.eanMismatch", errorParams = new { ean = scannedEan, expected = realEan ?? "" } });
+        }
 
         // Check Color — màu embed trong Serial (theo TryResolveColorFromSerial) phải khớp màu của
         // Rework WO, giống hệt Bước 2 "Check Color" của luồng verify-serial thông thường. EAN đúng
@@ -1173,7 +1204,10 @@ public class SakuraController : Controller
         // bị chặn ở đây.
         string? serialColor = SakuraService.TryResolveColorFromSerial(serial);
         if (serialColor == null || !string.Equals(serialColor, wo.Color, StringComparison.OrdinalIgnoreCase))
+        {
+            await LogReworkAttemptAsync(reworkWo, scannedEan, serial, wo.Color, "FAIL", 2);
             return BadRequest(new { ok = false, error = $"Màu của Serial '{serial}' ({serialColor ?? "?"}) không khớp với Rework WO '{reworkWo}' ({wo.Color}).", errorCode = "rework.colorMismatch", errorParams = new { serial, actual = serialColor ?? "", expected = wo.Color ?? "" } });
+        }
 
         var printRow = await _snLabel.MarkReworkedReprintAsync(serial, reworkWo, reprintedBy: null);
         if (printRow == null)
@@ -1188,14 +1222,18 @@ public class SakuraController : Controller
         });
         await _db.SaveChangesAsync();
 
+        // EAN + Color đã pass -> ghi 1 dòng PENDING (giống verify-serial thường), các bước sau
+        // (retry KQSX / report kết quả in) cập nhật TIẾP trên đúng dòng này, không insert mới.
+        var logEntry = await LogReworkAttemptAsync(reworkWo, scannedEan, serial, wo.Color, "PENDING", null);
+
         // Nhập kết quả sản xuất dưới Rework WO — KHÔNG gọi CheckLotSerialFgAsync (bỏ qua bước
         // Check trùng): serial này chắc chắn đã có bản ghi KQSX từ lần sản xuất gốc (đó là lý do
         // nó tồn tại để rework), Check trùng chắc chắn sẽ báo "đã nhập" và chặn mất Input. Gọi
         // thẳng InputProductionResultLogAsync để thêm 1 bản ghi KQSX MỚI song song, dưới Rework
         // WO (khác WO gốc) — dòng vừa insert vào SM_SerialNumber_Rework ở trên là để hệ thống
         // nhập KQSX bên ngoài (nếu có validate trùng ở phía họ) biết đây là serial rework hợp lệ.
-        // KHÔNG chặn chuyển trạng thái Unpack Log nếu bước Input fail — tem gift box đã reprint
-        // xong là việc chính, KQSX chỉ báo kèm để operator biết.
+        // Fail ở đây -> giống bước 3.2 của luồng thường: KHOÁ lại (Try Again/Skip phía client),
+        // KHÔNG cho in tem cho tới khi KQSX vào được (hoặc Skip bỏ qua serial này).
         bool inputResultOk;
         string? inputResultMessage;
         try
@@ -1213,8 +1251,19 @@ public class SakuraController : Controller
             inputResultMessage = ex.Message;
         }
 
-        await _snLabel.MarkSerialReworkedAsync(pending.Id, reworkWo);
+        if (!inputResultOk)
+        {
+            logEntry.Status = "FAIL";
+            logEntry.FailedStep = 6;
+            await _db.SaveChangesAsync();
+        }
 
+        // KHÔNG đánh dấu REWORKED ở đây — trình duyệt còn phải gửi ZPL tới bridge cục bộ mới
+        // thật sự "in xong". Chỉ chuyển UNPACKED -> REWORKED sau khi client báo in THÀNH CÔNG
+        // qua /api/sakura/snlabel/rework-reprint-report-result (xem ReworkReprintReportResult).
+        // In lỗi thì Unpack Log giữ nguyên UNPACKED, operator quét lại đúng serial này để thử
+        // lại là an toàn (gọi lại endpoint này không phá dữ liệu gì, chỉ tăng ReprintCount/insert
+        // thêm dòng SM_SerialNumber_Rework).
         string reworkTemplate = await _snLabel.GetZplTemplateAsync("SnLabel");
         string reworkZpl = SakuraService.BuildConcatenatedZpl(reworkTemplate, new[] { serial });
 
@@ -1229,9 +1278,93 @@ public class SakuraController : Controller
                 printRow.ReprintCount,
                 inputResultOk,
                 inputResultMessage,
+                unpackLogId = pending.Id,
+                logId = logEntry.Id,
                 zpl = reworkZpl
             }
         });
+    }
+
+    // ── API: retry riêng bước nhập KQSX (3.2) khi lần đầu fail — KHÔNG re-check EAN/Color (đã
+    // pass, tất định), KHÔNG insert lại SM_SerialNumber_Rework (đã có từ lần gọi rework-reprint
+    // đầu tiên) — chỉ gọi lại InputProductionResultLogAsync, cập nhật TẠI CHỖ dòng log (logId)
+    // đã tạo ở ReworkReprintSnLabel. ─────────────────────────────────────────────────────────────
+
+    [HttpPost("/api/sakura/snlabel/rework-reprint-retry-kqsx")]
+    public async Task<IActionResult> ReworkRetryKqsx([FromBody] ReworkRetryKqsxRequest req)
+    {
+        if (req == null || req.LogId <= 0 || string.IsNullOrWhiteSpace(req.SerialNumber) || string.IsNullOrWhiteSpace(req.ReworkWorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+
+        var entry = await _db.SnLabelScanLogs.FindAsync(req.LogId);
+        if (entry == null)
+            return NotFound(new { ok = false, error = $"Không tìm thấy log Id={req.LogId}.", errorCode = "common.missingData" });
+
+        string serial = req.SerialNumber.Trim();
+        string reworkWo = req.ReworkWorkOrder.Trim();
+
+        var wo = await _viidoo.SearchAsync(reworkWo);
+        if (wo == null || wo.ProductId is not int productId)
+            return BadRequest(new { ok = false, error = $"Không tìm thấy Work Order '{reworkWo}' trên Odoo.", errorCode = "workOrder.notFoundOdoo", errorParams = new { wo = reworkWo } });
+
+        bool inputResultOk;
+        string? inputResultMessage;
+        try
+        {
+            string subName = await BuildNextSubNameAsync(reworkWo);
+            var inputResult = await _productionApi.InputProductionResultLogAsync(
+                reworkWo, subName, serial, productId, 0,
+                new[] { new ProductionResultProduct { Product_id = productId, Has_tracking = "serial", Serial_code = serial } });
+            inputResultOk = inputResult.Ok;
+            inputResultMessage = inputResult.Message;
+        }
+        catch (Exception ex)
+        {
+            inputResultOk = false;
+            inputResultMessage = ex.Message;
+        }
+
+        entry.Status = inputResultOk ? "PENDING" : "FAIL";
+        entry.FailedStep = inputResultOk ? null : 6;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { ok = true, data = new { inputResultOk, inputResultMessage } });
+    }
+
+    // ── API: báo kết quả in thật của rework-reprint (SAU KHI trình duyệt gửi ZPL tới bridge cục
+    // bộ) — CHỈ khi Success mới chuyển Unpack Log UNPACKED -> REWORKED + chốt log Status=PASS.
+    // In lỗi thì log Status=FAIL/FailedStep=4 (giống "Print Label" của luồng thường) nhưng Unpack
+    // Log vẫn giữ UNPACKED — xem chú thích ở ReworkReprintSnLabel. ─────────────────────────────
+
+    [HttpPost("/api/sakura/snlabel/rework-reprint-report-result")]
+    public async Task<IActionResult> ReworkReprintReportResult([FromBody] ReworkReprintReportResultRequest req)
+    {
+        if (req == null || req.UnpackLogId <= 0 || string.IsNullOrWhiteSpace(req.ReworkWorkOrder))
+            return BadRequest(new { ok = false, error = "Thiếu dữ liệu.", errorCode = "common.missingData" });
+
+        var entry = await _db.SnLabelScanLogs.FindAsync(req.LogId);
+        if (entry != null)
+        {
+            entry.Status = req.Success ? "PASS" : "FAIL";
+            entry.FailedStep = req.Success ? null : 4;
+        }
+
+        if (!req.Success)
+        {
+            await _db.SaveChangesAsync();
+            return Ok(new { ok = true, data = new { marked = false } });
+        }
+
+        try
+        {
+            await _snLabel.MarkSerialReworkedAsync(req.UnpackLogId, req.ReworkWorkOrder.Trim());
+            await _db.SaveChangesAsync();
+            return Ok(new { ok = true, data = new { marked = true } });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
     }
 
     // ── API: history ──────────────────────────────────────────────────────────

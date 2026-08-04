@@ -86,6 +86,27 @@ public class ReworkReprintRequest
     public string? Ean { get; set; }
 }
 
+// Gọi SAU KHI trình duyệt đã gửi ZPL tới bridge cục bộ (thành công hay thất bại) — CHỈ khi
+// Success mới chuyển Unpack Log UNPACKED -> REWORKED. In thất bại thì giữ nguyên UNPACKED để
+// operator quét lại serial này an toàn (rework-reprint có thể gọi lại nhiều lần, idempotent).
+public class ReworkReprintReportResultRequest
+{
+    public int LogId { get; set; }
+    public int UnpackLogId { get; set; }
+    public string ReworkWorkOrder { get; set; } = "";
+    public string SerialNumber { get; set; } = "";
+    public bool Success { get; set; }
+}
+
+// Retry riêng bước nhập KQSX (3.2) của rework-reprint khi lần đầu fail — xem
+// SakuraController.ReworkRetryKqsx.
+public class ReworkRetryKqsxRequest
+{
+    public int LogId { get; set; }
+    public string SerialNumber { get; set; } = "";
+    public string ReworkWorkOrder { get; set; } = "";
+}
+
 public class CartonUnpackHistoryItemDto
 {
     public int Id { get; set; }

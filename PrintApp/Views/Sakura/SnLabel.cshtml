@@ -836,9 +836,12 @@
     let eanVerified = false; // đã quét đúng EAN của WO này chưa
     let verifiedEan = ''; // giá trị EAN đã verify — gửi kèm lúc verify-serial
     let pendingRetrySerial = null; // khác null khi đang khóa chờ Try Again/Skip (bước 3 hoặc 4 fail)
-    let pendingRetryStage = null; // 'production' (bước 3 fail) hoặc 'print' (bước 4 fail) — quyết định Try Again gọi lại API nào
-    let pendingRetryZpl = null; // ZPL đã có sẵn từ lần verify-serial đã pass — 'print' stage dùng lại, KHÔNG verify lại
-    let pendingRetryLogId = null; // logId (PENDING) tương ứng — dùng cho cả 2 stage khi Try Again
+    // 'production'/'print' = luồng Work Order thường; 'rework-kqsx'/'rework-print' = luồng Rework
+    // (checkSerialAndReworkPrint) — quyết định Try Again gọi lại API nào.
+    let pendingRetryStage = null;
+    let pendingRetryZpl = null; // ZPL đã có sẵn từ lần verify-serial/rework-reprint đã pass — 'print'/'rework-print' dùng lại, KHÔNG verify lại
+    let pendingRetryLogId = null; // logId (PENDING) tương ứng trên SM_SNLabelScanLog — dùng cho cả 4 stage khi Try Again
+    let pendingReworkUnpackLogId = null; // Unpack Log Id (SM_CartonUnpack_Log) — chỉ dùng cho stage 'rework-kqsx'/'rework-print'
 
     // ── Print mode: Work Order (default) vs Manual (password-gated every time) ──
     const $modeTabs   = document.getElementById('modeTabs');
@@ -973,6 +976,7 @@
         pendingRetryStage = null;
         pendingRetryZpl = null;
         pendingRetryLogId = null;
+        pendingReworkUnpackLogId = null;
         $snlRetryBox.style.display = 'none';
         updateEanSerialLock();
     }
@@ -1534,30 +1538,104 @@
 
             setStepState('1', 'done');
             setStepState('2', 'done');
+
+            // Bước 3.1/3.2 (nhập KQSX) fail -> KHOÁ lại giống luồng thường, KHÔNG cho in tem cho
+            // tới khi Try Again pass hoặc bấm Skip bỏ qua serial này.
+            if (body.data.inputResultOk === false) {
+                setStepState('3a', 'done');
+                setStepState('3b', 'fail');
+                updateParentStep3();
+                flashResult('fail', t('snlabel.fail', 'FAIL'));
+                const failMsg = body.data.inputResultMessage || t('snlabel.enterProductionResultFailed', 'Could not enter the production result.');
+                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}`, 'err');
+                pendingRetryZpl = body.data.zpl;
+                pendingRetryLogId = body.data.logId;
+                pendingReworkUnpackLogId = body.data.unpackLogId;
+                lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${failMsg}`);
+                return;
+            }
             setStepState('3a', 'done');
-            setStepState('3b', body.data.inputResultOk === false ? 'fail' : 'done');
+            setStepState('3b', 'done');
             updateParentStep3();
 
-            const printOk = await printGivenZpl(body.data.zpl);
-            setStepState('4', printOk ? 'done' : 'fail');
-
-            let msg = printOk
-                ? `✓ ${t('snlabel.pass', 'PASS')} — ${serial}`
-                : `✗ ${t('snlabel.fail', 'FAIL')} — ${t('snlabel.printSendFailed', 'Failed to send to printer.')}`;
-            if (body.data.inputResultOk === false) {
-                msg += ` ⚠ ${t('snlabel.reworkKqsxWarning', 'Production result entry: {message}').replace('{message}', body.data.inputResultMessage || '')}`;
-            }
-            flashResult(printOk ? 'pass' : 'fail', printOk ? t('snlabel.pass', 'PASS') : t('snlabel.fail', 'FAIL'));
-            showStatus($printStatus, msg, printOk ? 'ok' : 'err');
-
-            $snInput.value = '';
-            $snInput.focus();
+            await attemptReworkPrint(serial, body.data.zpl, body.data.logId, body.data.unpackLogId);
         } catch (e) {
             flashResult('fail', t('snlabel.fail', 'FAIL'));
             showStatus($printStatus, `✗ ${e.message}`, 'err');
             $snInput.value = '';
             $snInput.focus();
         }
+    }
+
+    // Rework — Try Again cho bước 3.2 (nhập KQSX) fail: gọi lại ĐÚNG bước đó (không re-check
+    // EAN/Color, không insert lại SM_SerialNumber_Rework — đã có từ lần gọi rework-reprint đầu).
+    async function attemptReworkKqsx(serial, logId, zpl) {
+        try {
+            const res = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint-retry-kqsx`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logId, serialNumber: serial, reworkWorkOrder: $workOrder.value.trim() })
+            });
+            const body = await res.json();
+            if (!res.ok || !body.ok || body.data.inputResultOk === false) {
+                setStepState('3b', 'fail');
+                updateParentStep3();
+                flashResult('fail', t('snlabel.fail', 'FAIL'));
+                const failMsg = (body.data && body.data.inputResultMessage) || t('snlabel.enterProductionResultFailed', 'Could not enter the production result.');
+                showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}`, 'err');
+                pendingRetryZpl = zpl;
+                pendingRetryLogId = logId;
+                lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${failMsg}`);
+                return;
+            }
+            setStepState('3b', 'done');
+            updateParentStep3();
+            await attemptReworkPrint(serial, zpl, logId, pendingReworkUnpackLogId);
+        } catch (e) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            showStatus($printStatus, `✗ ${e.message}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            lockForRetry(serial, 'rework-kqsx', `⚠ ${t('snlabel.step3bLabel', 'Enter Production Result')} (SN ${serial}) — ${e.message}`);
+        }
+    }
+
+    // Rework — Step 4: gửi ZPL cho bridge cục bộ. CHỈ báo REWORKED (chuyển UNPACKED -> REWORKED
+    // + chốt log PASS) khi in THẬT SỰ thành công — không tin riêng việc gọi rework-reprint xong
+    // là coi như đã rework. In lỗi -> khoá lại, cho Try Again (gửi lại đúng zpl đã có, không gọi
+    // lại EAN/Color/KQSX) hoặc Skip; Unpack Log + log vẫn giữ nguyên (chưa REWORKED/PASS).
+    async function attemptReworkPrint(serial, zpl, logId, unpackLogId) {
+        const printOk = await printGivenZpl(zpl);
+        setStepState('4', printOk ? 'done' : 'fail');
+
+        // Luôn báo kết quả in về server (thành công LẪN thất bại) — giống reportPrintResult của
+        // luồng thường — để chốt Status PASS/FAIL ngay lập tức, không để log treo ở PENDING chờ
+        // Try Again/Skip (bug đã sửa: trước đây chỉ gọi khi in thành công).
+        const reportRes = await fetch(`${BASE}/api/sakura/snlabel/rework-reprint-report-result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logId, unpackLogId, reworkWorkOrder: $workOrder.value.trim(), success: printOk })
+        }).then(r => r.json()).catch(() => null);
+        const reportOk = !!(reportRes && reportRes.ok);
+        const reportWarning = reportOk ? '' : ` ⚠ ${t('snlabel.reportResultFailed', 'Could not confirm the result with the server — the history record may stay stuck at PENDING.')}`;
+
+        if (!printOk) {
+            flashResult('fail', t('snlabel.fail', 'FAIL'));
+            const failMsg = t('snlabel.printSendFailed', 'Failed to send to printer.');
+            showStatus($printStatus, `✗ ${t('snlabel.fail', 'FAIL')} — ${failMsg}${reportWarning}`, 'err');
+            pendingRetryZpl = zpl;
+            pendingRetryLogId = logId;
+            pendingReworkUnpackLogId = unpackLogId;
+            lockForRetry(serial, 'rework-print', `⚠ ${t('snlabel.step4Label', 'Print Label')} (SN ${serial}) — ${failMsg}`);
+            return;
+        }
+
+        let msg = `✓ ${t('snlabel.pass', 'PASS')} — ${serial}${reportWarning}`;
+        flashResult('pass', t('snlabel.pass', 'PASS'));
+        showStatus($printStatus, msg, reportOk ? 'ok' : 'err');
+        unlockRetry();
+        $snInput.value = '';
+        $snInput.focus();
     }
 
     // Process — Step 3: Enter Production Result. Tách riêng khỏi verify-serial để Try Again
@@ -1667,8 +1745,12 @@
 
         if (stage === 'production') {
             await attemptEnterProductionResult(serial, logId, zpl);
-        } else {
+        } else if (stage === 'print') {
             await attemptPrint(serial, zpl, logId);
+        } else if (stage === 'rework-kqsx') {
+            await attemptReworkKqsx(serial, logId, zpl);
+        } else if (stage === 'rework-print') {
+            await attemptReworkPrint(serial, zpl, logId);
         }
         $btnSnlTryAgain.disabled = false;
     });
