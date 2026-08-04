@@ -24,4 +24,9 @@ public class SerialNumberRework
     public string SerialNumber { get; set; } = "";
 
     public DateTime CreatedAt { get; set; }
+
+    // Loại Rework — field "x_drop_rework_type" trên mrp.production của Rework WO (Odoo, vd "B").
+    // Null nếu Odoo không set field này cho WO đó.
+    [StringLength(10)]
+    public string? ReworkType { get; set; }
 }

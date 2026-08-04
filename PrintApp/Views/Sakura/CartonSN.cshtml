@@ -1228,7 +1228,7 @@
 
     $btnRepackCnPrint.addEventListener('click', async () => {
         if (repackCnPrinting || $btnRepackCnPrint.disabled) return;
-        if (!bridgeOnline || !isPrinterConfigured()) {
+        if (!TEST_FAKE_PRINT_OK && (!bridgeOnline || !isPrinterConfigured())) { // ⚠️ TEST ONLY bypass — chỉ nút này
             showStatus($repackCnPrintStatus, `✗ ${printerNotReadyMessage()}`, 'err');
             return;
         }
@@ -1252,7 +1252,11 @@
             let msg = `✓ ${t('rework.repackPrintSuccess', 'Refurb Carton Label generated for {carton}.').replace('{carton}', cartonNumber)}`;
             let statusType = 'ok';
 
-            if (printMode === 'usb') {
+            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — tải file .zpl thật để test, coi như đã gửi máy in thành công
+                downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
+                msg += ' [TEST] Downloaded .zpl file instead of printing — treated as sent OK.';
+                sentOk = true;
+            } else if (printMode === 'usb') {
                 const printerName = $usbSelect.value;
                 if (printerName) {
                     try {
@@ -2247,6 +2251,14 @@
             inp.focus(); // xóa xong tự focus lại ô đó luôn để quét lại ngay, khỏi phải click tay
         }, 1400);
     }
+
+    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. CHỈ áp dụng cho nút "Print Carton Label
+    // (Refurb)" ở chế độ Repack (WO là Rework WO) — luồng WO thường (tạo carton mới) KHÔNG bị
+    // ảnh hưởng, vẫn đòi máy in/bridge thật như cũ. Bật tạm để test Repack khi chưa có máy in
+    // thật: giả lập "đã kết nối máy in" + "gửi in luôn thành công" mà không thật sự gọi bridge,
+    // CHỈ trong $btnRepackCnPrint. Test xong đổi lại false (hoặc xoá khối liên quan tới biến này
+    // — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
+    const TEST_FAKE_PRINT_OK = true;
 
     // ── Print Carton Label — build ZPL server-side, send to Local Bridge ──────
     const CARTON_REAL_PRINT_ENABLED = true;

@@ -1218,7 +1218,8 @@ public class SakuraController : Controller
         {
             WorkOrder = reworkWo,
             SerialNumber = serial,
-            CreatedAt = SakuraService.VietnamNow().AddHours(1)
+            CreatedAt = SakuraService.VietnamNow().AddHours(1),
+            ReworkType = wo.DropReworkType
         });
         await _db.SaveChangesAsync();
 

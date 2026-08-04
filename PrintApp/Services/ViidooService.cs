@@ -13,6 +13,10 @@ public class ViidooSearchResult
     public string? Color { get; set; }
     public decimal? Quantity { get; set; }
     public int? ProductId { get; set; }
+
+    // Loại Rework (field "x_drop_rework_type" trên mrp.production, vd "B") — chỉ có ý nghĩa với
+    // các WO Rework, null với WO thường. Dùng để lưu vào SM_SerialNumber_Rework.ReworkType.
+    public string? DropReworkType { get; set; }
 }
 
 // Tra cứu Work Order trên Odoo (mrp.production) — trả về mã sản phẩm, màu, số lượng.
@@ -80,6 +84,12 @@ public class ViidooService
             : null;
         int? productId = ExtractProductId(record.Value);
 
+        // "x_drop_rework_type" — Odoo trả về false (JsonValueKind.False) khi field trống, chỉ
+        // đọc khi thật sự là chuỗi (vd "B").
+        string? dropReworkType = record.Value.TryGetProperty("x_drop_rework_type", out var reworkTypeEl) && reworkTypeEl.ValueKind == JsonValueKind.String
+            ? reworkTypeEl.GetString()
+            : null;
+
         if (string.IsNullOrEmpty(productCode)) return null;
 
         string? color = ExtractColorFromDescription(productDescription);
@@ -109,7 +119,7 @@ public class ViidooService
             depth++;
         }
 
-        return new ViidooSearchResult { ProductCode = productCode, Color = color, Quantity = quantity, ProductId = productId };
+        return new ViidooSearchResult { ProductCode = productCode, Color = color, Quantity = quantity, ProductId = productId, DropReworkType = dropReworkType };
     }
 
     // Tra WO -> trả về NGUYÊN chuỗi mô tả sản phẩm (product_id[1] thô từ Odoo, vd
@@ -313,7 +323,7 @@ public class ViidooService
                 ],
                 ""fields"": [
                     ""name"", ""product_id"", ""origin"", ""product_qty"",
-                    ""product_uom_id"", ""state""
+                    ""product_uom_id"", ""state"", ""x_drop_rework_type""
                 ]
             }}
         }}
