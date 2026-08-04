@@ -256,12 +256,8 @@
                 <input type="date" id="histDateTo" />
             </div>
             <div class="t-field">
-                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
-                <input type="text" id="histPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
-            </div>
-            <div class="t-field">
                 <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
-                <input type="text" id="histPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
+                <input type="text" id="histPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberMultiPlaceholder" placeholder="P-RM15A-00150,P-RM15A-00151…" />
             </div>
             <div class="t-field">
                 <label data-i18n="cartonHistory.filterCartonNumber">Carton Number</label>
@@ -329,7 +325,6 @@
             <table class="t-table">
                 <thead>
                     <tr>
-                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
                         <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
                         <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
                         <th data-i18n="cartonHistory.colCartonNumber">Carton Number</th>
@@ -342,7 +337,7 @@
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -476,7 +471,6 @@
 
     const $histDateFrom = document.getElementById('histDateFrom');
     const $histDateTo = document.getElementById('histDateTo');
-    const $histPalletId = document.getElementById('histPalletId');
     const $histPalletNumber = document.getElementById('histPalletNumber');
     const $histCartonNumber = document.getElementById('histCartonNumber');
     const $histWorkOrder = document.getElementById('histWorkOrder');
@@ -505,7 +499,6 @@
         const params = new URLSearchParams();
         if ($histDateFrom.value) params.set('dateFrom', $histDateFrom.value);
         if ($histDateTo.value) params.set('dateTo', $histDateTo.value);
-        if ($histPalletId.value.trim()) params.set('palletId', $histPalletId.value.trim());
         if ($histPalletNumber.value.trim()) params.set('palletNumber', $histPalletNumber.value.trim());
         if ($histCartonNumber.value.trim()) params.set('cartonNumber', $histCartonNumber.value.trim());
         if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
@@ -519,7 +512,7 @@
         params.set('page', currentPage);
         params.set('pageSize', pageSize());
 
-        $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -532,7 +525,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -582,7 +575,7 @@
 
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => {
@@ -591,7 +584,6 @@
             const serialsDisplay = r.serial ? escHtml(r.serial.split(',').join(', ')) : '—';
             return `
                 <tr>
-                    <td>${r.palletId ? escHtml(r.palletId) : '—'}</td>
                     <td>${r.palletNumber ? escHtml(r.palletNumber) : '—'}</td>
                     <td>${escHtml(r.workOrder) || '—'}</td>
                     <td>${escHtml(r.cartonNumber) || '—'}</td>
@@ -609,9 +601,6 @@
     $histDateTo.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histColor.addEventListener('change', () => { currentPage = 1; loadHistory(); });
     $histPageSize.addEventListener('change', () => { currentPage = 1; loadHistory(); });
-    $histPalletId.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
-    });
     $histPalletNumber.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; loadHistory(); }
     });
@@ -770,7 +759,6 @@
     // ── Export Excel — modal chọn cột rồi xuất TOÀN BỘ dữ liệu đang lọc (không chỉ trang hiện
     // tại) ra file .xlsx, dùng thư viện SheetJS (CDN, không cần build/npm) ─────────────────────
     const EXPORT_COLUMNS = [
-        { key: 'palletId', i18n: 'cartonHistory.colPalletId', fallback: 'Pallet ID', get: r => r.palletId || '' },
         { key: 'palletNumber', i18n: 'cartonHistory.colPalletNumber', fallback: 'Pallet Number', get: r => r.palletNumber || '' },
         { key: 'workOrder', i18n: 'cartonHistory.colWorkOrder', fallback: 'Work Order', get: r => r.workOrder || '' },
         { key: 'cartonNumber', i18n: 'cartonHistory.colCartonNumber', fallback: 'Carton Number', get: r => r.cartonNumber || '' },

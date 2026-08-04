@@ -866,8 +866,12 @@ public class SakuraService
 
         if (!string.IsNullOrWhiteSpace(palletNumber))
         {
-            string pn = palletNumber.Trim();
-            query = query.Where(x => x.PalletNumber != null && x.PalletNumber.Contains(pn));
+            // Cho phép nhập nhiều Pallet Number cách nhau bằng dấu phẩy (VD "P-RM15A-00150,
+            // P-RM15A-00151") để lọc/export đúng nhiều lô cùng lúc — khớp OR theo từng giá trị
+            // (vẫn dùng Contains như trước cho từng giá trị, không bắt buộc khớp tuyệt đối).
+            var terms = palletNumber.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct().ToList();
+            if (terms.Count > 0)
+                query = query.Where(x => x.PalletNumber != null && terms.Any(term => x.PalletNumber.Contains(term)));
         }
 
         if (isReprint.HasValue)

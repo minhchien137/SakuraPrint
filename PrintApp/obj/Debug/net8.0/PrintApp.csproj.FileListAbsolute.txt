@@ -735,3 +735,11 @@ C:\Users\Minh Chien\AppData\Local\Temp\build-check21\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check21\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check21\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check21\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check22\PrintApp.pdb
