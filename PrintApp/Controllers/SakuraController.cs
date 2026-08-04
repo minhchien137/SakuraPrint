@@ -1442,6 +1442,8 @@ public class SakuraController : Controller
             int totalCarton = (int)Math.Ceiling(totalQuantity / (double)SakuraService.CartonPcsPerCarton);
             int remainingCarton = (int)Math.Ceiling(remainingQuantity / (double)SakuraService.CartonPcsPerCarton);
 
+            string? ean = result.ProductId is int cartonWoProductId ? await _viidoo.GetProductEanAsync(cartonWoProductId) : null;
+
             var response = new CartonWorkOrderLookupResponse
             {
                 WorkOrder = wo,
@@ -1452,7 +1454,9 @@ public class SakuraController : Controller
                 ExpectedQuantity = expectedQuantity,
                 TotalCarton = totalCarton,
                 RemainingCarton = remainingCarton,
-                ProductId = result.ProductId
+                ProductId = result.ProductId,
+                ProductCode = result.ProductCode,
+                Ean = ean
             };
             return Ok(new { ok = true, data = response });
         }

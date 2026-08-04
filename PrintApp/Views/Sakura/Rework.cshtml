@@ -346,6 +346,10 @@
     <div class="t-section">
         <div class="t-section-label" data-i18n="rework.stationModeLabel">Unpack / Repack</div>
 
+        <!-- Tab Repack đã TẮT (không xóa) — chức năng đó giờ nằm ngay trong /sakura/cartonsn
+             (tự phát hiện Rework WO lúc lookup). Trang này giờ chỉ còn Unpack. Cần bật lại 2 tab
+             thì bỏ comment khối mode-toggle dưới đây (và bỏ display:none ở #repackPanel). -->
+        <!--
         <div class="mode-toggle" id="stationModeToggle">
             <label id="lblUnpack" class="active" data-mode="unpack">
                 <input type="radio" name="station-mode" value="unpack" checked />
@@ -358,6 +362,7 @@
                 <span data-i18n="rework.modeRepack">Repack</span>
             </label>
         </div>
+        -->
 
         <!-- ── Unpack panel — quét Carton Number đã in, hiện N serial hiện có, gỡ k serial ra
              rework (lưu SM_CartonUnpack_Log, Status=UNPACKED — xem
@@ -750,19 +755,13 @@
             return { sentOk: false, msgSuffix: t('rework.noIpSet', ' No printer IP set — downloaded .zpl file instead.') };
         }
 
-        // ── Station mode toggle — Unpack / Repack ───────────────────────────────────────────
-        const $lblUnpack = document.getElementById('lblUnpack');
-        const $lblRepack = document.getElementById('lblRepack');
+        // ── Station mode — Repack tab đã TẮT (chức năng đó giờ nằm trong /sakura/cartonsn), chỉ
+        // còn Unpack nên KHÔNG cần toggle nữa — ẩn thẳng Repack panel, bỏ mọi ref tới #lblUnpack/
+        // #lblRepack/#stationModeToggle (đã comment khỏi HTML, gọi getElementById sẽ ra null).
+        // Bật lại 2 tab thì bỏ comment HTML tương ứng rồi khôi phục lại setStationMode() cũ.
         const $unpackPanel = document.getElementById('unpackPanel');
         const $repackPanel = document.getElementById('repackPanel');
-        function setStationMode(mode) {
-            $lblUnpack.classList.toggle('active', mode === 'unpack');
-            $lblRepack.classList.toggle('active', mode === 'repack');
-            $unpackPanel.style.display = mode === 'unpack' ? '' : 'none';
-            $repackPanel.style.display = mode === 'repack' ? '' : 'none';
-        }
-        $lblUnpack.addEventListener('click', () => setStationMode('unpack'));
-        $lblRepack.addEventListener('click', () => setStationMode('repack'));
+        $repackPanel.style.display = 'none';
 
         // ══════════════════════════════════════════════════════════════════════════════════
         // ── Unpack tab — quét Carton Number đã in, hiện N serial hiện có, gỡ k serial ra
