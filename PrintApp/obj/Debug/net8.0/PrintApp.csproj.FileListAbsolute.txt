@@ -943,3 +943,27 @@ D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dl
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.pdb
