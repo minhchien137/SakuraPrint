@@ -503,7 +503,7 @@
             'laser.lookupFailed': 'Lookup failed.',
             'laser.verifyFailed': 'Verify failed.',
 
-            'laserHistory.title': 'LASER SCAN HISTORY',
+            'laserHistory.title': 'BACK PANEL SCAN HISTORY',
             'laserHistory.subtitle': 'Back Panel — Sakura',
             'laserHistory.filter': 'Filter',
             'laserHistory.filterWorkOrder': 'Work Order',
@@ -682,7 +682,7 @@
             'middleInput.backHome': '← Back to Home',
             'middleInput.viewHistory': 'View History →',
 
-            'middleInputHistory.title': 'INPUT RESULT HISTORY',
+            'middleInputHistory.title': 'MIDDLE PANEL SCAN HISTORY',
             'middleInputHistory.filter': 'Filter',
             'middleInputHistory.filterWorkOrder': 'Work Order',
             'middleInputHistory.filterWorkOrderPlaceholder': 'Search Work Order…',
@@ -1462,7 +1462,7 @@
             'laser.lookupFailed': '查询失败。',
             'laser.verifyFailed': '核对失败。',
 
-            'laserHistory.title': '镭射扫描历史记录',
+            'laserHistory.title': '背板扫描历史记录',
             'laserHistory.subtitle': '背板 — Sakura',
             'laserHistory.filter': '筛选',
             'laserHistory.filterWorkOrder': '工单号',
@@ -1641,7 +1641,7 @@
             'middleInput.backHome': '← 返回首页',
             'middleInput.viewHistory': '查看历史 →',
 
-            'middleInputHistory.title': '录入结果历史记录',
+            'middleInputHistory.title': '中板扫描历史记录',
             'middleInputHistory.filter': '筛选',
             'middleInputHistory.filterWorkOrder': '工单号',
             'middleInputHistory.filterWorkOrderPlaceholder': '搜索工单号…',
