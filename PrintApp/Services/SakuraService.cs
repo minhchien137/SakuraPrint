@@ -1004,14 +1004,34 @@ public class SakuraService
     // đã in trước đó — KHÔNG check "đã in trước đó" (chắc chắn đã in — đó là lý do reprint),
     // KHÔNG tính lại số lượng WO, KHÔNG cho sửa serial. Đánh dấu IsReprint = true để trang Reprint/
     // History biết carton nào đã từng in lại.
-    public async Task<CartonReprintZplResponse> ReprintCartonLabelAsync(int id)
+    // Trả về ReworkWorkOrder hiện tại của carton (null nếu carton này CHƯA từng Repack) — dùng ở
+    // SakuraController.ReprintCartonLabel để quyết định có cần tra lại SKU/PVID/EAN động từ Rework
+    // WO (qua Odoo) trước khi gọi ReprintCartonLabelAsync hay không.
+    public async Task<string?> GetCartonReworkWorkOrderAsync(int id)
+    {
+        return await _context.CartonSnScanLogs
+            .Where(x => x.Id == id)
+            .Select(x => x.ReworkWorkOrder)
+            .FirstOrDefaultAsync();
+    }
+
+    // overrideSkuPvId/overrideEan: khi carton đã Repack (có ReworkWorkOrder), caller (controller)
+    // tra lại đúng SKU/PVID/EAN HIỆN TẠI từ đúng Rework WO đó qua Odoo rồi truyền vào đây — nếu
+    // không, Reprint sẽ lấy nhầm SKU/PVID/EAN theo bảng tĩnh CartonColorMeta (chỉ đúng cho carton
+    // CHƯA từng rework, Condition vẫn hiện "Refurb" nhưng SKU/PVID/EAN sẽ sai). Description vẫn
+    // luôn giữ theo màu gốc của carton (Odoo không trả mô tả rời để in tem — giống BuildRepackCartonZplAsync).
+    public async Task<CartonReprintZplResponse> ReprintCartonLabelAsync(int id, string? overrideSkuPvId = null, string? overrideEan = null)
     {
         var row = await _context.CartonSnScanLogs.FirstOrDefaultAsync(x => x.Id == id);
         if (row == null)
             throw new SakuraValidationException("cartonLabel.reprint.notFound", $"Không tìm thấy Carton Id={id}.", new { id });
 
-        if (!ZplTemplates.CartonColorMeta.TryGetValue(row.Color ?? "", out var meta))
+        if (!ZplTemplates.CartonColorMeta.TryGetValue(row.Color ?? "", out var baseMeta))
             throw new SakuraValidationException("cartonLabel.unknownColor", $"Không nhận diện được màu '{row.Color}'.", new { color = row.Color });
+
+        var meta = (overrideSkuPvId != null && overrideEan != null)
+            ? (SkuPvId: overrideSkuPvId, baseMeta.Description, Ean: overrideEan)
+            : baseMeta;
 
         var slots = (row.Serial ?? "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -1200,7 +1220,7 @@ public class SakuraService
         var printInfoBySerial = await _context.SnLabelPrints
             .AsNoTracking()
             .Where(x => serialsInPage.Contains(x.SerialNumber))
-            .Select(x => new { x.SerialNumber, x.ReprintCount, x.LastReprintedAt })
+            .Select(x => new { x.SerialNumber, x.ReprintCount, x.LastReprintedAt, x.ReworkWorkOrder, x.ReworkReprintCount, x.LastReworkReprintAt })
             .ToDictionaryAsync(x => x.SerialNumber);
 
         var items = logRows.Select(x =>
@@ -1219,7 +1239,10 @@ public class SakuraService
                 LastReprintedAt = printInfo?.LastReprintedAt,
                 Ean = x.Ean,
                 Status = x.Status,
-                FailedStep = x.FailedStep
+                FailedStep = x.FailedStep,
+                ReworkWorkOrder = printInfo?.ReworkWorkOrder,
+                ReworkReprintCount = printInfo?.ReworkReprintCount ?? 0,
+                LastReworkReprintAt = printInfo?.LastReworkReprintAt
             };
         }).ToList();
 
@@ -1343,10 +1366,20 @@ public class SakuraService
         var row = await _context.SnLabelPrints.FirstOrDefaultAsync(x => x.SerialNumber == serialNumber.Trim());
         if (row == null) return null;
 
+        var now = VietnamNow().AddHours(1);
         row.ReprintCount += 1;
         // Hiển thị trên History -> lưu giờ Trung Quốc (UTC+8) theo yêu cầu riêng.
-        row.LastReprintedAt = VietnamNow().AddHours(1);
+        row.LastReprintedAt = now;
         row.LastReprintedBy = reprintedBy;
+
+        // Serial này đang gắn Rework WO (đã qua bước Rework trước đó) -> lần Manual Reprint này
+        // cũng là in lại tem rework, đếm riêng vào ReworkReprintCount (xem comment trên field).
+        if (!string.IsNullOrEmpty(row.ReworkWorkOrder))
+        {
+            row.ReworkReprintCount += 1;
+            row.LastReworkReprintAt = now;
+        }
+
         await _context.SaveChangesAsync();
         return row;
     }
@@ -1759,10 +1792,13 @@ public class SakuraService
         var row = await _context.SnLabelPrints.FirstOrDefaultAsync(x => x.SerialNumber == serialNumber.Trim());
         if (row == null) return null;
 
+        var now = VietnamNow().AddHours(1);
         row.ReprintCount += 1;
-        row.LastReprintedAt = VietnamNow().AddHours(1);
+        row.LastReprintedAt = now;
         row.LastReprintedBy = reprintedBy;
         row.ReworkWorkOrder = reworkWorkOrder.Trim();
+        row.ReworkReprintCount += 1;
+        row.LastReworkReprintAt = now;
         await _context.SaveChangesAsync();
         return row;
     }

@@ -1782,7 +1782,23 @@ public class SakuraController : Controller
 
         try
         {
-            var result = await _snLabel.ReprintCartonLabelAsync(req.Id);
+            string? overrideSkuPvId = null;
+            string? overrideEan = null;
+
+            string? reworkWo = await _snLabel.GetCartonReworkWorkOrderAsync(req.Id);
+            if (!string.IsNullOrWhiteSpace(reworkWo))
+            {
+                // Carton này đã Repack — tra lại ĐÚNG SKU/PVID/EAN hiện tại từ Rework WO đã gắn
+                // (không dùng bảng tĩnh theo màu, sẽ in sai) — xem SakuraService.ReprintCartonLabelAsync.
+                var wo = await _viidoo.SearchAsync(reworkWo);
+                if (wo == null || wo.ProductId is not int productId)
+                    return BadRequest(new { ok = false, error = $"Không tìm thấy Rework Work Order '{reworkWo}' trên Odoo để in lại đúng tem carton này.", errorCode = "workOrder.notFoundOdoo", errorParams = new { wo = reworkWo } });
+
+                overrideSkuPvId = wo.ProductCode ?? "";
+                overrideEan = await _viidoo.GetProductEanAsync(productId);
+            }
+
+            var result = await _snLabel.ReprintCartonLabelAsync(req.Id, overrideSkuPvId, overrideEan);
             return Ok(new { ok = true, data = result });
         }
         catch (ArgumentException ex)
