@@ -76,6 +76,13 @@ public class SnLabelPrint
     // /api/sakura/snlabel/rework-reprint) — WorkOrder gốc ở trên giữ nguyên không đổi.
     [StringLength(50)]
     public string? ReworkWorkOrder { get; set; }
+
+    // Đếm riêng số lần tem này được in lại trong lúc ĐANG gắn Rework WO — tăng ở cả lần rework-
+    // reprint đầu tiên (MarkReworkedReprintAsync) lẫn các lần Manual Reprint sau đó nếu serial đã
+    // có ReworkWorkOrder (MarkReprintedAsync) — tách biệt khỏi ReprintCount (tổng số lần in lại
+    // nói chung, không phân biệt rework hay không).
+    public int ReworkReprintCount { get; set; }
+    public DateTime? LastReworkReprintAt { get; set; }
 }
 
 // ── Request / response DTOs ──────────────────────────────────────────────────
@@ -213,6 +220,9 @@ public class SnLabelHistoryItemDto
     public string? Ean { get; set; }
     public string? Status { get; set; }
     public int? FailedStep { get; set; }
+    public string? ReworkWorkOrder { get; set; }
+    public int ReworkReprintCount { get; set; }
+    public DateTime? LastReworkReprintAt { get; set; }
 }
 
 public class SnLabelHistoryPageDto

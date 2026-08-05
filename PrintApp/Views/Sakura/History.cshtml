@@ -145,6 +145,15 @@
         border: 1px solid rgba(217, 119, 6, 0.35);
         padding: 1px 8px; border-radius: 10px; white-space: nowrap;
     }
+    /* Đếm riêng số lần in lại tem đang gắn Rework WO — cùng kiểu dáng với .reprint-badge nhưng
+       tông xanh để phân biệt rõ với reprint thường (ReprintCount). */
+    .rework-reprint-badge {
+        display: inline-flex; align-items: center; gap: 3px; margin-left: 6px;
+        font-family: var(--font-body); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2px;
+        color: #1D4ED8; background: rgba(29, 78, 216, 0.1);
+        border: 1px solid rgba(29, 78, 216, 0.35);
+        padding: 1px 8px; border-radius: 10px; white-space: nowrap;
+    }
 
     .swatch-dot {
         width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: inline-block;
@@ -257,13 +266,14 @@
                         <th data-i18n="history.colColor">Color</th>
                         <th data-i18n="history.colLine">Line</th>
                         <th data-i18n="history.colWorkOrder">Work Order</th>
+                        <th data-i18n="history.colReworkWo">Rework WO</th>
                         <th data-i18n="history.colStatus">Status</th>
                         <th data-i18n="history.colFailedStep">Failed Step</th>
                         <th data-i18n="history.colPrintedAt">Printed At</th>
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="8" style="text-align:center;color:var(--ghost);padding:16px">—</td></tr>
+                    <tr><td colspan="9" style="text-align:center;color:var(--ghost);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -359,7 +369,7 @@
         if ($histEan.value.trim()) params.set('ean', $histEan.value.trim());
         if ($histWorkOrder.value.trim()) params.set('workOrder', $histWorkOrder.value.trim());
 
-        $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ghost);padding:16px">${t('history.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ghost);padding:16px">${t('history.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/snlabel/history?${params}`);
             const body = await res.json();
@@ -372,7 +382,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--stamp);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--stamp);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -429,7 +439,7 @@
 
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ghost);padding:16px">${t('history.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ghost);padding:16px">${t('history.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => {
@@ -441,6 +451,13 @@
                 : '';
             const reprintBadge = reprinted
                 ? `<span class="reprint-badge"${reprintTitle}>🔁 ×${r.reprintCount}</span>`
+                : '';
+            const reworkReprinted = r.reworkReprintCount > 0;
+            const reworkReprintTitle = reworkReprinted && r.lastReworkReprintAt
+                ? ` title="${t('history.lastReworkReprintedAt', 'Last rework reprint')}: ${new Date(r.lastReworkReprintAt).toLocaleString()}"`
+                : '';
+            const reworkReprintBadge = reworkReprinted
+                ? `<span class="rework-reprint-badge"${reworkReprintTitle}>🛠️ ×${r.reworkReprintCount}</span>`
                 : '';
             const statusCls = r.status === 'PASS' ? 'pass' : (r.status === 'PENDING' ? 'pending' : (r.status === 'FAIL' ? 'fail' : ''));
             const statusCell = r.status
@@ -456,6 +473,7 @@
                     <td>${meta.name ? `<span class="swatch-dot ${meta.cls}"></span>${meta.name}` : '—'}</td>
                     <td>${r.productionLine ? lineLabel(r.productionLine) : '—'}</td>
                     <td>${r.workOrder || '—'}</td>
+                    <td>${r.reworkWorkOrder ? escHtml(r.reworkWorkOrder) + reworkReprintBadge : '—'}</td>
                     <td>${statusCell}</td>
                     <td>${failedStepCell}</td>
                     <td>${printedAt}</td>
@@ -485,7 +503,7 @@
     });
 
     // ── init ──────────────────────────────────────────────────────────────────
-    $histDateFrom.value = todayStr();
+    // From Date để trống mặc định (xem toàn bộ lịch sử về trước) — chỉ To Date mặc định hôm nay.
     $histDateTo.value = todayStr();
     loadHistory();
 })();
