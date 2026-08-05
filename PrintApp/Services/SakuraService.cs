@@ -901,7 +901,10 @@ public class SakuraService
                 PalletNumber = x.PalletNumber,
                 IsReprint = x.IsReprint,
                 LastReprintAt = x.LastReprintAt,
-                ReprintCount = x.ReprintCount
+                ReprintCount = x.ReprintCount,
+                ReworkWorkOrder = x.ReworkWorkOrder,
+                LastRepackedAt = x.LastRepackedAt,
+                RepackCount = x.RepackCount
             }).ToList(),
             TotalCount = totalCount,
             Page = page,
@@ -953,18 +956,31 @@ public class SakuraService
 
         var grouped = rows
             .GroupBy(x => x.PalletNumber)
-            .Select(g => new CartonSnPalletReprintItemDto
+            .Select(g =>
             {
-                PalletNumber = g.Key!,
-                PalletId = g.Select(x => x.PalletId).FirstOrDefault() ?? "",
-                WorkOrder = g.Select(x => x.WorkOrder).FirstOrDefault() ?? "",
-                Color = g.Select(x => x.Color).FirstOrDefault() ?? "",
-                CartonCount = g.Count(),
-                UnitCount = g.Sum(x => x.CountSerial),
-                IsPalletReprint = g.Any(x => x.IsPalletReprint),
-                LastPalletReprintAt = g.Max(x => x.LastPalletReprintAt),
-                PalletReprintCount = g.Max(x => x.PalletReprintCount),
-                LastScanDate = g.Max(x => x.ScanDate)
+                string color = g.Select(x => x.Color).FirstOrDefault() ?? "";
+                ZplTemplates.CartonColorMeta.TryGetValue(color, out var meta);
+                return new CartonSnPalletReprintItemDto
+                {
+                    PalletNumber = g.Key!,
+                    PalletId = g.Select(x => x.PalletId).FirstOrDefault() ?? "",
+                    WorkOrder = g.Select(x => x.WorkOrder).FirstOrDefault() ?? "",
+                    Color = color,
+                    CartonCount = g.Count(),
+                    UnitCount = g.Sum(x => x.CountSerial),
+                    IsPalletReprint = g.Any(x => x.IsPalletReprint),
+                    LastPalletReprintAt = g.Max(x => x.LastPalletReprintAt),
+                    PalletReprintCount = g.Max(x => x.PalletReprintCount),
+                    LastScanDate = g.Max(x => x.ScanDate),
+                    // Cả 3 field snapshot lúc "chốt" tem — mọi carton cùng Pallet Number được ghi
+                    // cùng lúc, cùng giá trị (xem BuildPalletLabelZplAsync), lấy dòng đầu là đủ.
+                    PoNumber = g.Select(x => x.PoNumber).FirstOrDefault(v => !string.IsNullOrEmpty(v)) ?? "",
+                    InboundReference = g.Select(x => x.InboundReference).FirstOrDefault(v => !string.IsNullOrEmpty(v)) ?? "",
+                    WarehouseReference = g.Select(x => x.WarehouseReference).FirstOrDefault(v => !string.IsNullOrEmpty(v)) ?? "",
+                    DeliveryAddress = g.Select(x => x.DeliveryAddress).FirstOrDefault(v => !string.IsNullOrEmpty(v)) ?? "",
+                    SkuPvId = meta.SkuPvId ?? "",
+                    Ean = meta.Ean ?? ""
+                };
             });
 
         if (isPalletReprint.HasValue)
@@ -1605,8 +1621,8 @@ public class SakuraService
     }
 
     // Bước 2: chuyển dòng Unpack Log UNPACKED -> REWORKED sau khi SN Label đã reprint xong dưới
-    // reworkWorkOrder.
-    public async Task<CartonUnpackLog> MarkSerialReworkedAsync(int unpackLogId, string reworkWorkOrder)
+    // reworkWorkOrder. reworkType = "x_drop_rework_type" của Rework WO trên Odoo (có thể null).
+    public async Task<CartonUnpackLog> MarkSerialReworkedAsync(int unpackLogId, string reworkWorkOrder, string? reworkType = null)
     {
         var row = await _context.CartonUnpackLogs.FindAsync(unpackLogId);
         if (row == null || row.Status != "UNPACKED")
@@ -1614,6 +1630,7 @@ public class SakuraService
 
         row.Status = "REWORKED";
         row.ReworkWorkOrder = reworkWorkOrder.Trim();
+        row.ReworkType = reworkType;
         row.ReworkedAt = VietnamNow().AddHours(1);
         await _context.SaveChangesAsync();
         return row;
@@ -1716,10 +1733,12 @@ public class SakuraService
         if (row == null)
             throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmedCarton}'.", new { cartonNumber = trimmedCarton });
 
+        var now = VietnamNow().AddHours(1);
         row.Condition = "Refurb";
         row.ReworkWorkOrder = trimmedWo;
+        row.LastRepackedAt = now;
+        row.RepackCount++;
 
-        var now = VietnamNow().AddHours(1);
         var reworkedLogs = await _context.CartonUnpackLogs
             .Where(x => x.CartonNumber == trimmedCarton && x.Status == "REWORKED")
             .ToListAsync();
@@ -1810,7 +1829,8 @@ public class SakuraService
                 Status = x.Status,
                 UnpackedAt = x.UnpackedAt,
                 ReworkedAt = x.ReworkedAt,
-                RepackedAt = x.RepackedAt
+                RepackedAt = x.RepackedAt,
+                ReworkType = x.ReworkType
             })
             .ToListAsync();
 

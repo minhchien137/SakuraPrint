@@ -98,6 +98,15 @@ public class CartonSnScanLog
     // Rework Work Order gắn vào lần Repack gần nhất (đổi Condition sang "Refurb" cùng lúc) —
     // xem SakuraService.RecordRepackResultAsync. Chỉ phản ánh lần rework GẦN NHẤT của carton
     // này; lịch sử đầy đủ (từng serial rework lúc nào, dưới WO nào) tra ở SM_CartonUnpack_Log.
+    // ReworkWorkOrder != NULL đã tự nó là dấu hiệu "carton này đã qua Repack" (mọi carton trong
+    // hệ thống luôn khởi tạo Condition="New" — xem CARTON_FIXED_CONDITION) — không cần thêm cột
+    // boolean riêng cho việc đó.
     [StringLength(50)]
     public string? ReworkWorkOrder { get; set; }
+
+    // Thời điểm + số lần Repack gần nhất/tổng cộng — cập nhật cùng lúc với Condition/ReworkWorkOrder
+    // ở trên mỗi lần Repack (RecordRepackResultAsync), giữ lại dấu vết carton này từng là "New"
+    // trước khi đổi Condition sang "Refurb" (đúng pattern LastReprintAt/ReprintCount ở trên).
+    public DateTime? LastRepackedAt { get; set; }
+    public int RepackCount { get; set; }
 }

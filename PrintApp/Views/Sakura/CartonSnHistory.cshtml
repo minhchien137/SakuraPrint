@@ -44,7 +44,7 @@
     }
     body::before { content: none !important; }
 
-    .snl-page { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
+    .snl-page { max-width: 1800px; margin: 0 auto; position: relative; z-index: 1; }
 
     .snl-header {
         display: flex;
@@ -52,7 +52,7 @@
         justify-content: space-between;
         margin-bottom: 28px;
     }
-    .snl-header h1 { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.3px; color: var(--red-dark); }
+    .snl-header h1 { font-family: var(--font-head); font-size: 44px; font-weight: 800; letter-spacing: -0.5px; color: var(--red-dark); line-height: 1.1; }
     .snl-header p {
         font-family: var(--font-body); font-size: 0.85rem;
         color: var(--gray-500); margin-top: 5px;
@@ -237,7 +237,7 @@
 
     <header class="snl-header">
         <div>
-            <h1 data-i18n="cartonHistory.title">CARTON SN LABEL HISTORY</h1>
+            <h1 data-i18n="cartonHistory.title">CARTON & PALLET LABEL HISTORY</h1>
             <p data-i18n="cartonHistory.subtitle">Carton Serial Number Print — Sakura</p>
             <span class="accent-bar"></span>
         </div>
@@ -287,6 +287,7 @@
                     <option value="20" selected>20</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
+                    <option value="200">200</option>
                 </select>
             </div>
             <div class="t-hist-btn-group">
@@ -319,6 +320,29 @@
         </div>
     </div>
 
+    <!-- ── Modal "Export Excel" cho bảng Printed Pallets — cùng pattern với modal Printed Cartons
+         ở trên, chỉ khác ID để tách riêng 2 bộ chọn cột. ── -->
+    <div id="exportPalletOverlay" class="exp-overlay" style="display:none">
+        <div class="exp-modal">
+            <div class="exp-modal-header">
+                <span data-i18n="cartonHistory.exportModalTitle">Export Excel — Select Columns</span>
+                <button type="button" class="exp-modal-close" id="btnClosePalletExport" aria-label="Close">✕</button>
+            </div>
+            <div class="exp-modal-body">
+                <div class="exp-select-row">
+                    <button type="button" class="exp-select-link" id="btnPalletExportSelectAll" data-i18n="cartonHistory.exportSelectAll">Select All</button>
+                    <button type="button" class="exp-select-link" id="btnPalletExportSelectNone" data-i18n="cartonHistory.exportSelectNone">Select None</button>
+                </div>
+                <div class="exp-col-list" id="exportPalletColList"></div>
+            </div>
+            <div class="exp-modal-footer">
+                <button type="button" class="t-btn t-btn-ghost" id="btnConfirmPalletExport" data-i18n="cartonHistory.exportConfirmBtn">📊 Export</button>
+                <button type="button" class="t-btn t-btn-ghost" id="btnCancelPalletExport" data-i18n="cartonHistory.exportCancelBtn">Cancel</button>
+                <span class="exp-status" id="exportPalletStatus"></span>
+            </div>
+        </div>
+    </div>
+
     <div class="t-section">
         <div class="t-section-label" data-i18n="cartonHistory.printedCartons">Printed Cartons</div>
         <div class="t-table-wrap">
@@ -334,10 +358,12 @@
                         <th data-i18n="cartonHistory.colSerials">Serials</th>
                         <th data-i18n="cartonHistory.colScanDate">Scanned At</th>
                         <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
+                        <th data-i18n="cartonHistory.colRepackCount">Repack Count</th>
+                        <th data-i18n="cartonHistory.colLastRepack">Last Repack</th>
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -369,10 +395,6 @@
                 <input type="date" id="palletSummaryDateTo" />
             </div>
             <div class="t-field">
-                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
-                <input type="text" id="palletSummaryPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
-            </div>
-            <div class="t-field">
                 <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
                 <input type="text" id="palletSummaryPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
             </div>
@@ -395,28 +417,37 @@
                     <option value="20" selected>20</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
+                    <option value="200">200</option>
                 </select>
             </div>
-            <button class="t-btn t-btn-ghost" id="btnPalletSummaryRefresh" data-i18n="cartonHistory.refresh">↻ Refresh</button>
+            <div class="t-hist-btn-group">
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryRefresh" data-i18n="cartonHistory.refresh">↻ Refresh</button>
+                <button class="t-btn t-btn-ghost" id="btnPalletSummaryExport" data-i18n="cartonHistory.exportBtn">📊 Export Excel</button>
+            </div>
         </div>
 
         <div class="t-table-wrap">
             <table class="t-table">
                 <thead>
                     <tr>
-                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
                         <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
                         <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
                         <th data-i18n="cartonHistory.colColor">Color</th>
                         <th data-i18n="cartonReprint.colCartonCount">Cartons</th>
                         <th data-i18n="cartonReprint.colUnitCount">Units</th>
+                        <th data-i18n="cartonHistory.colSkuPvId">SKU/PVID</th>
+                        <th data-i18n="cartonHistory.colEan">EAN</th>
+                        <th data-i18n="cartonHistory.colPoNumber">PO Number</th>
+                        <th data-i18n="cartonHistory.colInboundReference">Inbound Reference</th>
+                        <th data-i18n="cartonHistory.colWarehouseReference">Warehouse Reference</th>
+                        <th data-i18n="cartonHistory.colAddress">Address</th>
                         <th data-i18n="cartonHistory.colScanDate">Last Scanned</th>
                         <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
                         <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="palletSummaryRows">
-                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="14" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -512,7 +543,7 @@
         params.set('page', currentPage);
         params.set('pageSize', pageSize());
 
-        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $histRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -525,7 +556,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -573,9 +604,17 @@
         return `<span class="count-pill">×${count}</span> <span style="color:var(--gray-500);font-size:0.78rem;white-space:nowrap">${d}</span>`;
     }
 
+    // Cột "Repack Count" — số lần repack + link sang trang Rework History lọc sẵn theo Carton
+    // Number này (chi tiết từng serial/từng vòng rework nằm ở đó, xem SM_CartonUnpack_Log).
+    function repackCountCell(count, cartonNumber) {
+        if (!count) return '<span style="color:var(--gray-400)">0</span>';
+        const url = `${BASE}/sakura/rework/history?cartonNumber=${encodeURIComponent(cartonNumber || '')}`;
+        return `<a href="${url}" class="count-pill" style="text-decoration:none;cursor:pointer" title="${escHtml(t('cartonHistory.viewReworkDetail', 'View rework detail'))}">${count}</a>`;
+    }
+
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => {
@@ -593,6 +632,8 @@
                     <td class="cell-serials">${serialsDisplay}</td>
                     <td>${scanDate}</td>
                     <td>${reprintCell(r.reprintCount, r.lastReprintAt)}</td>
+                    <td>${repackCountCell(r.repackCount, r.cartonNumber)}</td>
+                    <td>${reprintCell(r.repackCount, r.lastRepackedAt)}</td>
                 </tr>`;
         }).join('');
     }
@@ -629,7 +670,6 @@
     // trang /sakura/cartonsn/reprint (trang đó yêu cầu đăng nhập vì cho in lại thật). ──────────
     const $palletSummaryDateFrom = document.getElementById('palletSummaryDateFrom');
     const $palletSummaryDateTo = document.getElementById('palletSummaryDateTo');
-    const $palletSummaryPalletId = document.getElementById('palletSummaryPalletId');
     const $palletSummaryPalletNumber = document.getElementById('palletSummaryPalletNumber');
     const $palletSummaryWorkOrder = document.getElementById('palletSummaryWorkOrder');
     const $palletSummaryReprintStatus = document.getElementById('palletSummaryReprintStatus');
@@ -650,18 +690,24 @@
         return parseInt($palletSummaryPageSize.value) || 20;
     }
 
-    async function loadPalletSummary() {
+    // Params dùng chung cho cả loadPalletSummary (theo trang) lẫn export Excel (lấy hết) — không
+    // gồm page/pageSize để mỗi nơi tự set riêng, giống buildFilterParams() của bảng Carton.
+    function buildPalletFilterParams() {
         const params = new URLSearchParams();
         if ($palletSummaryDateFrom.value) params.set('dateFrom', $palletSummaryDateFrom.value);
         if ($palletSummaryDateTo.value) params.set('dateTo', $palletSummaryDateTo.value);
-        if ($palletSummaryPalletId.value.trim()) params.set('palletId', $palletSummaryPalletId.value.trim());
         if ($palletSummaryPalletNumber.value.trim()) params.set('palletNumber', $palletSummaryPalletNumber.value.trim());
         if ($palletSummaryWorkOrder.value.trim()) params.set('workOrder', $palletSummaryWorkOrder.value.trim());
         if ($palletSummaryReprintStatus.value) params.set('isPalletReprint', $palletSummaryReprintStatus.value);
+        return params;
+    }
+
+    async function loadPalletSummary() {
+        const params = buildPalletFilterParams();
         params.set('page', palletSummaryPage);
         params.set('pageSize', palletSummaryPageSize());
 
-        $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $palletSummaryRows.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
             const body = await res.json();
@@ -674,14 +720,14 @@
         } catch (e) {
             lastPalletRows = null;
             palletSummaryTotalCount = 0;
-            $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $palletSummaryRows.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPalletSummaryPagination();
         }
     }
 
     function renderPalletSummary(rows) {
         if (!rows.length) {
-            $palletSummaryRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $palletSummaryRows.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $palletSummaryRows.innerHTML = rows.map(r => {
@@ -692,12 +738,17 @@
                 : `<span class="reprint-badge no">${t('cartonReprint.statusNotYet', 'Not yet')}</span>`;
             return `
                 <tr>
-                    <td>${r.palletId ? escHtml(r.palletId) : '—'}</td>
                     <td>${r.palletNumber ? escHtml(r.palletNumber) : '—'}</td>
                     <td>${escHtml(r.workOrder) || '—'}</td>
                     <td>${r.color ? `<span class="swatch-dot ${colorCls}"></span>${escHtml(r.color)}` : '—'}</td>
                     <td><span class="count-pill">${r.cartonCount}</span></td>
                     <td><span class="count-pill">${r.unitCount}</span></td>
+                    <td>${r.skuPvId ? escHtml(r.skuPvId) : '—'}</td>
+                    <td>${r.ean ? escHtml(r.ean) : '—'}</td>
+                    <td>${r.poNumber ? escHtml(r.poNumber) : '—'}</td>
+                    <td>${r.inboundReference ? escHtml(r.inboundReference) : '—'}</td>
+                    <td>${r.warehouseReference ? escHtml(r.warehouseReference) : '—'}</td>
+                    <td>${r.deliveryAddress ? escHtml(r.deliveryAddress) : '—'}</td>
                     <td>${lastScan}</td>
                     <td>${reprintBadge}</td>
                     <td>${reprintCell(r.palletReprintCount, r.lastPalletReprintAt)}</td>
@@ -743,9 +794,6 @@
     $palletSummaryDateTo.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
     $palletSummaryReprintStatus.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
     $palletSummaryPageSize.addEventListener('change', () => { palletSummaryPage = 1; loadPalletSummary(); });
-    $palletSummaryPalletId.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); palletSummaryPage = 1; loadPalletSummary(); }
-    });
     $palletSummaryPalletNumber.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); palletSummaryPage = 1; loadPalletSummary(); }
     });
@@ -768,7 +816,9 @@
         { key: 'serial', i18n: 'cartonHistory.colSerials', fallback: 'Serials', get: r => r.serial ? r.serial.split(',').join(', ') : '' },
         { key: 'scanDate', i18n: 'cartonHistory.colScanDate', fallback: 'Scanned At', get: r => new Date(r.scanDate).toLocaleString() },
         { key: 'reprintCount', i18n: 'cartonHistory.colReprintCount', fallback: 'Reprint Count', get: r => r.reprintCount || 0 },
-        { key: 'lastReprintAt', i18n: 'cartonHistory.colLastReprint', fallback: 'Last Reprint', get: r => r.lastReprintAt ? new Date(r.lastReprintAt).toLocaleString() : '' }
+        { key: 'lastReprintAt', i18n: 'cartonHistory.colLastReprint', fallback: 'Last Reprint', get: r => r.lastReprintAt ? new Date(r.lastReprintAt).toLocaleString() : '' },
+        { key: 'repackCount', i18n: 'cartonHistory.colRepackCount', fallback: 'Repack Count', get: r => r.repackCount || 0 },
+        { key: 'lastRepackedAt', i18n: 'cartonHistory.colLastRepack', fallback: 'Last Repack', get: r => r.lastRepackedAt ? new Date(r.lastRepackedAt).toLocaleString() : '' }
     ];
 
     const EXPORT_PAGE_SIZE = 200; // Khớp cap server-side (Math.Clamp 1..200 trong GetCartonHistoryAsync).
@@ -873,6 +923,124 @@
     }
 
     $btnConfirmExport.addEventListener('click', doExportExcel);
+
+    // ── Export Excel — bảng Printed Pallets — cùng pattern hệt trên, dùng
+    // buildPalletFilterParams()/API reprint/pallets thay vì cartonsn/history. ────────────────────
+    const EXPORT_PALLET_COLUMNS = [
+        { key: 'palletNumber', i18n: 'cartonHistory.colPalletNumber', fallback: 'Pallet Number', get: r => r.palletNumber || '' },
+        { key: 'workOrder', i18n: 'cartonHistory.colWorkOrder', fallback: 'Work Order', get: r => r.workOrder || '' },
+        { key: 'color', i18n: 'cartonHistory.colColor', fallback: 'Color', get: r => r.color || '' },
+        { key: 'cartonCount', i18n: 'cartonReprint.colCartonCount', fallback: 'Cartons', get: r => r.cartonCount || 0 },
+        { key: 'unitCount', i18n: 'cartonReprint.colUnitCount', fallback: 'Units', get: r => r.unitCount || 0 },
+        { key: 'skuPvId', i18n: 'cartonHistory.colSkuPvId', fallback: 'SKU/PVID', get: r => r.skuPvId || '' },
+        { key: 'ean', i18n: 'cartonHistory.colEan', fallback: 'EAN', get: r => r.ean || '' },
+        { key: 'poNumber', i18n: 'cartonHistory.colPoNumber', fallback: 'PO Number', get: r => r.poNumber || '' },
+        { key: 'inboundReference', i18n: 'cartonHistory.colInboundReference', fallback: 'Inbound Reference', get: r => r.inboundReference || '' },
+        { key: 'warehouseReference', i18n: 'cartonHistory.colWarehouseReference', fallback: 'Warehouse Reference', get: r => r.warehouseReference || '' },
+        { key: 'deliveryAddress', i18n: 'cartonHistory.colAddress', fallback: 'Address', get: r => r.deliveryAddress || '' },
+        { key: 'lastScanDate', i18n: 'cartonHistory.colScanDate', fallback: 'Last Scanned', get: r => r.lastScanDate ? new Date(r.lastScanDate).toLocaleString() : '' },
+        { key: 'isPalletReprint', i18n: 'cartonReprint.colReprintStatus', fallback: 'Reprint Status', get: r => r.isPalletReprint ? t('cartonReprint.statusReprinted', 'Reprinted') : t('cartonReprint.statusNotYet', 'Not yet') },
+        { key: 'palletReprintCount', i18n: 'cartonHistory.colReprintCount', fallback: 'Reprint Count', get: r => r.palletReprintCount || 0 },
+        { key: 'lastPalletReprintAt', i18n: 'cartonHistory.colLastReprint', fallback: 'Last Reprint', get: r => r.lastPalletReprintAt ? new Date(r.lastPalletReprintAt).toLocaleString() : '' }
+    ];
+
+    const $btnPalletSummaryExport = document.getElementById('btnPalletSummaryExport');
+    const $exportPalletOverlay = document.getElementById('exportPalletOverlay');
+    const $exportPalletColList = document.getElementById('exportPalletColList');
+    const $btnClosePalletExport = document.getElementById('btnClosePalletExport');
+    const $btnCancelPalletExport = document.getElementById('btnCancelPalletExport');
+    const $btnConfirmPalletExport = document.getElementById('btnConfirmPalletExport');
+    const $btnPalletExportSelectAll = document.getElementById('btnPalletExportSelectAll');
+    const $btnPalletExportSelectNone = document.getElementById('btnPalletExportSelectNone');
+    const $exportPalletStatus = document.getElementById('exportPalletStatus');
+
+    function renderPalletExportColumnList() {
+        $exportPalletColList.innerHTML = EXPORT_PALLET_COLUMNS.map(col => `
+            <label class="exp-col-item">
+                <input type="checkbox" class="exp-pallet-col-checkbox" value="${col.key}" checked>
+                <span>${escHtml(t(col.i18n, col.fallback))}</span>
+            </label>`).join('');
+    }
+
+    function openPalletExportModal() {
+        renderPalletExportColumnList();
+        $exportPalletStatus.textContent = '';
+        $exportPalletStatus.className = 'exp-status';
+        $exportPalletOverlay.style.display = 'flex';
+    }
+    function closePalletExportModal() { $exportPalletOverlay.style.display = 'none'; }
+
+    $btnPalletSummaryExport.addEventListener('click', openPalletExportModal);
+    $btnClosePalletExport.addEventListener('click', closePalletExportModal);
+    $btnCancelPalletExport.addEventListener('click', closePalletExportModal);
+    $exportPalletOverlay.addEventListener('click', (e) => { if (e.target === $exportPalletOverlay) closePalletExportModal(); });
+
+    $btnPalletExportSelectAll.addEventListener('click', () => {
+        $exportPalletColList.querySelectorAll('.exp-pallet-col-checkbox').forEach(cb => { cb.checked = true; });
+    });
+    $btnPalletExportSelectNone.addEventListener('click', () => {
+        $exportPalletColList.querySelectorAll('.exp-pallet-col-checkbox').forEach(cb => { cb.checked = false; });
+    });
+
+    async function fetchAllFilteredPalletRows() {
+        const baseParams = buildPalletFilterParams();
+        let page = 1;
+        let total = Infinity;
+        const all = [];
+        while (all.length < total) {
+            const params = new URLSearchParams(baseParams);
+            params.set('page', page);
+            params.set('pageSize', EXPORT_PAGE_SIZE);
+            const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('cartonHistory.exportFailed', 'Export failed.')));
+            all.push(...body.data.items);
+            total = body.data.totalCount;
+            if (body.data.items.length === 0) break;
+            page++;
+        }
+        return all;
+    }
+
+    async function doExportPalletExcel() {
+        const selectedCols = EXPORT_PALLET_COLUMNS.filter(col =>
+            $exportPalletColList.querySelector(`.exp-pallet-col-checkbox[value="${col.key}"]`).checked);
+        if (selectedCols.length === 0) {
+            $exportPalletStatus.textContent = `✗ ${t('cartonHistory.exportNoColumnSelected', 'Select at least 1 column.')}`;
+            $exportPalletStatus.className = 'exp-status err';
+            return;
+        }
+
+        $btnConfirmPalletExport.disabled = true;
+        $exportPalletStatus.className = 'exp-status';
+        $exportPalletStatus.textContent = `⏳ ${t('cartonHistory.exportFetching', 'Fetching data…')}`;
+        try {
+            const rows = await fetchAllFilteredPalletRows();
+            if (rows.length === 0) {
+                $exportPalletStatus.textContent = `✗ ${t('cartonHistory.exportNoData', 'No data to export for the current filter.')}`;
+                $exportPalletStatus.className = 'exp-status err';
+                return;
+            }
+
+            const header = selectedCols.map(col => t(col.i18n, col.fallback));
+            const data = rows.map(r => selectedCols.map(col => col.get(r)));
+            const sheet = XLSX.utils.aoa_to_sheet([header, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, sheet, 'Pallets');
+            const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+            XLSX.writeFile(workbook, `carton-sn-pallets-${stamp}.xlsx`);
+
+            $exportPalletStatus.textContent = t('cartonHistory.exportDone', '✓ Exported {n} row(s).').replace('{n}', rows.length);
+            $exportPalletStatus.className = 'exp-status ok';
+        } catch (e) {
+            $exportPalletStatus.textContent = `✗ ${e.message}`;
+            $exportPalletStatus.className = 'exp-status err';
+        } finally {
+            $btnConfirmPalletExport.disabled = false;
+        }
+    }
+
+    $btnConfirmPalletExport.addEventListener('click', doExportPalletExcel);
 
     // ── init ──────────────────────────────────────────────────────────────────
     // Không mặc định lọc theo ngày hôm nay — muốn xem toàn bộ lịch sử ngay khi mở trang
