@@ -55,6 +55,11 @@ public class CartonForUnpackDto
     public string WorkOrder { get; set; } = "";
     public string? Color { get; set; }
     public List<string> Serials { get; set; } = new();
+
+    // Serial nào của carton này đang có 1 vòng Unpack MỞ (Status=UNPACKED hoặc REWORKED, chưa
+    // REPACKED) — dùng ở FE để chặn NGAY lúc quét (không đợi tới lúc bấm Confirm mới báo lỗi từ
+    // server, xem SakuraService.UnpackCartonSerialsAsync's openStatuses check).
+    public List<string> PendingSerials { get; set; } = new();
 }
 
 public class UnpackCartonRequest

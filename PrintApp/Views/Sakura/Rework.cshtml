@@ -1080,6 +1080,13 @@
                 showStatus($unpackSerialStatus, `✗ ${t('rework.unpackSerialNotInCarton', 'Serial does not belong to this Carton')}: ${val}`, 'err');
                 return;
             }
+            // Chặn NGAY lúc quét nếu serial này đang có 1 vòng Unpack MỞ (đã gỡ trước đó nhưng
+            // chưa Rework/Repack xong) — không đợi tới lúc bấm Confirm mới báo lỗi từ server.
+            const alreadyPending = (unpackCartonData.pendingSerials || []).some(s => s.toLowerCase() === val.toLowerCase());
+            if (alreadyPending) {
+                showStatus($unpackSerialStatus, `✗ ${t('rework.unpackAlreadyPending', 'This serial is already Unpacked and waiting for Rework: {serial}').replace('{serial}', val)}`, 'err');
+                return;
+            }
             unpackSelected.push(val);
             renderUnpackScanList();
             hideStatus($unpackSerialStatus);
