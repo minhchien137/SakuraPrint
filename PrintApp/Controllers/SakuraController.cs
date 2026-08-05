@@ -235,8 +235,8 @@ public class SakuraController : Controller
                     {
                         Key = "rework",
                         Icon = "🔁",
-                        Title = "Rework",
-                        Subtitle = "Scan Work Order & EAN",
+                        Title = "Rework Unbind",
+                        Subtitle = "Unbind Carton",
                         Href = Url.Content("~/sakura/rework"),
                         Enabled = true
                     },
@@ -244,7 +244,7 @@ public class SakuraController : Controller
                     {
                         Key = "reworkhistory",
                         Icon = "🕘",
-                        Title = "EAN and Pvid Label Print History",
+                        Title = "Rework History",
                         Subtitle = "Rework scan history",
                         Href = Url.Content("~/sakura/rework/history"),
                         Enabled = true
@@ -1358,7 +1358,9 @@ public class SakuraController : Controller
 
         try
         {
-            await _snLabel.MarkSerialReworkedAsync(req.UnpackLogId, req.ReworkWorkOrder.Trim());
+            string reworkWo = req.ReworkWorkOrder.Trim();
+            var wo = await _viidoo.SearchAsync(reworkWo);
+            await _snLabel.MarkSerialReworkedAsync(req.UnpackLogId, reworkWo, wo?.DropReworkType);
             await _db.SaveChangesAsync();
             return Ok(new { ok = true, data = new { marked = true } });
         }

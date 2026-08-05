@@ -134,6 +134,47 @@
         .t-grid-auto { grid-template-columns: 1fr; }
     }
 
+    /* ── Export Excel modal ─────────────────────────────────────────────────── */
+    .exp-overlay {
+        position: fixed; inset: 0; background: rgba(17,24,39,0.45); z-index: 200;
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .exp-modal {
+        background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg);
+        width: 100%; max-width: 420px; max-height: 86vh; display: flex; flex-direction: column;
+    }
+    .exp-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 22px; border-bottom: 1px solid var(--gray-200);
+        font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--red-dark);
+    }
+    .exp-modal-close {
+        background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray-500);
+        padding: 2px 6px; border-radius: 6px;
+    }
+    .exp-modal-close:hover { color: var(--red); background: var(--red-xlight); }
+    .exp-modal-body { padding: 16px 22px; overflow-y: auto; }
+    .exp-select-row { display: flex; gap: 14px; margin-bottom: 12px; }
+    .exp-select-link {
+        background: none; border: none; cursor: pointer; padding: 0;
+        font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; color: var(--red-dark);
+        text-decoration: underline;
+    }
+    .exp-col-list { display: flex; flex-direction: column; gap: 10px; }
+    .exp-col-item {
+        display: flex; align-items: center; gap: 10px;
+        font-family: var(--font-body); font-size: 0.85rem; color: var(--gray-900);
+        cursor: pointer;
+    }
+    .exp-col-item input { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; }
+    .exp-modal-footer {
+        padding: 14px 22px 18px; border-top: 1px solid var(--gray-200);
+        display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    .exp-status { font-family: var(--font-body); font-size: 0.78rem; color: var(--gray-500); }
+    .exp-status.err { color: var(--danger); }
+    .exp-status.ok { color: var(--success); }
+
     /* ── Language switcher — fixed top-right, shared across all Sakura pages ── */
     .sk-lang-switch {
         position: fixed; top: 18px; right: 22px; z-index: 100;
@@ -209,7 +250,33 @@
                     <option value="100">100</option>
                 </select>
             </div>
-            <button class="t-btn t-btn-ghost" id="btnHistRefresh" data-i18n="reworkHistory.refresh">↻ Refresh</button>
+            <div style="display:flex;gap:8px">
+                <button class="t-btn t-btn-ghost" id="btnHistRefresh" data-i18n="reworkHistory.refresh">↻ Refresh</button>
+                <button class="t-btn t-btn-ghost" id="btnHistExport" data-i18n="reworkHistory.exportBtn">📊 Export Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Modal "Export Excel" — chọn cột trước khi xuất toàn bộ dữ liệu đang lọc
+         (không chỉ trang hiện tại) ra file .xlsx. ── -->
+    <div id="exportOverlay" class="exp-overlay" style="display:none">
+        <div class="exp-modal">
+            <div class="exp-modal-header">
+                <span data-i18n="reworkHistory.exportModalTitle">Export Excel — Select Columns</span>
+                <button type="button" class="exp-modal-close" id="btnCloseExport" aria-label="Close">✕</button>
+            </div>
+            <div class="exp-modal-body">
+                <div class="exp-select-row">
+                    <button type="button" class="exp-select-link" id="btnExportSelectAll" data-i18n="reworkHistory.exportSelectAll">Select All</button>
+                    <button type="button" class="exp-select-link" id="btnExportSelectNone" data-i18n="reworkHistory.exportSelectNone">Select None</button>
+                </div>
+                <div class="exp-col-list" id="exportColList"></div>
+            </div>
+            <div class="exp-modal-footer">
+                <button type="button" class="t-btn t-btn-ghost" id="btnConfirmExport" data-i18n="reworkHistory.exportConfirmBtn">📊 Export</button>
+                <button type="button" class="t-btn t-btn-ghost" id="btnCancelExport" data-i18n="reworkHistory.exportCancelBtn">Cancel</button>
+                <span class="exp-status" id="exportStatus"></span>
+            </div>
         </div>
     </div>
 
@@ -223,6 +290,7 @@
                         <th data-i18n="reworkHistory.colSerialNumber">Serial Number</th>
                         <th data-i18n="reworkHistory.colWorkOrder">Work Order</th>
                         <th data-i18n="reworkHistory.colReworkWo">Rework WO</th>
+                        <th data-i18n="reworkHistory.colReworkType">Rework Type</th>
                         <th data-i18n="reworkHistory.colStatus">Status</th>
                         <th data-i18n="reworkHistory.colUnpackedAt">Unpacked At</th>
                         <th data-i18n="reworkHistory.colReworkedAt">Reworked At</th>
@@ -230,7 +298,7 @@
                     </tr>
                 </thead>
                 <tbody id="histRows">
-                    <tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -261,6 +329,7 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
 <script>
 (function () {
@@ -303,16 +372,25 @@
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
-    async function loadHistory() {
-        const params = new URLSearchParams({ page: currentPage, pageSize: pageSize() });
+    // Params dùng chung cho cả loadHistory (theo trang) lẫn export Excel (lấy hết, xem
+    // fetchAllFilteredRows) — không gồm page/pageSize để mỗi nơi tự set riêng.
+    function buildFilterParams() {
+        const params = new URLSearchParams();
         if ($histDateFrom.value) params.set('dateFrom', $histDateFrom.value);
         if ($histDateTo.value) params.set('dateTo', $histDateTo.value);
         if ($histCartonNumber.value.trim()) params.set('cartonNumber', $histCartonNumber.value.trim());
         if ($histSerialNumber.value.trim()) params.set('serialNumber', $histSerialNumber.value.trim());
         if ($histReworkWo.value.trim()) params.set('reworkWorkOrder', $histReworkWo.value.trim());
         if ($histStatus.value) params.set('status', $histStatus.value);
+        return params;
+    }
 
-        $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.loading', 'Loading…')}</td></tr>`;
+    async function loadHistory() {
+        const params = buildFilterParams();
+        params.set('page', currentPage);
+        params.set('pageSize', pageSize());
+
+        $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/rework/history?${params}`);
             const body = await res.json();
@@ -325,7 +403,7 @@
         } catch (e) {
             lastRows = null;
             lastTotalCount = 0;
-            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPagination();
         }
     }
@@ -363,7 +441,7 @@
 
     function renderHistory(rows) {
         if (!rows.length) {
-            $histRows.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.noData', 'No data yet.')}</td></tr>`;
+            $histRows.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:16px">${t('reworkHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $histRows.innerHTML = rows.map(r => `
@@ -372,6 +450,7 @@
                     <td>${escHtml(r.serialNumber)}</td>
                     <td>${escHtml(r.workOrder)}</td>
                     <td>${r.reworkWorkOrder ? escHtml(r.reworkWorkOrder) : '<span class="cell-none">—</span>'}</td>
+                    <td>${r.reworkType ? escHtml(r.reworkType) : '<span class="cell-none">—</span>'}</td>
                     <td>${statusBadge(r.status)}</td>
                     <td>${dateCell(r.unpackedAt)}</td>
                     <td>${dateCell(r.reworkedAt)}</td>
@@ -399,9 +478,130 @@
         renderPagination();
     });
 
+    // ── Export Excel — modal chọn cột rồi xuất TOÀN BỘ dữ liệu đang lọc (không chỉ trang hiện
+    // tại) ra file .xlsx, dùng thư viện SheetJS (CDN, không cần build/npm) ─────────────────────
+    const EXPORT_COLUMNS = [
+        { key: 'cartonNumber', i18n: 'reworkHistory.colCartonNumber', fallback: 'Carton Number', get: r => r.cartonNumber || '' },
+        { key: 'serialNumber', i18n: 'reworkHistory.colSerialNumber', fallback: 'Serial Number', get: r => r.serialNumber || '' },
+        { key: 'workOrder', i18n: 'reworkHistory.colWorkOrder', fallback: 'Work Order', get: r => r.workOrder || '' },
+        { key: 'reworkWorkOrder', i18n: 'reworkHistory.colReworkWo', fallback: 'Rework WO', get: r => r.reworkWorkOrder || '' },
+        { key: 'reworkType', i18n: 'reworkHistory.colReworkType', fallback: 'Rework Type', get: r => r.reworkType || '' },
+        { key: 'status', i18n: 'reworkHistory.colStatus', fallback: 'Status', get: r => r.status || '' },
+        { key: 'unpackedAt', i18n: 'reworkHistory.colUnpackedAt', fallback: 'Unpacked At', get: r => r.unpackedAt ? new Date(r.unpackedAt).toLocaleString() : '' },
+        { key: 'reworkedAt', i18n: 'reworkHistory.colReworkedAt', fallback: 'Reworked At', get: r => r.reworkedAt ? new Date(r.reworkedAt).toLocaleString() : '' },
+        { key: 'repackedAt', i18n: 'reworkHistory.colRepackedAt', fallback: 'Repacked At', get: r => r.repackedAt ? new Date(r.repackedAt).toLocaleString() : '' }
+    ];
+
+    const EXPORT_PAGE_SIZE = 200; // Khớp cap server-side (Math.Clamp 1..200 trong GetUnpackHistoryAsync).
+
+    const $btnHistExport = document.getElementById('btnHistExport');
+    const $exportOverlay = document.getElementById('exportOverlay');
+    const $exportColList = document.getElementById('exportColList');
+    const $btnCloseExport = document.getElementById('btnCloseExport');
+    const $btnCancelExport = document.getElementById('btnCancelExport');
+    const $btnConfirmExport = document.getElementById('btnConfirmExport');
+    const $btnExportSelectAll = document.getElementById('btnExportSelectAll');
+    const $btnExportSelectNone = document.getElementById('btnExportSelectNone');
+    const $exportStatus = document.getElementById('exportStatus');
+
+    function renderExportColumnList() {
+        $exportColList.innerHTML = EXPORT_COLUMNS.map(col => `
+            <label class="exp-col-item">
+                <input type="checkbox" class="exp-col-checkbox" value="${col.key}" checked>
+                <span>${escHtml(t(col.i18n, col.fallback))}</span>
+            </label>`).join('');
+    }
+
+    function openExportModal() {
+        renderExportColumnList();
+        $exportStatus.textContent = '';
+        $exportStatus.className = 'exp-status';
+        $exportOverlay.style.display = 'flex';
+    }
+    function closeExportModal() { $exportOverlay.style.display = 'none'; }
+
+    $btnHistExport.addEventListener('click', openExportModal);
+    $btnCloseExport.addEventListener('click', closeExportModal);
+    $btnCancelExport.addEventListener('click', closeExportModal);
+    $exportOverlay.addEventListener('click', (e) => { if (e.target === $exportOverlay) closeExportModal(); });
+
+    $btnExportSelectAll.addEventListener('click', () => {
+        $exportColList.querySelectorAll('.exp-col-checkbox').forEach(cb => { cb.checked = true; });
+    });
+    $btnExportSelectNone.addEventListener('click', () => {
+        $exportColList.querySelectorAll('.exp-col-checkbox').forEach(cb => { cb.checked = false; });
+    });
+
+    // Lặp gọi lại API history theo đúng filter đang áp dụng trên form, tăng dần page (server
+    // cap pageSize tối đa 200/lần) cho tới khi đủ totalCount — dùng chung logic filter với
+    // loadHistory() qua buildFilterParams() để không bao giờ lệch dữ liệu so với bảng đang xem.
+    async function fetchAllFilteredRows() {
+        const baseParams = buildFilterParams();
+        let page = 1;
+        let total = Infinity;
+        const all = [];
+        while (all.length < total) {
+            const params = new URLSearchParams(baseParams);
+            params.set('page', page);
+            params.set('pageSize', EXPORT_PAGE_SIZE);
+            const res = await fetch(`${BASE}/api/sakura/rework/history?${params}`);
+            const body = await res.json();
+            if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('reworkHistory.exportFailed', 'Export failed.')));
+            all.push(...body.data.items);
+            total = body.data.totalCount;
+            if (body.data.items.length === 0) break; // an toàn, tránh lặp vô hạn nếu totalCount sai lệch
+            page++;
+        }
+        return all;
+    }
+
+    async function doExportExcel() {
+        const selectedCols = EXPORT_COLUMNS.filter(col =>
+            $exportColList.querySelector(`.exp-col-checkbox[value="${col.key}"]`).checked);
+        if (selectedCols.length === 0) {
+            $exportStatus.textContent = `✗ ${t('reworkHistory.exportNoColumnSelected', 'Select at least 1 column.')}`;
+            $exportStatus.className = 'exp-status err';
+            return;
+        }
+
+        $btnConfirmExport.disabled = true;
+        $exportStatus.className = 'exp-status';
+        $exportStatus.textContent = `⏳ ${t('reworkHistory.exportFetching', 'Fetching data…')}`;
+        try {
+            const rows = await fetchAllFilteredRows();
+            if (rows.length === 0) {
+                $exportStatus.textContent = `✗ ${t('reworkHistory.exportNoData', 'No data to export for the current filter.')}`;
+                $exportStatus.className = 'exp-status err';
+                return;
+            }
+
+            const header = selectedCols.map(col => t(col.i18n, col.fallback));
+            const data = rows.map(r => selectedCols.map(col => col.get(r)));
+            const sheet = XLSX.utils.aoa_to_sheet([header, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, sheet, 'History');
+            const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+            XLSX.writeFile(workbook, `rework-history-${stamp}.xlsx`);
+
+            $exportStatus.textContent = t('reworkHistory.exportDone', '✓ Exported {n} row(s).').replace('{n}', rows.length);
+            $exportStatus.className = 'exp-status ok';
+        } catch (e) {
+            $exportStatus.textContent = `✗ ${e.message}`;
+            $exportStatus.className = 'exp-status err';
+        } finally {
+            $btnConfirmExport.disabled = false;
+        }
+    }
+
+    $btnConfirmExport.addEventListener('click', doExportExcel);
+
     // ── init ──────────────────────────────────────────────────────────────────
-    $histDateFrom.value = todayStr();
+    // From Date để trống mặc định (xem toàn bộ lịch sử về trước) — chỉ To Date mặc định hôm nay.
     $histDateTo.value = todayStr();
+    // Cho phép trang khác (vd Carton SN History, link ở cột Repack Count) trỏ thẳng vào đây kèm
+    // sẵn ?cartonNumber=... để lọc ngay, không cần gõ lại tay.
+    const initialCartonNumber = new URLSearchParams(window.location.search).get('cartonNumber');
+    if (initialCartonNumber) $histCartonNumber.value = initialCartonNumber;
     loadHistory();
 })();
 </script>

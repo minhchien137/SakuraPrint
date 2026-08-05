@@ -31,6 +31,12 @@ public class CartonUnpackLog
     [StringLength(50)]
     public string? ReworkWorkOrder { get; set; }
 
+    // Loại Rework — field "x_drop_rework_type" trên mrp.production của Rework WO (Odoo, vd "B"),
+    // gắn cùng lúc với ReworkWorkOrder ở trên (xem SakuraService.MarkSerialReworkedAsync). Null
+    // nếu Odoo không set field này cho WO đó, hoặc serial chưa qua bước Rework.
+    [StringLength(10)]
+    public string? ReworkType { get; set; }
+
     // UNPACKED / REWORKED / REPACKED
     [Required]
     [StringLength(10)]
@@ -118,6 +124,8 @@ public class CartonUnpackHistoryItemDto
     public DateTime UnpackedAt { get; set; }
     public DateTime? ReworkedAt { get; set; }
     public DateTime? RepackedAt { get; set; }
+    // Khớp trực tiếp cột CartonUnpackLog.ReworkType — null nếu serial này chưa qua bước Rework.
+    public string? ReworkType { get; set; }
 }
 
 public class CartonUnpackHistoryPageDto

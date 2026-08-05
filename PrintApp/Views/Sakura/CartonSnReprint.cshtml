@@ -44,7 +44,7 @@
     }
     body::before { content: none !important; }
 
-    .snl-page { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
+    .snl-page { max-width: 1800px; margin: 0 auto; position: relative; z-index: 1; }
 
     .snl-header {
         display: flex;
@@ -404,10 +404,6 @@
                 <input type="text" id="cartonFilterCartonNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterCartonNumberPlaceholder" placeholder="Search Carton Number…" />
             </div>
             <div class="t-field">
-                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
-                <input type="text" id="cartonFilterPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
-            </div>
-            <div class="t-field">
                 <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
                 <input type="text" id="cartonFilterPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
             </div>
@@ -446,7 +442,6 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
                         <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
                         <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
                         <th data-i18n="cartonHistory.colCartonNumber">Carton Number</th>
@@ -459,7 +454,7 @@
                     </tr>
                 </thead>
                 <tbody id="cartonRows">
-                    <tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -501,10 +496,6 @@
                 <input type="text" id="palletFilterWorkOrder" autocomplete="off" data-i18n-placeholder="cartonHistory.filterWorkOrderPlaceholder" placeholder="Search Work Order…" />
             </div>
             <div class="t-field">
-                <label data-i18n="cartonHistory.filterPalletId">Pallet ID</label>
-                <input type="text" id="palletFilterPalletId" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletIdPlaceholder" placeholder="Search Pallet ID…" />
-            </div>
-            <div class="t-field">
                 <label data-i18n="cartonHistory.filterPalletNumber">Pallet Number</label>
                 <input type="text" id="palletFilterPalletNumber" autocomplete="off" data-i18n-placeholder="cartonHistory.filterPalletNumberPlaceholder" placeholder="Search Pallet Number…" />
             </div>
@@ -543,19 +534,24 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th data-i18n="cartonHistory.colPalletId">Pallet ID</th>
                         <th data-i18n="cartonHistory.colPalletNumber">Pallet Number</th>
                         <th data-i18n="cartonHistory.colWorkOrder">Work Order</th>
                         <th data-i18n="cartonHistory.colColor">Color</th>
                         <th data-i18n="cartonReprint.colCartonCount">Cartons</th>
                         <th data-i18n="cartonReprint.colUnitCount">Units</th>
+                        <th data-i18n="cartonHistory.colSkuPvId">SKU/PVID</th>
+                        <th data-i18n="cartonHistory.colEan">EAN</th>
+                        <th data-i18n="cartonHistory.colPoNumber">PO Number</th>
+                        <th data-i18n="cartonHistory.colInboundReference">Inbound Reference</th>
+                        <th data-i18n="cartonHistory.colWarehouseReference">Warehouse Reference</th>
+                        <th data-i18n="cartonHistory.colAddress">Address</th>
                         <th data-i18n="cartonHistory.colScanDate">Last Scanned</th>
                         <th data-i18n="cartonReprint.colReprintStatus">Reprint Status</th>
                         <th data-i18n="cartonHistory.colLastReprint">Last Reprint</th>
                     </tr>
                 </thead>
                 <tbody id="palletRows">
-                    <tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
+                    <tr><td colspan="15" style="text-align:center;color:var(--gray-400);padding:16px">—</td></tr>
                 </tbody>
             </table>
         </div>
@@ -882,7 +878,6 @@
     const $cartonDateTo = document.getElementById('cartonDateTo');
     const $cartonFilterWorkOrder = document.getElementById('cartonFilterWorkOrder');
     const $cartonFilterCartonNumber = document.getElementById('cartonFilterCartonNumber');
-    const $cartonFilterPalletId = document.getElementById('cartonFilterPalletId');
     const $cartonFilterPalletNumber = document.getElementById('cartonFilterPalletNumber');
     const $cartonFilterReprintStatus = document.getElementById('cartonFilterReprintStatus');
     const $cartonPageSize = document.getElementById('cartonPageSize');
@@ -907,11 +902,10 @@
         if ($cartonDateTo.value) params.set('dateTo', $cartonDateTo.value);
         if ($cartonFilterWorkOrder.value.trim()) params.set('workOrder', $cartonFilterWorkOrder.value.trim());
         if ($cartonFilterCartonNumber.value.trim()) params.set('cartonNumber', $cartonFilterCartonNumber.value.trim());
-        if ($cartonFilterPalletId.value.trim()) params.set('palletId', $cartonFilterPalletId.value.trim());
         if ($cartonFilterPalletNumber.value.trim()) params.set('palletNumber', $cartonFilterPalletNumber.value.trim());
         if ($cartonFilterReprintStatus.value) params.set('isReprint', $cartonFilterReprintStatus.value);
 
-        $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/history?${params}`);
             const body = await res.json();
@@ -922,7 +916,7 @@
             renderCartonPagination();
         } catch (e) {
             cartonTotalCount = 0;
-            $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderCartonPagination();
         }
         $cartonSelectAll.checked = false;
@@ -931,7 +925,7 @@
 
     function renderCartonRows(rows) {
         if (!rows.length) {
-            $cartonRows.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $cartonRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $cartonRows.innerHTML = rows.map(r => {
@@ -944,7 +938,6 @@
             return `
                 <tr>
                     <td><input type="checkbox" class="carton-select" data-id="${r.id}" data-carton="${escHtml(r.cartonNumber)}" /></td>
-                    <td>${r.palletId ? escHtml(r.palletId) : '—'}</td>
                     <td>${r.palletNumber ? escHtml(r.palletNumber) : '—'}</td>
                     <td>${escHtml(r.workOrder) || '—'}</td>
                     <td>${escHtml(r.cartonNumber) || '—'}</td>
@@ -991,7 +984,7 @@
     });
     [$cartonDateFrom, $cartonDateTo, $cartonFilterReprintStatus, $cartonPageSize].forEach(el =>
         el.addEventListener('change', () => { cartonPage = 1; loadCartonList(); }));
-    [$cartonFilterWorkOrder, $cartonFilterCartonNumber, $cartonFilterPalletId, $cartonFilterPalletNumber].forEach(el =>
+    [$cartonFilterWorkOrder, $cartonFilterCartonNumber, $cartonFilterPalletNumber].forEach(el =>
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); cartonPage = 1; loadCartonList(); } }));
     $btnCartonRefresh.addEventListener('click', () => { cartonPage = 1; loadCartonList(); });
 
@@ -1036,7 +1029,6 @@
     const $palletDateFrom = document.getElementById('palletDateFrom');
     const $palletDateTo = document.getElementById('palletDateTo');
     const $palletFilterWorkOrder = document.getElementById('palletFilterWorkOrder');
-    const $palletFilterPalletId = document.getElementById('palletFilterPalletId');
     const $palletFilterPalletNumber = document.getElementById('palletFilterPalletNumber');
     const $palletFilterReprintStatus = document.getElementById('palletFilterReprintStatus');
     const $palletPageSize = document.getElementById('palletPageSize');
@@ -1060,11 +1052,10 @@
         if ($palletDateFrom.value) params.set('dateFrom', $palletDateFrom.value);
         if ($palletDateTo.value) params.set('dateTo', $palletDateTo.value);
         if ($palletFilterWorkOrder.value.trim()) params.set('workOrder', $palletFilterWorkOrder.value.trim());
-        if ($palletFilterPalletId.value.trim()) params.set('palletId', $palletFilterPalletId.value.trim());
         if ($palletFilterPalletNumber.value.trim()) params.set('palletNumber', $palletFilterPalletNumber.value.trim());
         if ($palletFilterReprintStatus.value) params.set('isPalletReprint', $palletFilterReprintStatus.value);
 
-        $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
+        $palletRows.innerHTML = `<tr><td colspan="15" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.loading', 'Loading…')}</td></tr>`;
         try {
             const res = await fetch(`${BASE}/api/sakura/cartonsn/reprint/pallets?${params}`);
             const body = await res.json();
@@ -1075,7 +1066,7 @@
             renderPalletPagination();
         } catch (e) {
             palletTotalCount = 0;
-            $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
+            $palletRows.innerHTML = `<tr><td colspan="15" style="text-align:center;color:var(--danger);padding:16px">✗ ${e.message}</td></tr>`;
             renderPalletPagination();
         }
         $palletSelectAll.checked = false;
@@ -1084,7 +1075,7 @@
 
     function renderPalletRows(rows) {
         if (!rows.length) {
-            $palletRows.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
+            $palletRows.innerHTML = `<tr><td colspan="15" style="text-align:center;color:var(--gray-400);padding:16px">${t('cartonHistory.noData', 'No data yet.')}</td></tr>`;
             return;
         }
         $palletRows.innerHTML = rows.map(r => {
@@ -1096,12 +1087,17 @@
             return `
                 <tr>
                     <td><input type="checkbox" class="pallet-select" data-number="${escHtml(r.palletNumber)}" /></td>
-                    <td>${escHtml(r.palletId) || '—'}</td>
                     <td>${escHtml(r.palletNumber) || '—'}</td>
                     <td>${escHtml(r.workOrder) || '—'}</td>
                     <td>${r.color ? `<span class="swatch-dot ${colorCls}"></span>${escHtml(r.color)}` : '—'}</td>
                     <td><span class="count-pill">${r.cartonCount}</span></td>
                     <td><span class="count-pill">${r.unitCount}</span></td>
+                    <td>${r.skuPvId ? escHtml(r.skuPvId) : '—'}</td>
+                    <td>${r.ean ? escHtml(r.ean) : '—'}</td>
+                    <td>${r.poNumber ? escHtml(r.poNumber) : '—'}</td>
+                    <td>${r.inboundReference ? escHtml(r.inboundReference) : '—'}</td>
+                    <td>${r.warehouseReference ? escHtml(r.warehouseReference) : '—'}</td>
+                    <td>${r.deliveryAddress ? escHtml(r.deliveryAddress) : '—'}</td>
                     <td>${lastScan}</td>
                     <td>${reprintBadge}</td>
                     <td>${reprintCell(r.palletReprintCount, r.lastPalletReprintAt)}</td>
@@ -1142,7 +1138,7 @@
     });
     [$palletDateFrom, $palletDateTo, $palletFilterReprintStatus, $palletPageSize].forEach(el =>
         el.addEventListener('change', () => { palletPage = 1; loadPalletList(); }));
-    [$palletFilterWorkOrder, $palletFilterPalletId, $palletFilterPalletNumber].forEach(el =>
+    [$palletFilterWorkOrder, $palletFilterPalletNumber].forEach(el =>
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); palletPage = 1; loadPalletList(); } }));
     $btnPalletRefresh.addEventListener('click', () => { palletPage = 1; loadPalletList(); });
 

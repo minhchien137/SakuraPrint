@@ -265,7 +265,7 @@
                 <div class="t-grid t-grid-2" style="align-items:end">
                     <div class="t-field">
                         <label data-i18n="middleInput.workOrder">Work Order</label>
-                        <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="middleInput.workOrderPlaceholder" placeholder="Scan or type Work Order…" />
+                        <input type="text" id="workOrder" autocomplete="off" data-i18n-placeholder="middleInput.workOrderPlaceholder" placeholder="e.g. NM/MO/04020" />
                     </div>
                     <div class="t-actions" style="margin-top:0">
                         <button type="button" class="t-btn t-btn-outline" id="btnLookupWo" data-i18n="middleInput.lookupBtn">🔍 Lookup</button>
@@ -564,6 +564,15 @@
 
         if (!wo) {
             showStatus($woStatus, `✗ ${t('middleInput.woEnterFirst', 'Enter a Work Order first.')}`, 'err');
+            return;
+        }
+
+        // Bắt buộc đúng định dạng NM/MO/XXXXX (vd "NM/MO/04020") — chặn ngay ở client, không gọi
+        // API nếu người dùng chỉ gõ mỗi phần số (vd "04020") cho đỡ bị nhầm/sai Work Order.
+        if (!/^NM\/MO\/\d+$/i.test(wo)) {
+            showStatus($woStatus, `✗ ${t('middleInput.woInvalidFormat', 'Work Order must be in format NM/MO/XXXXX (e.g. NM/MO/04020).')}`, 'err');
+            $workOrder.value = '';
+            $workOrder.focus();
             return;
         }
 

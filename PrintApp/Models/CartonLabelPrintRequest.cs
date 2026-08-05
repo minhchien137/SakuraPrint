@@ -69,6 +69,9 @@ public class CartonSnHistoryItemDto
     public bool IsReprint { get; set; }
     public DateTime? LastReprintAt { get; set; }
     public int ReprintCount { get; set; }
+    public string? ReworkWorkOrder { get; set; }
+    public DateTime? LastRepackedAt { get; set; }
+    public int RepackCount { get; set; }
 }
 
 public class CartonSnHistoryPageDto
@@ -93,6 +96,17 @@ public class CartonSnPalletReprintItemDto
     public DateTime? LastPalletReprintAt { get; set; }
     public int PalletReprintCount { get; set; }
     public DateTime LastScanDate { get; set; }
+
+    // Snapshot PO Number/Inbound Reference/Warehouse Reference lấy từ đúng lô carton của Pallet
+    // Number này (ghi lúc "chốt"/in tem — xem SakuraService.BuildPalletLabelZplAsync). SkuPvId/Ean
+    // KHÔNG lưu DB — suy ra động từ Color qua ZplTemplates.CartonColorMeta (đúng logic dùng lúc in
+    // tem thật), hiển thị để người dùng biết rõ tem Pallet này in nội dung SKU/EAN gì.
+    public string? PoNumber { get; set; }
+    public string? InboundReference { get; set; }
+    public string? WarehouseReference { get; set; }
+    public string? DeliveryAddress { get; set; }
+    public string? SkuPvId { get; set; }
+    public string? Ean { get; set; }
 }
 
 public class CartonSnPalletReprintPageDto

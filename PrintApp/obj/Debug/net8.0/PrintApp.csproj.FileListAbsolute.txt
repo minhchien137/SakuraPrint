@@ -632,77 +632,6 @@ C:\Users\Minh Chien\AppData\Local\Temp\build-check17\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check17\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check17\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check17\PrintApp.pdb
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.exe
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.deps.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.runtimeconfig.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.pdb
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Core.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Identity.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Drawing.Common.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Memory.Data.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Runtime.Caching.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Permissions.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Windows.Extensions.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.AssemblyReference.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rpswa.dswa.cache.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.GeneratedMSBuildEditorConfig.editorconfig
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfoInputs.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfo.cs
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.CoreCompileInputs.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.MvcApplicationPartsAssemblyInfo.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cs
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.sourcelink.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\scopedcss\bundle\PrintApp.styles.css
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.development.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\swae.build.ex.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.Up2Date
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dll
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
-D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check18\appsettings.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check18\PrintApp.staticwebassets.runtime.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check18\PrintApp.staticwebassets.endpoints.json
@@ -799,3 +728,242 @@ C:\Users\Minh Chien\AppData\Local\Temp\build-check29\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check29\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check29\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check29\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check30\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check31\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check32\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check33\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check34\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check35\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check36\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check37\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check38\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check39\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check40\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check41\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check42\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check43\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check44\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check45\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check46\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check47\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.exe
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.deps.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.runtimeconfig.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Core.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Azure.Identity.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Memory.Data.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Runtime.Caching.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Security.Permissions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\System.Windows.Extensions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.AssemblyReference.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rpswa.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfoInputs.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.AssemblyInfo.cs
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.CoreCompileInputs.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.MvcApplicationPartsAssemblyInfo.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.RazorAssemblyInfo.cs
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.sourcelink.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\scopedcss\bundle\PrintApp.styles.css
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.json.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.development.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\swae.build.ex.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.csproj.Up2Date
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dll
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
+D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check48\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check49\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check50\PrintApp.pdb
