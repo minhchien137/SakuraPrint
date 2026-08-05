@@ -920,6 +920,38 @@ C:\Users\Minh Chien\AppData\Local\Temp\build-check53\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check53\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check53\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check53\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check56\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check57\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\appsettings.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.runtime.json
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\bin\Debug\net8.0\PrintApp.staticwebassets.endpoints.json
@@ -991,19 +1023,3 @@ D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\refint\PrintApp.dl
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.pdb
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\PrintApp.genruntimeconfig.cache
 D:\PrintService-Sakura-MiddleCheck-\PrintApp\obj\Debug\net8.0\ref\PrintApp.dll
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\appsettings.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.staticwebassets.runtime.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.staticwebassets.endpoints.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.exe
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.deps.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.runtimeconfig.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.dll
-C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.pdb
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\appsettings.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.runtime.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.endpoints.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.exe
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.deps.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.runtimeconfig.json
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.dll
-C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.pdb

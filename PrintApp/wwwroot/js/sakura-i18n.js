@@ -24,6 +24,15 @@
             'line.opt0': '0 — Golden line',
             'line.opt1': '1 — Golden line',
 
+            // Rework 3-step indicator + persistent banner — shared across Rework.cshtml,
+            // SnLabel.cshtml, CartonSN.cshtml (see .rework-mode-bar/.rework-steps in each file).
+            'reworkSteps.step1': 'Unpack',
+            'reworkSteps.step2': 'Rework (SN Label)',
+            'reworkSteps.step3': 'Repack (Carton)',
+            'reworkBanner.title': 'REWORK MODE',
+            'reworkBanner.subtitleSnLabel': 'Reprinting the SN Label under Rework Work Order',
+            'reworkBanner.subtitleCartonSn': 'Repacking this carton under Rework Work Order',
+
             'home.subtitle': 'Choose a function below',
             'home.section': 'Functions',
             'home.footer': 'Designed by SVN IT',
@@ -946,6 +955,13 @@
             'color.green': '绿色',
             'line.opt0': '0 — 金线',
             'line.opt1': '1 — 金线',
+
+            'reworkSteps.step1': '拆箱',
+            'reworkSteps.step2': '返工（SN 标签）',
+            'reworkSteps.step3': '重新装箱（纸箱）',
+            'reworkBanner.title': '返工模式',
+            'reworkBanner.subtitleSnLabel': '正在返工工单下重新打印 SN 标签',
+            'reworkBanner.subtitleCartonSn': '正在返工工单下重新装箱',
 
             'home.subtitle': '请选择下方功能',
             'home.section': '功能',

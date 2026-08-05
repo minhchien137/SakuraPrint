@@ -53,6 +53,46 @@
     }
     .rw-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
 
+    /* ── Rework step indicator (Unpack -> Rework -> Repack) — cùng CSS/markup lặp lại trên
+       SnLabel.cshtml (bước 2) và CartonSN.cshtml (bước 3), chỉ khác bước nào đang "active".
+       Trang này (Unpack) luôn active bước 1, không cần banner "REWORK MODE" (đứng nguyên ở đây
+       đã rõ ràng là đang Unpack, không cần "phát hiện" gì cả). ── */
+    .rework-mode-bar { margin-bottom: 18px; }
+    .rework-mode-banner {
+        display: flex; align-items: center; gap: 12px;
+        background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+        border: 1.5px solid #F59E0B; border-radius: 12px;
+        padding: 12px 18px; margin-bottom: 10px;
+    }
+    .rework-mode-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .rework-mode-banner .text { font-family: var(--font-body); font-size: 0.85rem; color: #92400E; line-height: 1.5; }
+    .rework-mode-banner .text strong {
+        font-family: var(--font-head); font-size: 0.95rem; letter-spacing: 0.5px;
+        display: block; color: #9A3412;
+    }
+    .rework-mode-banner .wo { font-weight: 700; color: #7C2D12; }
+
+    .rework-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .rework-step {
+        display: flex; align-items: center; gap: 6px;
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+        color: var(--gray-500); text-decoration: none;
+        padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--gray-200);
+        background: var(--white); transition: all 0.2s ease;
+    }
+    a.rework-step:hover { border-color: var(--red-mid); color: var(--red-dark); }
+    .rework-step .num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 18px; height: 18px; border-radius: 50%; background: var(--gray-200);
+        color: var(--gray-700); font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .rework-step.active {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        color: var(--white); border-color: transparent; cursor: default;
+    }
+    .rework-step.active .num { background: rgba(255,255,255,0.25); color: var(--white); }
+    .rework-step-arrow { color: var(--gray-400); font-size: 0.8rem; }
+
     /* ── Section/grid/field/button primitives (same as SnLabel.cshtml/CartonSN.cshtml) ── */
     .t-section {
         background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
@@ -274,6 +314,25 @@
         </div>
         <div class="rw-badge">SAKURA</div>
     </header>
+
+    <div class="rework-mode-bar">
+        <div class="rework-steps">
+            <span class="rework-step active">
+                <span class="num">1</span>
+                <span class="lbl" data-i18n="reworkSteps.step1">Unpack</span>
+            </span>
+            <span class="rework-step-arrow">→</span>
+            <a href="@Url.Content("~/sakura/snlabel")" class="rework-step">
+                <span class="num">2</span>
+                <span class="lbl" data-i18n="reworkSteps.step2">Rework (SN Label)</span>
+            </a>
+            <span class="rework-step-arrow">→</span>
+            <a href="@Url.Content("~/sakura/cartonsn")" class="rework-step">
+                <span class="num">3</span>
+                <span class="lbl" data-i18n="reworkSteps.step3">Repack (Carton)</span>
+            </a>
+        </div>
+    </div>
 
     <div class="t-section" id="printerConfigSection" style="position:relative">
         <div class="t-section-label" data-i18n="rework.printerConfig">Printer Configuration</div>
