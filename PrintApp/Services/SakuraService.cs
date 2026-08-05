@@ -1731,6 +1731,18 @@ public class SakuraService
         if (missing.Count > 0 || unknown.Count > 0)
             throw new SakuraValidationException("unpackCarton.incompleteScan", $"Chưa quét đủ {required.Count} serial của Carton '{trimmed}' (thiếu {missing.Count}, không thuộc carton {unknown.Count}).", new { cartonNumber = trimmed, required = required.Count, missing = missing.Count, unknown = unknown.Count });
 
+        // Chặn Repack nếu carton này còn serial nào đang UNPACKED (đã gỡ ra nhưng CHƯA qua bước
+        // Rework ở trạm SN Label) — nếu không chặn, người vận hành có thể quét lại đúng con hàng
+        // CHƯA rework (số serial vật lý không đổi) và Repack vẫn "thành công", khiến carton bị gắn
+        // Refurb/Rework WO dù có sản phẩm chưa thực sự sửa/rework.
+        var stillUnpacked = await _context.CartonUnpackLogs
+            .AsNoTracking()
+            .Where(x => x.CartonNumber == trimmed && x.Status == "UNPACKED")
+            .Select(x => x.SerialNumber)
+            .ToListAsync();
+        if (stillUnpacked.Count > 0)
+            throw new SakuraConflictException("unpackCarton.pendingRework", $"Carton '{trimmed}' còn {stillUnpacked.Count} serial chưa Rework xong: {string.Join(", ", stillUnpacked)}. Phải Rework xong hết mới được Repack.", new { cartonNumber = trimmed, serials = string.Join(", ", stillUnpacked) });
+
         return row;
     }
 

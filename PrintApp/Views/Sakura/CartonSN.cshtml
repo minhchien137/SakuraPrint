@@ -58,6 +58,45 @@
     }
     .snl-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
 
+    /* ── Rework step indicator + persistent "REWORK MODE" banner — hiện khi Work Order vừa
+       lookup có hậu tố "RW" (isReworkWo → chế độ Repack). Cùng CSS/markup lặp lại trên
+       Rework.cshtml (bước 1) và SnLabel.cshtml (bước 2), chỉ khác bước nào "active". ── */
+    .rework-mode-bar { margin-bottom: 18px; display: none; }
+    .rework-mode-banner {
+        display: flex; align-items: center; gap: 12px;
+        background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+        border: 1.5px solid #F59E0B; border-radius: 12px;
+        padding: 12px 18px; margin-bottom: 10px;
+    }
+    .rework-mode-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .rework-mode-banner .text { font-family: var(--font-body); font-size: 0.85rem; color: #92400E; line-height: 1.5; }
+    .rework-mode-banner .text strong {
+        font-family: var(--font-head); font-size: 0.95rem; letter-spacing: 0.5px;
+        display: block; color: #9A3412;
+    }
+    .rework-mode-banner .wo { font-weight: 700; color: #7C2D12; }
+
+    .rework-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .rework-step {
+        display: flex; align-items: center; gap: 6px;
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+        color: var(--gray-500); text-decoration: none;
+        padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--gray-200);
+        background: var(--white); transition: all 0.2s ease;
+    }
+    a.rework-step:hover { border-color: var(--red-mid); color: var(--red-dark); }
+    .rework-step .num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 18px; height: 18px; border-radius: 50%; background: var(--gray-200);
+        color: var(--gray-700); font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .rework-step.active {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        color: var(--white); border-color: transparent; cursor: default;
+    }
+    .rework-step.active .num { background: rgba(255,255,255,0.25); color: var(--white); }
+    .rework-step-arrow { color: var(--gray-400); font-size: 0.8rem; }
+
     .snl-layout { display: flex; flex-direction: column; gap: 0; align-items: stretch; }
     .snl-left { width: 100%; min-width: 0; }
     .snl-right { width: 100%; min-width: 0; }
@@ -405,6 +444,33 @@
         </div>
         <div class="snl-badge">SAKURA</div>
     </header>
+
+    <div class="rework-mode-bar" id="reworkModeBar">
+        <div class="rework-mode-banner">
+            <span class="icon">🔧</span>
+            <div class="text">
+                <strong data-i18n="reworkBanner.title">REWORK MODE</strong>
+                <span data-i18n="reworkBanner.subtitleCartonSn">Repacking this carton under Rework Work Order</span>
+                <span class="wo" id="reworkBannerWo"></span>
+            </div>
+        </div>
+        <div class="rework-steps">
+            <a href="@Url.Content("~/sakura/rework")" class="rework-step">
+                <span class="num">1</span>
+                <span class="lbl" data-i18n="reworkSteps.step1">Unpack</span>
+            </a>
+            <span class="rework-step-arrow">→</span>
+            <a href="@Url.Content("~/sakura/snlabel")" class="rework-step">
+                <span class="num">2</span>
+                <span class="lbl" data-i18n="reworkSteps.step2">Rework (SN Label)</span>
+            </a>
+            <span class="rework-step-arrow">→</span>
+            <span class="rework-step active">
+                <span class="num">3</span>
+                <span class="lbl" data-i18n="reworkSteps.step3">Repack (Carton)</span>
+            </span>
+        </div>
+    </div>
 
     <div class="snl-layout">
 
@@ -786,7 +852,7 @@
                 </div>
 
                 <div class="t-actions" style="margin-top:18px">
-                    <button type="button" class="t-btn t-btn-primary" id="btnRepackCnPrint" data-i18n="rework.repackPrintBtn" disabled>🖨️ Print Carton Label (Refurb)</button>
+                    <button type="button" class="t-btn t-btn-primary" id="btnRepackCnPrint" data-i18n="rework.repackPrintBtn" disabled>🖨️ Print Carton Label</button>
                 </div>
                 <div id="repackCnPrintStatus" class="t-status"></div>
             </div>
@@ -944,6 +1010,24 @@
     // (tạo carton mới) — xem lookupWorkOrder()/resetWoState().
     let isReworkWo = false;
 
+    // Bắt đăng nhập trước khi cho thao tác Repack — chỉ hỏi 1 LẦN/phiên. Trạng thái lưu ở
+    // sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/SnLabel.cshtml — đăng nhập ở bất kỳ
+    // trang nào trong 3 trang Rework thì 2 trang còn lại tự nhận đã đăng nhập luôn trong cùng
+    // phiên làm việc (đóng tab/trình duyệt là mất, phải đăng nhập lại).
+    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
+    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
+
+    const $reworkModeBar = document.getElementById('reworkModeBar');
+    const $reworkBannerWo = document.getElementById('reworkBannerWo');
+
+    // Banner + step indicator "REWORK MODE" (bước 3/3) — hiện cố định (không tự ẩn) khi WO vừa
+    // lookup là Rework WO, để người thao tác luôn biết rõ mình đang Repack, không phải in Carton
+    // Label bình thường.
+    function setReworkModeUi(active, wo) {
+        $reworkModeBar.style.display = active ? 'block' : 'none';
+        if (active) $reworkBannerWo.textContent = wo || '';
+    }
+
     // Pallet ID của WO đang resolve — 1 WO chỉ có ĐÚNG 1 Pallet ID, tự sinh/lấy lại qua
     // /api/sakura/cartonsn/pallet/resolve ngay sau khi lookupWorkOrder() pass, KHÔNG còn nhập
     // tay và KHÔNG hiện lên UI (xem SakuraService.ResolvePalletIdForWorkOrderAsync).
@@ -969,6 +1053,7 @@
         // WO mới -> mặc định về chế độ bình thường (section Print Label Carton), chỉ chuyển
         // sang Repack nếu lookupWorkOrder() phát hiện đúng là Rework WO.
         isReworkWo = false;
+        setReworkModeUi(false);
         $normalCartonPrintSection.style.display = '';
         $repackCartonSection.style.display = 'none';
         $palletSection.style.display = ''; // Repack không đụng Pallet -> mặc định hiện lại như luồng thường
@@ -1017,6 +1102,7 @@
             // bên dưới — bỏ qua toàn bộ resolve Pallet/buildSerialGrid/Template vốn không có ý
             // nghĩa gì với Rework WO (xem SakuraController.CartonWorkOrderLookup).
             isReworkWo = (body.data.productCode || '').trim().toUpperCase().endsWith('RW');
+            setReworkModeUi(isReworkWo, wo);
             if (isReworkWo) {
                 woResolvedOk = true;
                 $normalCartonPrintSection.style.display = 'none';
@@ -1026,11 +1112,24 @@
                 $repackCnEan.textContent = body.data.ean || '—';
                 $repackCnColor.textContent = body.data.color || '—';
                 $repackCnWoReadout.style.display = 'flex';
-                $repackCnCartonNumber.disabled = false;
+                $repackCnCartonNumber.disabled = true; // mở lại SAU khi đăng nhập xong (dưới đây)
 
                 showStatus($woStatus, `✓ ${t('cartonsn.reworkWoDetected', 'Rework Work Order detected — switched to Repack mode below.')}`, 'ok');
                 woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
-                $repackCnCartonNumber.focus();
+
+                // Rework WO -> bắt đăng nhập trước khi cho thao tác Repack (Carton Number vẫn
+                // khoá cho tới khi đăng nhập xong) — xem khai báo reworkLoggedIn ở trên.
+                if (!reworkLoggedIn) {
+                    requireLogin(() => {
+                        reworkLoggedIn = true;
+                        sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
+                        $repackCnCartonNumber.disabled = false;
+                        $repackCnCartonNumber.focus();
+                    });
+                } else {
+                    $repackCnCartonNumber.disabled = false;
+                    $repackCnCartonNumber.focus();
+                }
                 return;
             }
 
@@ -1228,7 +1327,7 @@
 
     $btnRepackCnPrint.addEventListener('click', async () => {
         if (repackCnPrinting || $btnRepackCnPrint.disabled) return;
-        if (!TEST_FAKE_PRINT_OK && (!bridgeOnline || !isPrinterConfigured())) { // ⚠️ TEST ONLY bypass — chỉ nút này
+        if (!bridgeOnline || !isPrinterConfigured()) {
             showStatus($repackCnPrintStatus, `✗ ${printerNotReadyMessage()}`, 'err');
             return;
         }
@@ -1252,11 +1351,7 @@
             let msg = `✓ ${t('rework.repackPrintSuccess', 'Refurb Carton Label generated for {carton}.').replace('{carton}', cartonNumber)}`;
             let statusType = 'ok';
 
-            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — tải file .zpl thật để test, coi như đã gửi máy in thành công
-                downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
-                msg += ' [TEST] Downloaded .zpl file instead of printing — treated as sent OK.';
-                sentOk = true;
-            } else if (printMode === 'usb') {
+            if (printMode === 'usb') {
                 const printerName = $usbSelect.value;
                 if (printerName) {
                     try {
@@ -2251,14 +2346,6 @@
             inp.focus(); // xóa xong tự focus lại ô đó luôn để quét lại ngay, khỏi phải click tay
         }, 1400);
     }
-
-    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. CHỈ áp dụng cho nút "Print Carton Label
-    // (Refurb)" ở chế độ Repack (WO là Rework WO) — luồng WO thường (tạo carton mới) KHÔNG bị
-    // ảnh hưởng, vẫn đòi máy in/bridge thật như cũ. Bật tạm để test Repack khi chưa có máy in
-    // thật: giả lập "đã kết nối máy in" + "gửi in luôn thành công" mà không thật sự gọi bridge,
-    // CHỈ trong $btnRepackCnPrint. Test xong đổi lại false (hoặc xoá khối liên quan tới biến này
-    // — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
-    const TEST_FAKE_PRINT_OK = true;
 
     // ── Print Carton Label — build ZPL server-side, send to Local Bridge ──────
     const CARTON_REAL_PRINT_ENABLED = true;

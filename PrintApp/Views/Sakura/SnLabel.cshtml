@@ -63,6 +63,45 @@
     }
     .snl-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
 
+    /* ── Rework step indicator + persistent "REWORK MODE" banner — hiện khi Work Order vừa
+       lookup có hậu tố "RW" (isReworkWo). Cùng CSS/markup lặp lại trên Rework.cshtml (bước 1) và
+       CartonSN.cshtml (bước 3), chỉ khác bước nào "active" — xem toggleReworkModeUi(). ── */
+    .rework-mode-bar { margin-bottom: 18px; display: none; }
+    .rework-mode-banner {
+        display: flex; align-items: center; gap: 12px;
+        background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+        border: 1.5px solid #F59E0B; border-radius: 12px;
+        padding: 12px 18px; margin-bottom: 10px;
+    }
+    .rework-mode-banner .icon { font-size: 22px; flex-shrink: 0; }
+    .rework-mode-banner .text { font-family: var(--font-body); font-size: 0.85rem; color: #92400E; line-height: 1.5; }
+    .rework-mode-banner .text strong {
+        font-family: var(--font-head); font-size: 0.95rem; letter-spacing: 0.5px;
+        display: block; color: #9A3412;
+    }
+    .rework-mode-banner .wo { font-weight: 700; color: #7C2D12; }
+
+    .rework-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .rework-step {
+        display: flex; align-items: center; gap: 6px;
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+        color: var(--gray-500); text-decoration: none;
+        padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--gray-200);
+        background: var(--white); transition: all 0.2s ease;
+    }
+    a.rework-step:hover { border-color: var(--red-mid); color: var(--red-dark); }
+    .rework-step .num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 18px; height: 18px; border-radius: 50%; background: var(--gray-200);
+        color: var(--gray-700); font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .rework-step.active {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        color: var(--white); border-color: transparent; cursor: default;
+    }
+    .rework-step.active .num { background: rgba(255,255,255,0.25); color: var(--white); }
+    .rework-step-arrow { color: var(--gray-400); font-size: 0.8rem; }
+
     .snl-layout { display: flex; gap: 32px; align-items: flex-start; }
     .snl-left { flex: 1.1; min-width: 0; }
     .snl-right { flex: 1; min-width: 0; position: sticky; top: 24px; }
@@ -399,6 +438,33 @@
         </div>
         <div class="snl-badge">SAKURA</div>
     </header>
+
+    <div class="rework-mode-bar" id="reworkModeBar">
+        <div class="rework-mode-banner">
+            <span class="icon">🔧</span>
+            <div class="text">
+                <strong data-i18n="reworkBanner.title">REWORK MODE</strong>
+                <span data-i18n="reworkBanner.subtitleSnLabel">Reprinting the SN Label under Rework Work Order</span>
+                <span class="wo" id="reworkBannerWo"></span>
+            </div>
+        </div>
+        <div class="rework-steps">
+            <a href="@Url.Content("~/sakura/rework")" class="rework-step">
+                <span class="num">1</span>
+                <span class="lbl" data-i18n="reworkSteps.step1">Unpack</span>
+            </a>
+            <span class="rework-step-arrow">→</span>
+            <span class="rework-step active">
+                <span class="num">2</span>
+                <span class="lbl" data-i18n="reworkSteps.step2">Rework (SN Label)</span>
+            </span>
+            <span class="rework-step-arrow">→</span>
+            <a href="@Url.Content("~/sakura/cartonsn")" class="rework-step">
+                <span class="num">3</span>
+                <span class="lbl" data-i18n="reworkSteps.step3">Repack (Carton)</span>
+            </a>
+        </div>
+    </div>
 
     <div class="snl-layout">
 
@@ -858,6 +924,16 @@
     const $woColor    = document.getElementById('woColor');
     const $woRemaining= document.getElementById('woRemaining');
     const $woPrinted  = document.getElementById('woPrinted');
+    const $reworkModeBar = document.getElementById('reworkModeBar');
+    const $reworkBannerWo = document.getElementById('reworkBannerWo');
+
+    // Banner + step indicator "REWORK MODE" (bước 2/3) — hiện cố định (KHÔNG tự ẩn sau vài giây
+    // như $woStatus) khi WO vừa lookup là Rework WO, để người thao tác luôn biết rõ mình đang ở
+    // chế độ nào — xem lookupWorkOrder()/các chỗ reset isReworkWo.
+    function setReworkModeUi(active, wo) {
+        $reworkModeBar.style.display = active ? 'block' : 'none';
+        if (active) $reworkBannerWo.textContent = wo || '';
+    }
 
     const $pwOverlay  = document.getElementById('pwModalOverlay');
     const $pwUsername = document.getElementById('pwUsername');
@@ -877,12 +953,6 @@
     // Reprint by Serial trong tab này. Cần bật lại thì đổi true là đủ, không phải
     // sửa lại HTML/JS gì khác.
     const MANUAL_PRINT_ENABLED = false;
-
-    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. Bật tạm để test luồng (Rework/WO/Reprint)
-    // khi chưa có máy in/bridge thật kết nối — giả lập "đã kết nối máy in" + "gửi in luôn thành
-    // công" mà không thật sự gọi bridge. Test xong đổi lại false (hoặc xoá cả khối liên quan tới
-    // biến này — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
-    const TEST_FAKE_PRINT_OK = true;
 
     // Bắt buộc đăng nhập (Username + Password, xem SM_UserPermission) mỗi lần vào tab
     // Reprint — không "remember me": trạng thái đăng nhập KHÔNG được lưu ở đâu cả (không
@@ -1006,7 +1076,6 @@
     // duyệt không tự mở được socket để kiểm tra thật sự có bắt tay được với máy in
     // hay không, việc đó do Local Bridge (agent chạy trên máy operator) đảm nhiệm.
     function isPrinterConfigured() {
-        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY
         return printMode === 'usb' ? !!$usbSelect.value : !!$printerIp.value.trim();
     }
 
@@ -1074,9 +1143,12 @@
 
     // Rework giờ phát hiện NGAY TRONG tab Work Order (không qua tab riêng nữa) — vẫn bắt đăng
     // nhập trước khi cho thao tác, nhưng KHÔNG mỗi lần lookup 1 WO rework là hỏi lại — chỉ hỏi
-    // 1 lần/phiên trang (reworkLoggedIn không lưu localStorage -> F5 lại vẫn phải đăng nhập lại,
-    // giữ đúng tinh thần "không remember me" nhưng không làm phiền khi quét nhiều Rework WO liên tục).
-    let reworkLoggedIn = false;
+    // 1 lần/phiên trang. Trạng thái lưu ở sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/
+    // CartonSN.cshtml — đăng nhập ở bất kỳ trang nào trong 3 trang Rework thì 2 trang còn lại tự
+    // nhận đã đăng nhập luôn trong cùng phiên làm việc (đóng tab/trình duyệt là mất, phải đăng
+    // nhập lại — vẫn giữ tinh thần "không remember me" giữa các phiên khác nhau).
+    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
+    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
     let pendingReworkLogin = false;
 
     $modeTabs.addEventListener('click', (e) => {
@@ -1130,6 +1202,7 @@
             if (pendingReworkLogin) {
                 pendingReworkLogin = false;
                 reworkLoggedIn = true;
+                sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
                 updateEanSerialLock();
                 $eanInput.focus();
             } else {
@@ -1155,6 +1228,7 @@
         expectedProductId = null;
         expectedColorValue = null;
         isReworkWo = false;
+        setReworkModeUi(false);
         resetVerifyState();
         updatePrintButtonState();
 
@@ -1186,6 +1260,7 @@
             // — số lượng in không tính theo WO này, xem MarkReworkedReprintAsync), hiện badge.
             isReworkWo = (body.data.productCode || '').trim().toUpperCase().endsWith('RW');
             $woReworkRow.style.display = isReworkWo ? '' : 'none';
+            setReworkModeUi(isReworkWo, wo);
             $woPrintedRow.style.display = isReworkWo ? 'none' : '';
             $woRemainingRow.style.display = isReworkWo ? 'none' : '';
 
@@ -1234,6 +1309,7 @@
             expectedProductId = null;
             expectedColorValue = null;
             isReworkWo = false;
+            setReworkModeUi(false);
             $woResolved.style.display = 'none';
             resetVerifyState();
             updatePrintButtonState();
@@ -1273,6 +1349,7 @@
         expectedProductId = null;
         expectedColorValue = null;
         isReworkWo = false;
+        setReworkModeUi(false);
         $woResolved.style.display = 'none';
         resetVerifyState();
         localStorage.removeItem(LS_WO_KEY);
@@ -1350,7 +1427,6 @@
     // Gửi cả EAN + Serial cho server verify lại toàn bộ (không tin riêng client) — pass hết
     // thì server trả ZPL sẵn sàng in đúng Serial đã quét, không tự sinh serial mới.
     async function printGivenZpl(zpl) {
-        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY — giả lập gửi in luôn thành công
         const copies = parseInt($copies.value) || 1;
         try {
             if (printMode === 'usb') {
@@ -2144,13 +2220,6 @@
 
     // ── Local Bridge health check — same pattern as the /Print page ──────────
     async function checkNode() {
-        if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — giả lập bridge luôn online
-            $nodeDot.className = 'node-dot alive';
-            $nodeTxt.textContent = t('snlabel.bridgeOnline', 'Service — Online');
-            bridgeOnline = true;
-            updatePrintButtonState();
-            return;
-        }
         try {
             const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
             if (r.ok) {
