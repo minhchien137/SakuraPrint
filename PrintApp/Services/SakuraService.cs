@@ -1576,12 +1576,20 @@ public class SakuraService
         if (row == null)
             throw new SakuraValidationException("unpackCarton.cartonNotFound", $"Không tìm thấy Carton Number '{trimmed}'.", new { cartonNumber = trimmed });
 
+        var openStatuses = new[] { "UNPACKED", "REWORKED" };
+        var pendingSerials = await _context.CartonUnpackLogs
+            .AsNoTracking()
+            .Where(x => x.CartonNumber == trimmed && openStatuses.Contains(x.Status))
+            .Select(x => x.SerialNumber)
+            .ToListAsync();
+
         return new CartonForUnpackDto
         {
             CartonNumber = row.CartonNumber,
             WorkOrder = row.WorkOrder,
             Color = row.Color,
-            Serials = SplitCartonSerials(row.Serial)
+            Serials = SplitCartonSerials(row.Serial),
+            PendingSerials = pendingSerials
         };
     }
 
