@@ -999,3 +999,11 @@ C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.deps.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.runtimeconfig.json
 C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.dll
 C:\Users\Minh Chien\AppData\Local\Temp\build-check54\PrintApp.pdb
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\appsettings.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.runtime.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.staticwebassets.endpoints.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.exe
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.deps.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.runtimeconfig.json
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.dll
+C:\Users\Minh Chien\AppData\Local\Temp\build-check55\PrintApp.pdb
