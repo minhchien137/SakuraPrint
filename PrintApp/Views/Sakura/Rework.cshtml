@@ -302,6 +302,87 @@
     .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
     .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
     .sk-modal-error.show { display: block; }
+
+    /* ── Nút "Hướng dẫn" (❓) — cố định góc dưới-phải, luôn thấy được kể cả khi cuộn trang. ── */
+    .guide-btn {
+        position: fixed; bottom: 24px; right: 24px; z-index: 90;
+        display: flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        color: var(--white); border: none; border-radius: 30px;
+        padding: 13px 20px; font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;
+        box-shadow: var(--shadow-lg); cursor: pointer; transition: transform 0.2s ease;
+    }
+    .guide-btn:hover { transform: translateY(-2px); }
+
+    /* ── Modal "Hướng dẫn Rework" — 3 bước, chữ to rõ ràng, càng đơn giản càng tốt. ── */
+    .guide-modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.55);
+        z-index: 250; align-items: center; justify-content: center; padding: 20px;
+    }
+    .guide-modal-overlay.show { display: flex; }
+    .guide-modal {
+        background: var(--white); border-radius: 20px; box-shadow: var(--shadow-lg);
+        width: 100%; max-width: 640px; max-height: 88vh; display: flex; flex-direction: column;
+    }
+    .guide-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 26px; border-bottom: 1px solid var(--gray-200); flex-shrink: 0;
+    }
+    .guide-modal-header h2 {
+        font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--red-dark); margin: 0;
+    }
+    .guide-modal-close {
+        background: none; border: none; cursor: pointer; font-size: 18px; color: var(--gray-500);
+        padding: 4px 8px; border-radius: 8px; flex-shrink: 0;
+    }
+    .guide-modal-close:hover { color: var(--red); background: var(--red-xlight); }
+    .guide-modal-body { padding: 22px 26px; overflow-y: auto; }
+    .guide-intro {
+        font-family: var(--font-body); font-size: 0.85rem; color: var(--gray-700); line-height: 1.6;
+        margin-bottom: 20px; padding: 12px 16px; background: var(--gray-50); border-radius: 10px;
+    }
+    .guide-step {
+        display: flex; gap: 14px; margin-bottom: 16px; padding: 16px; border-radius: 14px;
+        border: 1.5px solid var(--gray-200);
+    }
+    .guide-step.s1 { border-left: 5px solid #F59E0B; }
+    .guide-step.s2 { border-left: 5px solid #2563EB; }
+    .guide-step.s3 { border-left: 5px solid #059669; }
+    .guide-step .num {
+        flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-head); font-size: 17px; font-weight: 800; color: var(--white);
+    }
+    .guide-step.s1 .num { background: #F59E0B; }
+    .guide-step.s2 .num { background: #2563EB; }
+    .guide-step.s3 .num { background: #059669; }
+    .guide-step .content { flex: 1; min-width: 0; }
+    .guide-step .content h3 {
+        font-family: var(--font-head); font-size: 15px; font-weight: 800; color: var(--gray-900);
+        margin: 0 0 3px;
+    }
+    .guide-step .content .page-hint {
+        font-family: var(--font-body); font-size: 0.72rem; font-weight: 700; color: var(--gray-500);
+        text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;
+    }
+    .guide-step .content ol {
+        margin: 0; padding-left: 20px; font-family: var(--font-body); font-size: 0.83rem;
+        color: var(--gray-700); line-height: 1.75;
+    }
+    .guide-step .content .result {
+        margin-top: 8px; font-family: var(--font-body); font-size: 0.82rem; font-weight: 600; color: #92400E;
+    }
+    .guide-warn {
+        margin-top: 10px; padding: 9px 12px; background: #FFF7ED; border: 1px solid #FDBA74;
+        border-radius: 8px; font-family: var(--font-body); font-size: 0.76rem; color: #9A3412; line-height: 1.55;
+    }
+    .guide-footer-note {
+        margin-top: 4px; padding: 12px 16px; background: var(--red-xlight); border: 1px solid var(--red-light);
+        border-radius: 10px; font-family: var(--font-body); font-size: 0.8rem; color: var(--red-dark); line-height: 1.6;
+    }
+    .guide-modal-footer {
+        padding: 16px 26px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; flex-shrink: 0;
+    }
 </style>
 
 @await Html.PartialAsync("_LangSwitcher")
@@ -520,6 +601,78 @@
         <a class="rw-back" href="@Url.Content("~/sakura/rework/history")" data-i18n="rework.viewHistory">View History →</a>
     </div>
 
+    <button type="button" class="guide-btn" id="btnOpenGuide">
+        <span>❓</span>
+        <span data-i18n="reworkGuide.btnLabel">Guide</span>
+    </button>
+
+    <div class="guide-modal-overlay" id="guideModalOverlay">
+        <div class="guide-modal">
+            <div class="guide-modal-header">
+                <h2 data-i18n="reworkGuide.title">REWORK GUIDE — 3 SIMPLE STEPS</h2>
+                <button type="button" class="guide-modal-close" id="btnCloseGuide" aria-label="Close">✕</button>
+            </div>
+            <div class="guide-modal-body">
+                <div class="guide-intro" data-i18n="reworkGuide.intro">
+                    When 1 or more products in a carton are defective and need repair, follow these 3 steps in order. All 3 steps use the SAME Rework Work Order (a Work Order ending in "RW", e.g. NM/MO/04020RW).
+                </div>
+
+                <div class="guide-step s1">
+                    <div class="num">1</div>
+                    <div class="content">
+                        <h3 data-i18n="reworkGuide.step1Title">REMOVE THE DEFECTIVE PRODUCT FROM THE CARTON</h3>
+                        <div class="page-hint" data-i18n="reworkGuide.step1Page">Do this on this page — Rework</div>
+                        <ol>
+                            <li data-i18n="reworkGuide.step1Item1">Scan or type the Carton Number (the carton containing the defective item).</li>
+                            <li data-i18n="reworkGuide.step1Item2">In the serial list shown, scan the Serial Number of the defective product.</li>
+                            <li data-i18n="reworkGuide.step1Item3">Click the Unpack button.</li>
+                        </ol>
+                        <div class="result" data-i18n="reworkGuide.step1Result">Done — now send that product for repair.</div>
+                    </div>
+                </div>
+
+                <div class="guide-step s2">
+                    <div class="num">2</div>
+                    <div class="content">
+                        <h3 data-i18n="reworkGuide.step2Title">AFTER REPAIR, REPRINT THE LABEL</h3>
+                        <div class="page-hint" data-i18n="reworkGuide.step2Page">Do this on the SN Label page</div>
+                        <ol>
+                            <li data-i18n="reworkGuide.step2Item1">Once the product is repaired, open the SN Label page.</li>
+                            <li data-i18n="reworkGuide.step2Item2">Enter the Rework Work Order (ends in RW) in the Work Order field, click Lookup.</li>
+                            <li data-i18n="reworkGuide.step2Item3">An orange REWORK MODE banner will appear — that confirms the correct mode.</li>
+                            <li data-i18n="reworkGuide.step2Item4">Scan the EAN, then scan the EXACT Serial Number removed in Step 1.</li>
+                            <li data-i18n="reworkGuide.step2Item5">Print — apply the new label to that exact product.</li>
+                        </ol>
+                        <div class="guide-warn" data-i18n="reworkGuide.step2Warn">You must scan the same serial removed in Step 1. If more than one product was removed, repeat Step 2 for EACH one — don't skip any.</div>
+                    </div>
+                </div>
+
+                <div class="guide-step s3">
+                    <div class="num">3</div>
+                    <div class="content">
+                        <h3 data-i18n="reworkGuide.step3Title">CLOSE THE CARTON BACK UP</h3>
+                        <div class="page-hint" data-i18n="reworkGuide.step3Page">Do this on the Carton SN Label page</div>
+                        <ol>
+                            <li data-i18n="reworkGuide.step3Item1">Only do this step once ALL products removed in Step 1 have been relabeled in Step 2.</li>
+                            <li data-i18n="reworkGuide.step3Item2">Open the Carton SN Label page.</li>
+                            <li data-i18n="reworkGuide.step3Item3">Enter the SAME Rework Work Order again, click Lookup.</li>
+                            <li data-i18n="reworkGuide.step3Item4">Scan back ALL original serials of the carton (including the ones that were never removed).</li>
+                            <li data-i18n="reworkGuide.step3Item5">Print — the carton gets a new label with Condition = Refurb.</li>
+                        </ol>
+                        <div class="guide-warn" data-i18n="reworkGuide.step3Warn">If any product still hasn't finished Step 2, the system will automatically BLOCK closing the carton — go back and finish Step 2 for all of them first.</div>
+                    </div>
+                </div>
+
+                <div class="guide-footer-note" data-i18n="reworkGuide.footerNote">
+                    Remember: 3 steps = 3 different pages (Rework → SN Label → Carton SN Label), but ALWAYS use the SAME Rework Work Order across all 3 steps.
+                </div>
+            </div>
+            <div class="guide-modal-footer">
+                <button type="button" class="t-btn t-btn-primary" id="btnCloseGuide2" data-i18n="reworkGuide.closeBtn">Got it</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div class="sk-modal-overlay" id="pwModalOverlay">
@@ -551,9 +704,15 @@
         // biến này (search "TEST ONLY" trong file) để khôi phục đúng logic thật.
         const TEST_FAKE_PRINT_OK = true;
 
-        // ── Login gate — bắt buộc đăng nhập lại MỖI LẦN vào trang này (không lưu trạng thái
-        // đăng nhập ở đâu cả), dùng chung tài khoản SM_UserPermission với tab Reprint ở
-        // SnLabel.cshtml / CartonSnReprint.cshtml (endpoint verify-reprint-login).
+        // ── Login gate — dùng chung tài khoản SM_UserPermission với tab Reprint ở
+        // SnLabel.cshtml / CartonSnReprint.cshtml (endpoint verify-reprint-login). Trạng thái
+        // "đã đăng nhập" lưu ở sessionStorage (KHÔNG phải localStorage) dưới 1 key DÙNG CHUNG với
+        // SnLabel.cshtml/CartonSN.cshtml — đăng nhập ở bất kỳ trang nào trong 3 trang Rework
+        // (Unpack/Rework/Repack) thì 2 trang còn lại tự nhận đã đăng nhập luôn trong cùng phiên
+        // làm việc (đóng tab/trình duyệt là mất, phải đăng nhập lại — vẫn giữ tinh thần "không
+        // remember me" giữa các phiên làm việc khác nhau, chỉ bớt phiền trong lúc đang thao tác
+        // liên tục 1 lượt Rework trải qua cả 3 trang).
+        const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
         const $reworkPage = document.getElementById('reworkPage');
         const $pwOverlay  = document.getElementById('pwModalOverlay');
         const $pwUsername = document.getElementById('pwUsername');
@@ -568,6 +727,13 @@
             $pwError.classList.remove('show');
             $pwOverlay.classList.add('show');
             $pwUsername.focus();
+        }
+
+        function revealReworkPage() {
+            $pwOverlay.classList.remove('show');
+            $reworkPage.style.display = '';
+            $unpackCartonNumber.focus();
+            restoreSavedRepackWo();
         }
 
         async function submitLogin() {
@@ -586,10 +752,8 @@
                     $pwError.classList.add('show');
                     return;
                 }
-                $pwOverlay.classList.remove('show');
-                $reworkPage.style.display = '';
-                $unpackCartonNumber.focus();
-                restoreSavedRepackWo();
+                sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
+                revealReworkPage();
             } catch {
                 $pwError.classList.add('show');
             } finally {
@@ -1203,7 +1367,26 @@
             }
         });
 
-        openPasswordModal();
+        // ── Nút "Hướng dẫn" — modal tĩnh giải thích 3 bước Unpack/Rework/Repack, không gọi API
+        // gì cả. Đóng bằng nút ✕, nút "Đã hiểu", hoặc bấm ra ngoài overlay. ──────────────────
+        const $btnOpenGuide = document.getElementById('btnOpenGuide');
+        const $guideModalOverlay = document.getElementById('guideModalOverlay');
+        const $btnCloseGuide = document.getElementById('btnCloseGuide');
+        const $btnCloseGuide2 = document.getElementById('btnCloseGuide2');
+
+        function openGuideModal() { $guideModalOverlay.classList.add('show'); }
+        function closeGuideModal() { $guideModalOverlay.classList.remove('show'); }
+
+        $btnOpenGuide.addEventListener('click', openGuideModal);
+        $btnCloseGuide.addEventListener('click', closeGuideModal);
+        $btnCloseGuide2.addEventListener('click', closeGuideModal);
+        $guideModalOverlay.addEventListener('click', (e) => { if (e.target === $guideModalOverlay) closeGuideModal(); });
+
+        if (sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1') {
+            revealReworkPage();
+        } else {
+            openPasswordModal();
+        }
     })();
     </script>
 }

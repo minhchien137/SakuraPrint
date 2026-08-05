@@ -852,7 +852,7 @@
                 </div>
 
                 <div class="t-actions" style="margin-top:18px">
-                    <button type="button" class="t-btn t-btn-primary" id="btnRepackCnPrint" data-i18n="rework.repackPrintBtn" disabled>🖨️ Print Carton Label (Refurb)</button>
+                    <button type="button" class="t-btn t-btn-primary" id="btnRepackCnPrint" data-i18n="rework.repackPrintBtn" disabled>🖨️ Print Carton Label</button>
                 </div>
                 <div id="repackCnPrintStatus" class="t-status"></div>
             </div>
@@ -1010,10 +1010,12 @@
     // (tạo carton mới) — xem lookupWorkOrder()/resetWoState().
     let isReworkWo = false;
 
-    // Bắt đăng nhập trước khi cho thao tác Repack — chỉ hỏi 1 LẦN/phiên trang (không lưu
-    // localStorage/sessionStorage -> F5 lại phải đăng nhập lại), giống hệt reworkLoggedIn ở
-    // SnLabel.cshtml — không hỏi lại mỗi lần lookup thêm 1 Rework WO khác trong cùng phiên.
-    let reworkLoggedIn = false;
+    // Bắt đăng nhập trước khi cho thao tác Repack — chỉ hỏi 1 LẦN/phiên. Trạng thái lưu ở
+    // sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/SnLabel.cshtml — đăng nhập ở bất kỳ
+    // trang nào trong 3 trang Rework thì 2 trang còn lại tự nhận đã đăng nhập luôn trong cùng
+    // phiên làm việc (đóng tab/trình duyệt là mất, phải đăng nhập lại).
+    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
+    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
 
     const $reworkModeBar = document.getElementById('reworkModeBar');
     const $reworkBannerWo = document.getElementById('reworkBannerWo');
@@ -1120,6 +1122,7 @@
                 if (!reworkLoggedIn) {
                     requireLogin(() => {
                         reworkLoggedIn = true;
+                        sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
                         $repackCnCartonNumber.disabled = false;
                         $repackCnCartonNumber.focus();
                     });
@@ -1324,7 +1327,7 @@
 
     $btnRepackCnPrint.addEventListener('click', async () => {
         if (repackCnPrinting || $btnRepackCnPrint.disabled) return;
-        if (!TEST_FAKE_PRINT_OK && (!bridgeOnline || !isPrinterConfigured())) { // ⚠️ TEST ONLY bypass — chỉ nút này
+        if (!bridgeOnline || !isPrinterConfigured()) {
             showStatus($repackCnPrintStatus, `✗ ${printerNotReadyMessage()}`, 'err');
             return;
         }
@@ -1348,11 +1351,7 @@
             let msg = `✓ ${t('rework.repackPrintSuccess', 'Refurb Carton Label generated for {carton}.').replace('{carton}', cartonNumber)}`;
             let statusType = 'ok';
 
-            if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — tải file .zpl thật để test, coi như đã gửi máy in thành công
-                downloadZplFile(zpl, `carton-${cartonNumber}-refurb.zpl`);
-                msg += ' [TEST] Downloaded .zpl file instead of printing — treated as sent OK.';
-                sentOk = true;
-            } else if (printMode === 'usb') {
+            if (printMode === 'usb') {
                 const printerName = $usbSelect.value;
                 if (printerName) {
                     try {
@@ -2347,14 +2346,6 @@
             inp.focus(); // xóa xong tự focus lại ô đó luôn để quét lại ngay, khỏi phải click tay
         }, 1400);
     }
-
-    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. CHỈ áp dụng cho nút "Print Carton Label
-    // (Refurb)" ở chế độ Repack (WO là Rework WO) — luồng WO thường (tạo carton mới) KHÔNG bị
-    // ảnh hưởng, vẫn đòi máy in/bridge thật như cũ. Bật tạm để test Repack khi chưa có máy in
-    // thật: giả lập "đã kết nối máy in" + "gửi in luôn thành công" mà không thật sự gọi bridge,
-    // CHỈ trong $btnRepackCnPrint. Test xong đổi lại false (hoặc xoá khối liên quan tới biến này
-    // — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
-    const TEST_FAKE_PRINT_OK = true;
 
     // ── Print Carton Label — build ZPL server-side, send to Local Bridge ──────
     const CARTON_REAL_PRINT_ENABLED = true;

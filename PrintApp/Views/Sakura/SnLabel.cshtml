@@ -954,12 +954,6 @@
     // sửa lại HTML/JS gì khác.
     const MANUAL_PRINT_ENABLED = false;
 
-    // ⚠️ TEST ONLY — KHÔNG được để true khi chạy thật. Bật tạm để test luồng (Rework/WO/Reprint)
-    // khi chưa có máy in/bridge thật kết nối — giả lập "đã kết nối máy in" + "gửi in luôn thành
-    // công" mà không thật sự gọi bridge. Test xong đổi lại false (hoặc xoá cả khối liên quan tới
-    // biến này — search "TEST ONLY" trong file) để khôi phục đúng logic thật.
-    const TEST_FAKE_PRINT_OK = true;
-
     // Bắt buộc đăng nhập (Username + Password, xem SM_UserPermission) mỗi lần vào tab
     // Reprint — không "remember me": trạng thái đăng nhập KHÔNG được lưu ở đâu cả (không
     // localStorage/sessionStorage), nên F5, chuyển trang, hay chỉ đơn giản bấm sang tab Work
@@ -1082,7 +1076,6 @@
     // duyệt không tự mở được socket để kiểm tra thật sự có bắt tay được với máy in
     // hay không, việc đó do Local Bridge (agent chạy trên máy operator) đảm nhiệm.
     function isPrinterConfigured() {
-        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY
         return printMode === 'usb' ? !!$usbSelect.value : !!$printerIp.value.trim();
     }
 
@@ -1150,9 +1143,12 @@
 
     // Rework giờ phát hiện NGAY TRONG tab Work Order (không qua tab riêng nữa) — vẫn bắt đăng
     // nhập trước khi cho thao tác, nhưng KHÔNG mỗi lần lookup 1 WO rework là hỏi lại — chỉ hỏi
-    // 1 lần/phiên trang (reworkLoggedIn không lưu localStorage -> F5 lại vẫn phải đăng nhập lại,
-    // giữ đúng tinh thần "không remember me" nhưng không làm phiền khi quét nhiều Rework WO liên tục).
-    let reworkLoggedIn = false;
+    // 1 lần/phiên trang. Trạng thái lưu ở sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/
+    // CartonSN.cshtml — đăng nhập ở bất kỳ trang nào trong 3 trang Rework thì 2 trang còn lại tự
+    // nhận đã đăng nhập luôn trong cùng phiên làm việc (đóng tab/trình duyệt là mất, phải đăng
+    // nhập lại — vẫn giữ tinh thần "không remember me" giữa các phiên khác nhau).
+    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
+    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
     let pendingReworkLogin = false;
 
     $modeTabs.addEventListener('click', (e) => {
@@ -1206,6 +1202,7 @@
             if (pendingReworkLogin) {
                 pendingReworkLogin = false;
                 reworkLoggedIn = true;
+                sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
                 updateEanSerialLock();
                 $eanInput.focus();
             } else {
@@ -1430,7 +1427,6 @@
     // Gửi cả EAN + Serial cho server verify lại toàn bộ (không tin riêng client) — pass hết
     // thì server trả ZPL sẵn sàng in đúng Serial đã quét, không tự sinh serial mới.
     async function printGivenZpl(zpl) {
-        if (TEST_FAKE_PRINT_OK) return true; // ⚠️ TEST ONLY — giả lập gửi in luôn thành công
         const copies = parseInt($copies.value) || 1;
         try {
             if (printMode === 'usb') {
@@ -2224,13 +2220,6 @@
 
     // ── Local Bridge health check — same pattern as the /Print page ──────────
     async function checkNode() {
-        if (TEST_FAKE_PRINT_OK) { // ⚠️ TEST ONLY — giả lập bridge luôn online
-            $nodeDot.className = 'node-dot alive';
-            $nodeTxt.textContent = t('snlabel.bridgeOnline', 'Service — Online');
-            bridgeOnline = true;
-            updatePrintButtonState();
-            return;
-        }
         try {
             const r = await fetch(`${NODE_SERVICE}/health`, { signal: AbortSignal.timeout(2500) });
             if (r.ok) {
