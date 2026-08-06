@@ -120,6 +120,18 @@
     .sk-group-item .desc { font-family: var(--font-body); font-size: 11px; color: var(--gray-500); margin-top: 2px; }
     .sk-group-item .chevron { color: var(--gray-400); font-size: 14px; flex-shrink: 0; }
 
+    /* Wide single-action card (Tile.Wide=true) — cùng hình dạng sk-group-header nhưng là 1 link
+       trực tiếp (không expand/collapse, không có Items con) — dùng cho chức năng đơn cần nổi bật
+       hơn ô icon vuông, dễ bấm hơn trên PDA. */
+    .sk-wide-link {
+        display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+        text-decoration: none; color: inherit; border: 1px solid var(--gray-200); border-radius: 14px;
+        background: var(--white); box-shadow: var(--shadow-sm); transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sk-wide-link:hover { border-color: var(--red-light); box-shadow: var(--shadow-md); }
+    .sk-wide-link .sk-group-icon { background: var(--red-xlight); }
+    .sk-wide-link .chevron { margin-left: auto; color: var(--gray-400); font-size: 16px; flex-shrink: 0; }
+
     /* ── App grid — "home screen" tiles ───────────────────────────────────── */
     .sk-app-grid {
         display: grid;
@@ -191,6 +203,13 @@
     .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
 
     @@media (max-width: 560px) {
+        .sk-page { max-width: 100%; }
+        .sk-header h1 { font-size: 34px; }
+        .sk-board { padding: 24px 14px 28px; border-radius: 14px; }
+        .sk-group-header, .sk-wide-link, .sk-group-item { padding: 12px 14px; gap: 10px; }
+        .sk-group-icon { width: 38px; height: 38px; font-size: 18px; border-radius: 10px; }
+        .sk-group-title { font-size: 13.5px; }
+        .sk-group-subtitle { font-size: 11px; }
         .sk-app-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 24px 14px; }
         .sk-app-tile { width: 92px; }
         .sk-app-icon { width: 62px; height: 62px; font-size: 26px; }
@@ -215,36 +234,50 @@
         <div class="sk-board-label" data-i18n="home.section">Functions</div>
 
         <div class="sk-groups">
-            @foreach (var group in (Model ?? new List<PrintApp.Models.SakuraAppTile>()).Where(t => t.Items != null && t.Items.Count > 0))
+            @foreach (var tile in (Model ?? new List<PrintApp.Models.SakuraAppTile>()).Where(t => (t.Items != null && t.Items.Count > 0) || (t.Wide && t.Enabled && !string.IsNullOrEmpty(t.Href))))
             {
-                <div class="sk-group">
-                    <div class="sk-group-header">
-                        <div class="sk-group-icon">@group.Icon</div>
-                        <div>
-                            <div class="sk-group-title" data-i18n="tile.@(group.Key).title">@group.Title</div>
-                            <div class="sk-group-subtitle" data-i18n="tile.@(group.Key).desc">@group.Subtitle</div>
+                if (tile.Items != null && tile.Items.Count > 0)
+                {
+                    <div class="sk-group">
+                        <div class="sk-group-header">
+                            <div class="sk-group-icon">@tile.Icon</div>
+                            <div>
+                                <div class="sk-group-title" data-i18n="tile.@(tile.Key).title">@tile.Title</div>
+                                <div class="sk-group-subtitle" data-i18n="tile.@(tile.Key).desc">@tile.Subtitle</div>
+                            </div>
+                            <span class="sk-group-chevron">⌄</span>
                         </div>
-                        <span class="sk-group-chevron">⌄</span>
+                        <div class="sk-group-items">
+                            @foreach (var item in tile.Items!)
+                            {
+                                <a class="sk-group-item" href="@item.Href" target="@(item.OpenInNewTab ? "_blank" : null)" rel="@(item.OpenInNewTab ? "noopener noreferrer" : null)">
+                                    <span class="icon">@item.Icon</span>
+                                    <span class="txt">
+                                        <div class="name" data-i18n="tile.@(item.Key).title">@item.Title</div>
+                                        <div class="desc" data-i18n="tile.@(item.Key).desc">@item.Subtitle</div>
+                                    </span>
+                                    <span class="chevron">→</span>
+                                </a>
+                            }
+                        </div>
                     </div>
-                    <div class="sk-group-items">
-                        @foreach (var item in group.Items!)
-                        {
-                            <a class="sk-group-item" href="@item.Href" target="@(item.OpenInNewTab ? "_blank" : null)" rel="@(item.OpenInNewTab ? "noopener noreferrer" : null)">
-                                <span class="icon">@item.Icon</span>
-                                <span class="txt">
-                                    <div class="name" data-i18n="tile.@(item.Key).title">@item.Title</div>
-                                    <div class="desc" data-i18n="tile.@(item.Key).desc">@item.Subtitle</div>
-                                </span>
-                                <span class="chevron">→</span>
-                            </a>
-                        }
-                    </div>
-                </div>
+                }
+                else
+                {
+                    <a class="sk-wide-link" href="@tile.Href" target="@(tile.OpenInNewTab ? "_blank" : null)" rel="@(tile.OpenInNewTab ? "noopener noreferrer" : null)">
+                        <div class="sk-group-icon">@tile.Icon</div>
+                        <div>
+                            <div class="sk-group-title" data-i18n="tile.@(tile.Key).title">@tile.Title</div>
+                            <div class="sk-group-subtitle" data-i18n="tile.@(tile.Key).desc">@tile.Subtitle</div>
+                        </div>
+                        <span class="chevron">→</span>
+                    </a>
+                }
             }
         </div>
 
         <div class="sk-app-grid">
-            @foreach (var tile in (Model ?? new List<PrintApp.Models.SakuraAppTile>()).Where(t => t.Items == null || t.Items.Count == 0))
+            @foreach (var tile in (Model ?? new List<PrintApp.Models.SakuraAppTile>()).Where(t => !t.Wide && (t.Items == null || t.Items.Count == 0)))
             {
                 if (tile.Enabled && !string.IsNullOrEmpty(tile.Href))
                 {

@@ -23,14 +23,16 @@ public class SakuraController : Controller
     private readonly AppDbContext _db;
     private readonly ViidooService _viidoo;
     private readonly ProductionResultApiService _productionApi;
+    private readonly SakuraLookupService _lookup;
 
-    public SakuraController(SakuraService snLabel, IConfiguration config, AppDbContext db, ViidooService viidoo, ProductionResultApiService productionApi)
+    public SakuraController(SakuraService snLabel, IConfiguration config, AppDbContext db, ViidooService viidoo, ProductionResultApiService productionApi, SakuraLookupService lookup)
     {
         _snLabel = snLabel;
         _config = config;
         _db = db;
         _viidoo = viidoo;
         _productionApi = productionApi;
+        _lookup = lookup;
     }
 
     // Gói 1 exception thành JSON lỗi có errorCode/errorParams (nếu có) để front-end tự
@@ -56,6 +58,16 @@ public class SakuraController : Controller
         // ban dich day du (EN/ZH) nam trong wwwroot/js/sakura-i18n.js, khoa theo Key.
         var tiles = new List<SakuraAppTile>
         {
+            new SakuraAppTile
+            {
+                Key = "lookup",
+                Icon = "🔎",
+                Title = "Universal Lookup",
+                Subtitle = "Scan to get data",
+                Href = Url.Content("~/sakura/lookup"),
+                Enabled = true,
+                Wide = true
+            },
             new SakuraAppTile
             {
                 Key = "snlabelgroup",
@@ -281,7 +293,8 @@ public class SakuraController : Controller
                 Title = "Administrator",
                 Subtitle = "Manage Account",
                 Href = Url.Content("~/admin/users"),
-                Enabled = true
+                Enabled = true,
+                Wide = true
             });
         }
 
@@ -319,6 +332,28 @@ public class SakuraController : Controller
     public IActionResult CartonSnHistory()
     {
         return View("~/Views/Sakura/CartonSnHistory.cshtml");
+    }
+
+    // ── Universal Lookup — scan 1 mã bất kỳ (Pallet/Carton/Serial), tự nhận diện loại mã ────────
+
+    [TypeFilter(typeof(LogPageVisitFilter))]
+    [HttpGet("/sakura/lookup")]
+    public IActionResult LookupIndex()
+    {
+        return View("~/Views/Sakura/Lookup.cshtml");
+    }
+
+    [HttpGet("/api/sakura/lookup/resolve")]
+    public async Task<IActionResult> LookupResolveApi([FromQuery] string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return BadRequest(new { ok = false, error = "Thiếu mã cần tra cứu.", errorCode = "common.missingData" });
+
+        var result = await _lookup.ResolveAsync(code);
+        if (result == null)
+            return Ok(new { ok = true, found = false, data = (object?)null });
+
+        return Ok(new { ok = true, found = true, data = result });
     }
 
     [Authorize(Roles = "LineLeader,Admin")]

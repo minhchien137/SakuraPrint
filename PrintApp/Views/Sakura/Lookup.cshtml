@@ -1,0 +1,260 @@
+@{
+    ViewData["Title"] = "Universal Lookup — Sakura";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .lk-page { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .lk-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+    .lk-header h1 { font-family: var(--font-head); font-size: 40px; font-weight: 800; letter-spacing: -0.5px; color: var(--red-dark); line-height: 1.1; }
+
+    .lk-back {
+        position: fixed; left: 22px; bottom: 18px; z-index: 100;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 600; color: var(--gray-600); text-decoration: none;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 8px 16px; box-shadow: var(--shadow-sm);
+    }
+    .lk-back:hover { color: var(--red-dark); border-color: var(--red-light); }
+
+    .lk-scanbox {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 24px 26px; margin-bottom: 20px; box-shadow: var(--shadow-md);
+        display: flex; gap: 12px; align-items: center;
+    }
+    .lk-scanbox input {
+        flex: 1; font-family: var(--font-body); font-size: 1.3rem; font-weight: 600;
+        padding: 16px 18px; border: 2px solid var(--gray-200); border-radius: 12px;
+        letter-spacing: 0.5px; color: var(--gray-900);
+    }
+    .lk-scanbox input:focus { outline: none; border-color: var(--red-mid); box-shadow: 0 0 0 3px rgba(230,57,80,0.12); }
+    .lk-scanbox button {
+        font-family: var(--font-body); font-weight: 700; font-size: 0.95rem; padding: 16px 24px;
+        border: none; border-radius: 12px; background: var(--red); color: var(--white); cursor: pointer;
+    }
+    .lk-scanbox button:hover { background: var(--red-dark); }
+    .lk-scanbox button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .lk-status { font-size: 0.85rem; margin-bottom: 16px; min-height: 20px; }
+    .lk-status.error { color: var(--danger); font-weight: 600; }
+    .lk-status.loading { color: var(--gray-500); }
+
+    .lk-result-header {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    }
+    .lk-type-badge {
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+        padding: 6px 14px; border-radius: 20px;
+    }
+    .lk-scanned-code { font-family: var(--font-head); font-size: 1.3rem; font-weight: 700; color: var(--gray-900); }
+
+    .lk-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 16px;
+        padding: 22px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm);
+    }
+    .lk-section-title {
+        font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .lk-section-title::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+    .lk-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px 20px; }
+    .lk-field-label { font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .lk-field-value { font-size: 0.95rem; font-weight: 600; color: var(--gray-900); word-break: break-word; }
+    .lk-field-value.empty { color: var(--gray-400); font-weight: 400; }
+
+    .lk-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table.lk-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    table.lk-table th {
+        text-align: left; padding: 8px 12px; background: var(--gray-50); color: var(--gray-600);
+        font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px;
+        border-bottom: 2px solid var(--gray-200); white-space: nowrap;
+    }
+    table.lk-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; }
+    table.lk-table tr:hover td { background: var(--gray-50); }
+    .lk-empty-rows { color: var(--gray-400); font-size: 0.85rem; padding: 8px 0; }
+
+    /* ── Mobile / PDA (máy quét cầm tay, màn hình hẹp) ─────────────────────── */
+    @@media (max-width: 640px) {
+        .lk-page { max-width: 100%; }
+        .lk-header h1 { font-size: 22px; }
+
+        .lk-scanbox { flex-direction: column; align-items: stretch; padding: 16px 14px; gap: 10px; border-radius: 12px; }
+        .lk-scanbox input { font-size: 1.1rem; padding: 14px 14px; width: 100%; box-sizing: border-box; }
+        .lk-scanbox button { width: 100%; padding: 14px; font-size: 1rem; }
+
+        .lk-section { padding: 16px 14px; border-radius: 12px; }
+        .lk-fields { grid-template-columns: 1fr; gap: 12px; }
+        .lk-field-label { font-size: 0.65rem; }
+        .lk-field-value { font-size: 0.9rem; }
+
+        .lk-result-header { flex-wrap: wrap; gap: 8px; }
+        .lk-scanned-code { font-size: 1.05rem; word-break: break-all; }
+
+        table.lk-table { font-size: 0.78rem; }
+        table.lk-table th, table.lk-table td { padding: 7px 10px; }
+    }
+
+    @@media (max-width: 380px) {
+        .lk-scanbox input { font-size: 1rem; }
+    }
+</style>
+
+<a class="lk-back" href="@Url.Content("~/sakura")">&larr; Sakura Home</a>
+
+<div class="lk-page">
+    <div class="lk-header">
+        <div>
+            <h1>Lookup Information</h1>
+        </div>
+    </div>
+
+    <div class="lk-scanbox">
+        <input type="text" id="lkInput" placeholder="Scan or type any code, then press Enter…" autofocus autocomplete="off" />
+        <button id="lkBtn" type="button">Lookup</button>
+    </div>
+
+    <div id="lkStatus" class="lk-status"></div>
+
+    <div id="lkResult"></div>
+</div>
+
+<script>
+(function () {
+    const BASE = '@Url.Content("~")'.replace(/\/$/, '');
+    const $input = document.getElementById('lkInput');
+    const $btn = document.getElementById('lkBtn');
+    const $status = document.getElementById('lkStatus');
+    const $result = document.getElementById('lkResult');
+
+    function esc(s) {
+        if (s === null || s === undefined || s === '') return '';
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderFields(fields) {
+        const items = (fields || []).map(f => {
+            const empty = f.value === null || f.value === undefined || f.value === '';
+            return `<div>
+                <div class="lk-field-label">${esc(f.label)}</div>
+                <div class="lk-field-value ${empty ? 'empty' : ''}">${empty ? '—' : esc(f.value)}</div>
+            </div>`;
+        }).join('');
+        return `<div class="lk-fields">${items}</div>`;
+    }
+
+    function renderSection(section) {
+        const cols = section.columns || [];
+        const rows = section.rows || [];
+        if (rows.length === 0) {
+            return `<div class="lk-section">
+                <div class="lk-section-title">${esc(section.title)}</div>
+                <div class="lk-empty-rows">No data.</div>
+            </div>`;
+        }
+        const thead = cols.map(c => `<th>${esc(c)}</th>`).join('');
+        const tbody = rows.map(r => `<tr>${r.map(v => `<td>${esc(v) || '—'}</td>`).join('')}</tr>`).join('');
+        return `<div class="lk-section">
+            <div class="lk-section-title">${esc(section.title)}</div>
+            <div class="lk-table-wrap">
+                <table class="lk-table">
+                    <thead><tr>${thead}</tr></thead>
+                    <tbody>${tbody}</tbody>
+                </table>
+            </div>
+        </div>`;
+    }
+
+    function renderResult(data) {
+        let html = `<div class="lk-result-header">
+            <span class="lk-type-badge">${esc(data.typeLabel)}</span>
+            <span class="lk-scanned-code">${esc(data.scannedCode)}</span>
+        </div>`;
+        html += `<div class="lk-section">${renderFields(data.fields)}</div>`;
+        html += (data.sections || []).map(renderSection).join('');
+        $result.innerHTML = html;
+    }
+
+    async function doLookup() {
+        const code = $input.value.trim();
+        if (!code) return;
+
+        $btn.disabled = true;
+        $status.className = 'lk-status loading';
+        $status.textContent = 'Searching…';
+        $result.innerHTML = '';
+
+        try {
+            const res = await fetch(`${BASE}/api/sakura/lookup/resolve?code=${encodeURIComponent(code)}`);
+            const json = await res.json();
+
+            if (!json.ok) {
+                $status.className = 'lk-status error';
+                $status.textContent = json.error || 'Lookup failed.';
+                return;
+            }
+
+            if (!json.found) {
+                $status.className = 'lk-status error';
+                $status.textContent = `No data found for "${code}".`;
+                return;
+            }
+
+            $status.className = 'lk-status';
+            $status.textContent = '';
+            renderResult(json.data);
+        } catch (err) {
+            $status.className = 'lk-status error';
+            $status.textContent = 'Network/server error — ' + err.message;
+        } finally {
+            $btn.disabled = false;
+            $input.select();
+        }
+    }
+
+    $btn.addEventListener('click', doLookup);
+    $input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            doLookup();
+        }
+    });
+})();
+</script>

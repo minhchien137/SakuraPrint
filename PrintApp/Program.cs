@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using PrintApp.Data;
+using PrintApp.Models;
 using PrintApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -77,6 +78,16 @@ builder.Services.AddScoped<ToastSerialService>();
 // ── Sakura services ────────────────────────────────────────────────────────────
 builder.Services.AddScoped<SakuraService>();
 builder.Services.AddScoped<ViidooService>();
+
+// ── Universal Lookup (/sakura/lookup) — thứ tự đăng ký = thứ tự ưu tiên thử khi CanHandle() hoà
+// nhau (xem SakuraLookupService.ResolveAsync); CartonLookupHandler luôn CanHandle=true nên phải
+// đăng ký SAU CÙNG để làm catch-all.
+builder.Services.AddScoped<ISakuraLookupHandler, PalletLookupHandler>();
+builder.Services.AddScoped<ISakuraLookupHandler, SerialLookupHandler>();
+builder.Services.AddScoped<ISakuraLookupHandler, PoNumberLookupHandler>();
+builder.Services.AddScoped<ISakuraLookupHandler, WorkOrderLookupHandler>();
+builder.Services.AddScoped<ISakuraLookupHandler, CartonLookupHandler>();
+builder.Services.AddScoped<SakuraLookupService>();
 
 // ── Back Panel services ────────────────────────────────────────────────────────
 builder.Services.AddSingleton<ProductionResultApiService>();
