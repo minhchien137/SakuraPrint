@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PrintApp.Data;
+using PrintApp.Filters;
 using PrintApp.Models;
 using PrintApp.Services;
 
@@ -8,6 +10,12 @@ namespace PrintApp.Controllers;
 
 // Controller chung cho các chức năng thuộc dự án Sakura.
 // SN Label Print là chức năng đầu tiên — các chức năng Sakura khác sẽ được thêm vào đây.
+//
+// [Authorize] ở đây bắt buộc đăng nhập (bất kỳ Role nào — Worker/LineLeader/Admin) cho MỌI
+// action trong controller này (xem AccountController/Program.cs — cookie auth). Các action
+// dành riêng cho Reprint/Rework (LineLeader trở lên) có thêm [Authorize(Roles = "LineLeader,Admin")]
+// đè lên — thay thế hoàn toàn cho modal verify-reprint-login cũ.
+[Authorize]
 public class SakuraController : Controller
 {
     private readonly SakuraService _snLabel;
@@ -40,6 +48,7 @@ public class SakuraController : Controller
 
     // Trang chủ Sakura — tổng hợp các chức năng dưới dạng ô chọn (app tile).
     // Thêm chức năng mới: thêm 1 SakuraAppTile vào danh sách bên dưới.
+    [TypeFilter(typeof(LogPageVisitFilter))]
     [HttpGet("/sakura")]
     public IActionResult Index()
     {
@@ -261,12 +270,32 @@ public class SakuraController : Controller
                 Enabled = false
             }
         };
+
+        // Chỉ Admin thấy tile này — trỏ tới /admin/users (AdminController, [Authorize(Roles="Admin")]).
+        if (User.IsInRole(UserRoles.Admin))
+        {
+            tiles.Insert(0, new SakuraAppTile
+            {
+                Key = "adminusers",
+                Icon = "🛡️",
+                Title = "Administrator",
+                Subtitle = "Manage Account",
+                Href = Url.Content("~/admin/users"),
+                Enabled = true
+            });
+        }
+
         return View("~/Views/Sakura/Index.cshtml", tiles);
     }
 
+    [TypeFilter(typeof(LogPageVisitFilter))]
     [HttpGet("/sakura/snlabel")]
     public IActionResult SnLabelIndex()
     {
+        // Tab Reprint + luồng Rework trong trang này chỉ dành cho LineLeader/Admin (xem
+        // [Authorize(Roles = ...)] trên các action Reprint/ReworkReprintSnLabel/... bên dưới) —
+        // view dùng cờ này để ẩn hẳn tab/luồng đó với Worker thay vì để bấm vào rồi mới bị 403.
+        ViewBag.CanReprint = User.IsInRole(UserRoles.LineLeader) || User.IsInRole(UserRoles.Admin);
         return View("~/Views/Sakura/SnLabel.cshtml");
     }
 
@@ -276,9 +305,13 @@ public class SakuraController : Controller
         return View("~/Views/Sakura/History.cshtml");
     }
 
+    [TypeFilter(typeof(LogPageVisitFilter))]
     [HttpGet("/sakura/cartonsn")]
     public IActionResult CartonSnIndex()
     {
+        // Pallet Manage/Manage Templates/Repack (Rework WO) chỉ dành cho LineLeader/Admin — xem
+        // ghi chú CanReprint ở SnLabelIndex().
+        ViewBag.CanReprint = User.IsInRole(UserRoles.LineLeader) || User.IsInRole(UserRoles.Admin);
         return View("~/Views/Sakura/CartonSN.cshtml");
     }
 
@@ -288,6 +321,8 @@ public class SakuraController : Controller
         return View("~/Views/Sakura/CartonSnHistory.cshtml");
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
+    [TypeFilter(typeof(LogPageVisitFilter))]
     [HttpGet("/sakura/cartonsn/reprint")]
     public IActionResult CartonSnReprint()
     {
@@ -295,6 +330,8 @@ public class SakuraController : Controller
     }
 
     // Placeholder — chức năng Rework, chưa có logic, sẽ bổ sung sau.
+    [Authorize(Roles = "LineLeader,Admin")]
+    [TypeFilter(typeof(LogPageVisitFilter))]
     [HttpGet("/sakura/rework")]
     public IActionResult ReworkIndex()
     {
@@ -426,6 +463,7 @@ public class SakuraController : Controller
     // (giống cách EanLookup/GetEanByWorkOrderAsync tra EAN cho SnLabel). EAN có thể null nếu
     // sản phẩm chưa cấu hình x_custcode trên Odoo — không coi đó là lỗi, chỉ hiển thị "—".
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/rework/workorder-lookup")]
     public async Task<IActionResult> ReworkWorkOrderLookup([FromQuery] string workOrder)
     {
@@ -454,6 +492,7 @@ public class SakuraController : Controller
     // đó, để front-end tự so khớp với màu của Work Order đã lookup ở bước 1. Trả lỗi nếu không
     // tìm thấy sản phẩm nào có EAN này, hoặc không suy ra được màu từ tên sản phẩm. ───────────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/rework/ean-color-lookup")]
     public async Task<IActionResult> ReworkEanColorLookup([FromQuery] string ean)
     {
@@ -480,6 +519,7 @@ public class SakuraController : Controller
     // fail, hoặc 3 Print Label pass/fail) — LUÔN insert dòng MỚI, không tìm/ghi đè dòng cũ, để
     // giữ lại toàn bộ lịch sử mọi lần thử (kể cả FAIL), giống SM_SNLabelScanLog ở trạm SnLabel. ──
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/rework/log-attempt")]
     public async Task<IActionResult> ReworkLogAttempt([FromBody] ReworkLogAttemptRequest req)
     {
@@ -530,6 +570,7 @@ public class SakuraController : Controller
     // ── API: Rework — Unpack Carton (bước 1). Quét 1 Carton Number đã in để xem N serial hiện
     // có, rồi gỡ k serial ra rework — xem SakuraService.GetCartonForUnpackAsync/UnpackCartonSerialsAsync. ──
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/rework/carton-lookup")]
     public async Task<IActionResult> UnpackCartonLookup([FromQuery] string cartonNumber)
     {
@@ -544,6 +585,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/rework/unpack")]
     public async Task<IActionResult> UnpackCarton([FromBody] UnpackCartonRequest req)
     {
@@ -569,6 +611,7 @@ public class SakuraController : Controller
     // Carton với Condition=Refurb + SKU/PVID/EAN theo Rework WO — xem
     // SakuraService.GetRepackStatusAsync/BuildRepackCartonZplAsync/RecordRepackResultAsync. ─────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/rework/repack-status")]
     public async Task<IActionResult> RepackStatus([FromQuery] string cartonNumber)
     {
@@ -583,6 +626,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/rework/verify-repack-serial")]
     public async Task<IActionResult> VerifyRepackSerial([FromQuery] string cartonNumber, [FromQuery] string serial)
     {
@@ -592,6 +636,7 @@ public class SakuraController : Controller
         return Ok(new { ok = true });
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/rework/repack-print")]
     public async Task<IActionResult> RepackPrint([FromBody] RepackPrintRequest req)
     {
@@ -619,6 +664,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/rework/repack-report-result")]
     public async Task<IActionResult> RepackReportResult([FromBody] RepackReportResultRequest req)
     {
@@ -988,26 +1034,6 @@ public class SakuraController : Controller
         return Ok(new { ok = true });
     }
 
-    // ── API: đăng nhập để mở khoá tab Reprint — bắt buộc đăng nhập lại MỖI LẦN vào tab
-    // này (client không lưu trạng thái đã đăng nhập ở đâu cả — không localStorage/session-
-    // Storage — nên F5, chuyển trang, hoặc chỉ đơn giản chuyển tab đi rồi quay lại cũng phải
-    // đăng nhập lại). Tài khoản lưu ở SM_UserPermission (PasswordHash — PBKDF2/SHA256, xem
-    // SimplePasswordHasher), không có mật khẩu dùng chung như trước nữa. ──────────────────
-
-    [HttpPost("/api/sakura/snlabel/verify-reprint-login")]
-    public async Task<IActionResult> VerifyReprintLogin([FromBody] ReprintLoginRequest req)
-    {
-        if (req == null || string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
-            return Unauthorized(new { ok = false, error = "Sai tài khoản hoặc mật khẩu.", errorCode = "login.incorrect" });
-
-        string username = req.Username.Trim();
-        var user = await _db.UserPermissions.FirstOrDefaultAsync(x => x.Username == username);
-        if (user == null || !SimplePasswordHasher.Verify(req.Password, user.PasswordHash))
-            return Unauthorized(new { ok = false, error = "Sai tài khoản hoặc mật khẩu.", errorCode = "login.incorrect" });
-
-        return Ok(new { ok = true });
-    }
-
     // ── API: print ────────────────────────────────────────────────────────────
 
     [HttpPost("/api/sakura/snlabel/print")]
@@ -1100,6 +1126,7 @@ public class SakuraController : Controller
 
     // ── API: reprint by serial (Manual mode) ────────────────────────────────────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/snlabel/reprint")]
     public async Task<IActionResult> Reprint([FromQuery] string serialNumber)
     {
@@ -1171,6 +1198,7 @@ public class SakuraController : Controller
         return entry;
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/snlabel/rework-reprint")]
     public async Task<IActionResult> ReworkReprintSnLabel([FromBody] ReworkReprintRequest req)
     {
@@ -1291,6 +1319,7 @@ public class SakuraController : Controller
     // đầu tiên) — chỉ gọi lại InputProductionResultLogAsync, cập nhật TẠI CHỖ dòng log (logId)
     // đã tạo ở ReworkReprintSnLabel. ─────────────────────────────────────────────────────────────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/snlabel/rework-reprint-retry-kqsx")]
     public async Task<IActionResult> ReworkRetryKqsx([FromBody] ReworkRetryKqsxRequest req)
     {
@@ -1337,6 +1366,7 @@ public class SakuraController : Controller
     // In lỗi thì log Status=FAIL/FailedStep=4 (giống "Print Label" của luồng thường) nhưng Unpack
     // Log vẫn giữ UNPACKED — xem chú thích ở ReworkReprintSnLabel. ─────────────────────────────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/snlabel/rework-reprint-report-result")]
     public async Task<IActionResult> ReworkReprintReportResult([FromBody] ReworkReprintReportResultRequest req)
     {
@@ -1574,6 +1604,7 @@ public class SakuraController : Controller
         return Ok(new { ok = true, data = list });
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/cartonsn/pallet-template")]
     public async Task<IActionResult> CreatePalletInfoTemplate([FromBody] PalletInfoTemplateUpsertRequest req)
     {
@@ -1595,6 +1626,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPut("/api/sakura/cartonsn/pallet-template/{id:int}")]
     public async Task<IActionResult> UpdatePalletInfoTemplate(int id, [FromBody] PalletInfoTemplateUpsertRequest req)
     {
@@ -1616,6 +1648,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpDelete("/api/sakura/cartonsn/pallet-template/{id:int}")]
     public async Task<IActionResult> DeletePalletInfoTemplate(int id)
     {
@@ -1691,6 +1724,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/cartonsn/pallet/unscan-box")]
     public async Task<IActionResult> PalletUnscanBox([FromBody] PalletUnscanBoxRequest req)
     {
@@ -1764,6 +1798,7 @@ public class SakuraController : Controller
 
     // ── API: Reprint (trang /sakura/cartonsn/reprint) ───────────────────────────
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/cartonsn/reprint/pallets")]
     public async Task<IActionResult> CartonSnPalletReprintListApi(
         [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? workOrder,
@@ -1774,6 +1809,7 @@ public class SakuraController : Controller
         return Ok(new { ok = true, data = result });
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/cartonsn/reprint/carton")]
     public async Task<IActionResult> ReprintCartonLabel([FromBody] CartonReprintRequest req)
     {
@@ -1811,6 +1847,7 @@ public class SakuraController : Controller
         }
     }
 
+    [Authorize(Roles = "LineLeader,Admin")]
     [HttpPost("/api/sakura/cartonsn/reprint/pallet")]
     public async Task<IActionResult> ReprintPalletLabel([FromBody] PalletReprintRequest req)
     {
