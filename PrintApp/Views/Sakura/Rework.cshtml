@@ -278,31 +278,6 @@
     .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
     .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
 
-    /* ── Login gate modal — bắt buộc đăng nhập lại mỗi lần vào trang, cùng thiết kế với
-       modal Reprint (SnLabel.cshtml / CartonSnReprint.cshtml). ──────────────────────── */
-    .sk-modal-overlay {
-        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.45);
-        z-index: 200; align-items: center; justify-content: center;
-    }
-    .sk-modal-overlay.show { display: flex; }
-    .sk-modal {
-        background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 26px 28px;
-        width: 320px; max-width: 90vw; box-shadow: var(--shadow-lg);
-    }
-    .sk-modal-title {
-        font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--gray-900);
-        margin-bottom: 14px; line-height: 1.5;
-    }
-    .sk-modal-input {
-        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
-        min-height: 44px; padding: 10px 14px; font-family: var(--font-body); font-size: 14px; color: var(--gray-900); outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
-    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
-    .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
-    .sk-modal-error.show { display: block; }
-
     /* ── Nút "Hướng dẫn" (❓) — cố định góc dưới-phải, luôn thấy được kể cả khi cuộn trang. ── */
     .guide-btn {
         position: fixed; bottom: 24px; right: 24px; z-index: 90;
@@ -386,8 +361,9 @@
 </style>
 
 @await Html.PartialAsync("_LangSwitcher")
+@await Html.PartialAsync("_UserBadge")
 
-<div class="rw-page" id="reworkPage" style="display:none">
+<div class="rw-page" id="reworkPage">
 
     <header class="rw-header">
         <div>
@@ -675,19 +651,6 @@
 
 </div>
 
-<div class="sk-modal-overlay" id="pwModalOverlay">
-    <div class="sk-modal">
-        <div class="sk-modal-title" data-i18n="rework.loginTitle">Log in to open Rework.</div>
-        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="rework.loginUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
-        <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="rework.loginPasswordPlaceholder" placeholder="Password" autocomplete="off" />
-        <div class="sk-modal-error" id="pwError" data-i18n="rework.loginWrong">Incorrect username or password.</div>
-        <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
-            <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="rework.cancel">Cancel</button>
-            <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="rework.confirm">Confirm</button>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
     <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
@@ -704,67 +667,8 @@
         // biến này (search "TEST ONLY" trong file) để khôi phục đúng logic thật.
         const TEST_FAKE_PRINT_OK = true;
 
-        // ── Login gate — dùng chung tài khoản SM_UserPermission với tab Reprint ở
-        // SnLabel.cshtml / CartonSnReprint.cshtml (endpoint verify-reprint-login). Trạng thái
-        // "đã đăng nhập" lưu ở sessionStorage (KHÔNG phải localStorage) dưới 1 key DÙNG CHUNG với
-        // SnLabel.cshtml/CartonSN.cshtml — đăng nhập ở bất kỳ trang nào trong 3 trang Rework
-        // (Unpack/Rework/Repack) thì 2 trang còn lại tự nhận đã đăng nhập luôn trong cùng phiên
-        // làm việc (đóng tab/trình duyệt là mất, phải đăng nhập lại — vẫn giữ tinh thần "không
-        // remember me" giữa các phiên làm việc khác nhau, chỉ bớt phiền trong lúc đang thao tác
-        // liên tục 1 lượt Rework trải qua cả 3 trang).
-        const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
-        const $reworkPage = document.getElementById('reworkPage');
-        const $pwOverlay  = document.getElementById('pwModalOverlay');
-        const $pwUsername = document.getElementById('pwUsername');
-        const $pwInput    = document.getElementById('pwInput');
-        const $pwError    = document.getElementById('pwError');
-        const $btnPwCancel= document.getElementById('btnPwCancel');
-        const $btnPwSubmit= document.getElementById('btnPwSubmit');
-
-        function openPasswordModal() {
-            $pwUsername.value = '';
-            $pwInput.value = '';
-            $pwError.classList.remove('show');
-            $pwOverlay.classList.add('show');
-            $pwUsername.focus();
-        }
-
-        function revealReworkPage() {
-            $pwOverlay.classList.remove('show');
-            $reworkPage.style.display = '';
-            $unpackCartonNumber.focus();
-            restoreSavedRepackWo();
-        }
-
-        async function submitLogin() {
-            const username = $pwUsername.value.trim();
-            const pw = $pwInput.value;
-            if (!username || !pw) return;
-            $btnPwSubmit.disabled = true;
-            try {
-                const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password: pw })
-                });
-                const body = await res.json().catch(() => null);
-                if (!res.ok || !body || body.ok === false) {
-                    $pwError.classList.add('show');
-                    return;
-                }
-                sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
-                revealReworkPage();
-            } catch {
-                $pwError.classList.add('show');
-            } finally {
-                $btnPwSubmit.disabled = false;
-            }
-        }
-
-        $btnPwCancel.addEventListener('click', () => { window.location.href = `${BASE}/sakura`; });
-        $btnPwSubmit.addEventListener('click', submitLogin);
-        $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
-        $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+        // Trang này đã bị chặn ở server ([Authorize(Roles="LineLeader,Admin")] trên
+        // ReworkIndex()/các API bên dưới, xem SakuraController) — không cần gate JS nữa.
 
         function t(key, fallback) {
             return window.SakuraI18n ? window.SakuraI18n.t(key) : fallback;
@@ -1389,11 +1293,8 @@
         $btnCloseGuide2.addEventListener('click', closeGuideModal);
         $guideModalOverlay.addEventListener('click', (e) => { if (e.target === $guideModalOverlay) closeGuideModal(); });
 
-        if (sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1') {
-            revealReworkPage();
-        } else {
-            openPasswordModal();
-        }
+        $unpackCartonNumber.focus();
+        restoreSavedRepackWo();
     })();
     </script>
 }

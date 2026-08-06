@@ -407,34 +407,10 @@
         .sk-lang-flag { width: 22px; height: 22px; }
     }
 
-    /* ── Login gate modal — mở khoá Pallet Manage / Manage Templates, bắt buộc đăng nhập lại
-       mỗi lần bấm vào (không lưu trạng thái đăng nhập ở đâu cả), cùng thiết kế với modal ở
-       SnLabel.cshtml/CartonSnReprint.cshtml. ── */
-    .sk-modal-overlay {
-        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.45);
-        z-index: 300; align-items: center; justify-content: center;
-    }
-    .sk-modal-overlay.show { display: flex; }
-    .sk-modal {
-        background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 26px 28px;
-        width: 320px; max-width: 90vw; box-shadow: var(--shadow-lg);
-    }
-    .sk-modal-title {
-        font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--gray-900);
-        margin-bottom: 14px; line-height: 1.5;
-    }
-    .sk-modal-input {
-        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
-        min-height: 44px; padding: 10px 14px; font-family: var(--font-body); font-size: 14px; color: var(--gray-900); outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
-    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
-    .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
-    .sk-modal-error.show { display: block; }
 </style>
 
 @await Html.PartialAsync("_LangSwitcher")
+@await Html.PartialAsync("_UserBadge")
 
 <div class="snl-page">
 
@@ -588,7 +564,7 @@
                                 <option value="__manual__" data-i18n="cartonsn.palletTemplateManualOption">✏️ Manual (type manually)</option>
                             </select>
                         </div>
-                        <button type="button" class="t-btn t-btn-outline" id="btnManagePalletTemplate" data-i18n="cartonsn.managePalletTemplateBtn" style="min-height:40px;white-space:nowrap">⚙️ Manage Templates</button>
+                        <button type="button" class="t-btn t-btn-outline" id="btnManagePalletTemplate" data-i18n="cartonsn.managePalletTemplateBtn" style="min-height:40px;white-space:nowrap;@(ViewBag.CanReprint == true ? "" : "display:none")">⚙️ Manage Templates</button>
                     </div>
 
                     <div id="palletManualFieldsWrap" style="display:none">
@@ -646,7 +622,7 @@
                             <label data-i18n="cartonsn.palletAutoPrintLabel" style="margin-bottom:2px">🎯 Auto Print At</label>
                             <input type="number" id="palletAutoPrintTarget" min="1" step="1" data-i18n-placeholder="cartonsn.palletAutoPrintPlaceholder" placeholder="e.g. 64" style="min-height:40px" />
                         </div>
-                        <button type="button" class="t-btn t-btn-outline" id="btnManagePallet" data-i18n="cartonsn.managePalletBtn" style="min-height:40px">⚙️ Pallet Manage</button>
+                        <button type="button" class="t-btn t-btn-outline" id="btnManagePallet" data-i18n="cartonsn.managePalletBtn" style="min-height:40px;@(ViewBag.CanReprint == true ? "" : "display:none")">⚙️ Pallet Manage</button>
                         <button type="button" class="t-btn t-btn-primary" id="btnPrintPalletLabel" data-i18n="cartonsn.printPalletLabelBtn" style="min-height:40px">🖨️ Print Pallet Label</button>
                     </div>
                     <div id="palletStatus" class="t-status"></div>
@@ -877,19 +853,6 @@
     </div>
 </div>
 
-<div class="sk-modal-overlay" id="pwModalOverlay">
-    <div class="sk-modal">
-        <div class="sk-modal-title" data-i18n="cartonsn.loginTitle">Log in to continue.</div>
-        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="cartonsn.loginUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
-        <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="cartonsn.loginPasswordPlaceholder" placeholder="Password" autocomplete="off" />
-        <div class="sk-modal-error" id="pwError" data-i18n="cartonsn.loginWrong">Incorrect username or password.</div>
-        <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
-            <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="cartonsn.cancel">Cancel</button>
-            <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="cartonsn.confirm">Confirm</button>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
 <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
@@ -916,66 +879,11 @@
     }
     function hideStatus(el) { el.classList.remove('show', 'ok', 'err'); }
 
-    // ── Login gate — bắt buộc đăng nhập lại MỖI LẦN vào Pallet Manage / Manage Templates
-    // (không lưu trạng thái đăng nhập ở đâu cả — không localStorage/sessionStorage — nên F5,
-    // chuyển trang, hay chỉ đơn giản đóng modal rồi mở lại cũng đều phải đăng nhập lại). Dùng
-    // chung tài khoản SM_UserPermission với tab Reprint ở trang SnLabel/CartonSnReprint.
-    const $pwOverlay  = document.getElementById('pwModalOverlay');
-    const $pwUsername = document.getElementById('pwUsername');
-    const $pwInput    = document.getElementById('pwInput');
-    const $pwError    = document.getElementById('pwError');
-    const $btnPwCancel= document.getElementById('btnPwCancel');
-    const $btnPwSubmit= document.getElementById('btnPwSubmit');
-
-    let pendingLoginAction = null;
-
-    function requireLogin(action) {
-        pendingLoginAction = action;
-        $pwUsername.value = '';
-        $pwInput.value = '';
-        $pwError.classList.remove('show');
-        $pwOverlay.classList.add('show');
-        $pwUsername.focus();
-    }
-
-    function closePasswordModal() {
-        $pwOverlay.classList.remove('show');
-        pendingLoginAction = null;
-    }
-
-    $btnPwCancel.addEventListener('click', closePasswordModal);
-    $pwOverlay.addEventListener('click', (e) => { if (e.target === $pwOverlay) closePasswordModal(); });
-
-    async function submitLogin() {
-        const username = $pwUsername.value.trim();
-        const pw = $pwInput.value;
-        if (!username || !pw) return;
-        $btnPwSubmit.disabled = true;
-        try {
-            const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password: pw })
-            });
-            const body = await res.json().catch(() => null);
-            if (!res.ok || !body || body.ok === false) {
-                $pwError.classList.add('show');
-                return;
-            }
-            const action = pendingLoginAction;
-            pendingLoginAction = null;
-            $pwOverlay.classList.remove('show');
-            if (action) action();
-        } catch {
-            $pwError.classList.add('show');
-        } finally {
-            $btnPwSubmit.disabled = false;
-        }
-    }
-
-    $btnPwSubmit.addEventListener('click', submitLogin);
-    $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
-    $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitLogin(); });
+    // Pallet Manage / Manage Templates / Repack (Rework WO) chỉ dành cho LineLeader/Admin —
+    // đăng nhập 1 lần cho cả site (cookie auth, xem AccountController), KHÔNG còn modal password
+    // riêng nữa. Server vẫn là chốt chặn thật sự ([Authorize(Roles="LineLeader,Admin")] trên
+    // SakuraController) — CAN_REPRINT chỉ để ẩn/khoá UI cho gọn với Worker.
+    const CAN_REPRINT = @(ViewBag.CanReprint == true ? "true" : "false");
 
     // ── Print Label: Work Order / Carton Number ───────────────────────────────
     const $workOrder     = document.getElementById('workOrder');
@@ -1009,13 +917,6 @@
     // Repack (carton đã tồn tại, in lại Refurb) thay cho section Print Label Carton bình thường
     // (tạo carton mới) — xem lookupWorkOrder()/resetWoState().
     let isReworkWo = false;
-
-    // Bắt đăng nhập trước khi cho thao tác Repack — chỉ hỏi 1 LẦN/phiên. Trạng thái lưu ở
-    // sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/SnLabel.cshtml — đăng nhập ở bất kỳ
-    // trang nào trong 3 trang Rework thì 2 trang còn lại tự nhận đã đăng nhập luôn trong cùng
-    // phiên làm việc (đóng tab/trình duyệt là mất, phải đăng nhập lại).
-    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
-    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
 
     const $reworkModeBar = document.getElementById('reworkModeBar');
     const $reworkBannerWo = document.getElementById('reworkBannerWo');
@@ -1112,24 +1013,19 @@
                 $repackCnEan.textContent = body.data.ean || '—';
                 $repackCnColor.textContent = body.data.color || '—';
                 $repackCnWoReadout.style.display = 'flex';
-                $repackCnCartonNumber.disabled = true; // mở lại SAU khi đăng nhập xong (dưới đây)
+                $repackCnCartonNumber.disabled = true;
+
+                // Rework WO nhưng tài khoản là Worker (không đủ quyền) -> báo rõ thay vì khoá im
+                // lặng. Carton Number vẫn khoá (xem $repackCnCartonNumber.disabled ở trên).
+                if (!CAN_REPRINT) {
+                    showStatus($woStatus, `⚠ ${t('cartonsn.reworkNeedsLineLeader', 'This is a Rework Work Order — ask a Line Leader/Admin to process it.')}`, 'err');
+                    return;
+                }
 
                 showStatus($woStatus, `✓ ${t('cartonsn.reworkWoDetected', 'Rework Work Order detected — switched to Repack mode below.')}`, 'ok');
                 woStatusHideTimer = setTimeout(() => { $woStatus.className = 't-status'; }, 5000);
-
-                // Rework WO -> bắt đăng nhập trước khi cho thao tác Repack (Carton Number vẫn
-                // khoá cho tới khi đăng nhập xong) — xem khai báo reworkLoggedIn ở trên.
-                if (!reworkLoggedIn) {
-                    requireLogin(() => {
-                        reworkLoggedIn = true;
-                        sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
-                        $repackCnCartonNumber.disabled = false;
-                        $repackCnCartonNumber.focus();
-                    });
-                } else {
-                    $repackCnCartonNumber.disabled = false;
-                    $repackCnCartonNumber.focus();
-                }
+                $repackCnCartonNumber.disabled = false;
+                $repackCnCartonNumber.focus();
                 return;
             }
 
@@ -1691,7 +1587,7 @@
     }
     function closePalletTemplateManage() { $palletTemplateManageOverlay.style.display = 'none'; }
 
-    $btnManagePalletTemplate.addEventListener('click', () => requireLogin(openPalletTemplateManage));
+    $btnManagePalletTemplate.addEventListener('click', openPalletTemplateManage);
     $btnClosePalletTemplateManage.addEventListener('click', closePalletTemplateManage);
     $palletTemplateManageOverlay.addEventListener('click', (e) => { if (e.target === $palletTemplateManageOverlay) closePalletTemplateManage(); });
     $btnCancelEditTemplate.addEventListener('click', resetTemplateForm);
@@ -1879,7 +1775,7 @@
     }
     function closePalletManage() { $palletManageOverlay.style.display = 'none'; }
 
-    $btnManagePallet.addEventListener('click', () => requireLogin(openPalletManage));
+    $btnManagePallet.addEventListener('click', openPalletManage);
     $btnClosePalletManage.addEventListener('click', closePalletManage);
     $palletManageOverlay.addEventListener('click', (e) => { if (e.target === $palletManageOverlay) closePalletManage(); });
 

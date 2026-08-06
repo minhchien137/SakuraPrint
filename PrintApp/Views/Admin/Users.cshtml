@@ -1,0 +1,457 @@
+@model List<PrintApp.Models.UserPermission>
+@{
+    ViewData["Title"] = "Account Administration — Sakura";
+    var msgCode = ViewBag.MsgCode as string;
+    var msgParam = ViewBag.MsgParam as string;
+    var errCode = ViewBag.ErrCode as string;
+    var errParam = ViewBag.ErrParam as string;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --success:    #059669;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important; font-family: var(--font-body) !important;
+    }
+    body::before { content: none !important; }
+
+    .adm-page { max-width: 1400px; margin: 0 auto; padding: 32px 28px 60px; position: relative; z-index: 1; }
+
+    .adm-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px; }
+    .adm-header h1 { font-family: var(--font-head); font-size: 34px; font-weight: 800; letter-spacing: -0.4px; color: var(--red-dark); line-height: 1.15; }
+    .adm-header p { font-size: 0.85rem; color: var(--gray-500); margin-top: 8px; }
+    .adm-header .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin-top: 12px;
+        background: linear-gradient(90deg, var(--red-dark), var(--red-mid));
+    }
+    .adm-badge {
+        background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light);
+        font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase; padding: 6px 14px 6px 10px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; height: fit-content;
+    }
+    .adm-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    .adm-back {
+        font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--gray-500);
+        text-decoration: none; border-bottom: 1px solid var(--gray-200); transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .adm-back:hover { color: var(--red-dark); border-color: var(--red-light); }
+
+    .adm-nav { display: flex; gap: 10px; margin-bottom: 22px; }
+    .adm-nav a {
+        font-family: var(--font-body); font-size: 0.78rem; font-weight: 700; text-decoration: none;
+        padding: 9px 16px; border-radius: 10px; border: 1.5px solid var(--gray-200); color: var(--gray-600);
+        transition: all 0.15s ease;
+    }
+    .adm-nav a:hover { border-color: var(--red-light); color: var(--red-dark); background: var(--red-xlight); }
+    .adm-nav a.active { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); border-color: transparent; }
+
+    .adm-banner { border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; font-weight: 600; }
+    .adm-banner.ok { background: #ECFDF5; border: 1px solid #A7F3D0; color: var(--success); }
+    .adm-banner.err { background: var(--red-xlight); border: 1px solid var(--red-light); color: var(--danger); }
+
+    .adm-section {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 18px;
+        padding: 26px 28px; margin-bottom: 22px; box-shadow: var(--shadow-md);
+    }
+    .adm-section-label {
+        font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+        color: var(--gray-700); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .adm-section-label::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+    .adm-count { color: var(--gray-400); font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+    label { display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px; }
+    input[type=text], input[type=password], select {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 42px; padding: 9px 13px; font-family: var(--font-body); font-size: 13.5px; color: var(--gray-900);
+        outline: none; box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:hover, select:hover { border-color: var(--red-mid); }
+    input:focus, select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+
+    .adm-create-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; align-items: end; }
+    .btn {
+        font-family: var(--font-body); font-size: 0.8rem; font-weight: 700; border: none; cursor: pointer;
+        min-height: 42px; padding: 10px 18px; border-radius: 10px; white-space: nowrap;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--red-dark), var(--red-mid)); color: var(--white); box-shadow: 0 4px 14px rgba(200,16,46,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(200,16,46,0.38); }
+    .btn-ghost { background: var(--white); color: var(--gray-600); border: 1.5px solid var(--gray-200); }
+    .btn-ghost:hover { border-color: var(--red); color: var(--red-dark); background: var(--red-xlight); }
+
+    .adm-rowhead, .adm-row {
+        display: grid; grid-template-columns: 1.3fr 1.1fr 1.2fr 1fr 1fr auto 1.2fr auto;
+        gap: 14px; align-items: center;
+    }
+    .adm-rowhead {
+        padding: 0 14px 12px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+        color: var(--gray-400); border-bottom: 1.5px solid var(--gray-100);
+    }
+    .adm-row {
+        padding: 16px 14px; border-bottom: 1px dashed var(--gray-200); border-radius: 12px;
+        transition: background 0.15s ease;
+    }
+    .adm-row:hover { background: var(--gray-50); }
+    .adm-row:last-child { border-bottom: none; }
+    .adm-row .static-cell { font-size: 13.5px; color: var(--gray-900); font-weight: 700; }
+    .adm-row .hint-cell { font-size: 11.5px; color: var(--gray-400); }
+    .adm-row form { display: contents; }
+    .adm-row form > div { margin: 0; }
+
+    .role-badge {
+        display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+        padding: 3px 9px; border-radius: 20px; margin-bottom: 6px;
+    }
+    .role-Admin { background: var(--red-xlight); color: var(--red-dark); border: 1px solid var(--red-light); }
+    .role-LineLeader { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .role-Worker { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+
+    /* ── Language switcher — fixed top-right, shared across all Sakura pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 560px) {
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+
+    .adm-reset-form { display: flex !important; gap: 8px; align-items: end; }
+
+    @@media (max-width: 1100px) {
+        .adm-rowhead { display: none; }
+        .adm-row { grid-template-columns: 1fr 1fr; row-gap: 12px; }
+    }
+
+    /* ── Nút "Hướng dẫn" (❓) — cố định góc dưới-phải, giải thích Role nào làm được gì. ── */
+    .guide-btn {
+        position: fixed; bottom: 24px; right: 24px; z-index: 90;
+        display: flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        color: var(--white); border: none; border-radius: 30px;
+        padding: 13px 20px; font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;
+        box-shadow: var(--shadow-lg); cursor: pointer; transition: transform 0.2s ease;
+    }
+    .guide-btn:hover { transform: translateY(-2px); }
+
+    .guide-modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.55);
+        z-index: 250; align-items: center; justify-content: center; padding: 20px;
+    }
+    .guide-modal-overlay.show { display: flex; }
+    .guide-modal {
+        background: var(--white); border-radius: 20px; box-shadow: var(--shadow-lg);
+        width: 100%; max-width: 640px; max-height: 88vh; display: flex; flex-direction: column;
+    }
+    .guide-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 26px; border-bottom: 1px solid var(--gray-200); flex-shrink: 0;
+    }
+    .guide-modal-header h2 {
+        font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--red-dark); margin: 0;
+    }
+    .guide-modal-close {
+        background: none; border: none; cursor: pointer; font-size: 18px; color: var(--gray-500);
+        padding: 4px 8px; border-radius: 8px; flex-shrink: 0;
+    }
+    .guide-modal-close:hover { color: var(--red); background: var(--red-xlight); }
+    .guide-modal-body { padding: 22px 26px; overflow-y: auto; }
+    .guide-intro {
+        font-family: var(--font-body); font-size: 0.85rem; color: var(--gray-700); line-height: 1.6;
+        margin-bottom: 20px; padding: 12px 16px; background: var(--gray-50); border-radius: 10px;
+    }
+    .guide-step {
+        display: flex; gap: 14px; margin-bottom: 16px; padding: 16px; border-radius: 14px;
+        border: 1.5px solid var(--gray-200);
+    }
+    .guide-step.s1 { border-left: 5px solid var(--gray-400); }
+    .guide-step.s2 { border-left: 5px solid #F59E0B; }
+    .guide-step.s3 { border-left: 5px solid var(--red); }
+    .guide-step .num {
+        flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; color: var(--white);
+    }
+    .guide-step.s1 .num { background: var(--gray-400); }
+    .guide-step.s2 .num { background: #F59E0B; }
+    .guide-step.s3 .num { background: var(--red); }
+    .guide-step .content { flex: 1; min-width: 0; }
+    .guide-step .content h3 {
+        font-family: var(--font-head); font-size: 15px; font-weight: 800; color: var(--gray-900);
+        margin: 0 0 8px;
+    }
+    .guide-step .content ul {
+        margin: 0; padding-left: 20px; font-family: var(--font-body); font-size: 0.83rem;
+        color: var(--gray-700); line-height: 1.75;
+    }
+    .guide-step .content .result {
+        margin-top: 8px; font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; color: var(--gray-500);
+    }
+    .guide-footer-note {
+        margin-top: 4px; padding: 12px 16px; background: var(--red-xlight); border: 1px solid var(--red-light);
+        border-radius: 10px; font-family: var(--font-body); font-size: 0.8rem; color: var(--red-dark); line-height: 1.6;
+    }
+    .guide-modal-footer {
+        padding: 16px 26px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; flex-shrink: 0;
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+@await Html.PartialAsync("~/Views/Sakura/_UserBadge.cshtml")
+
+<div class="adm-page">
+    <header class="adm-header">
+        <div>
+            <h1 data-i18n="admin.title">Account Administration</h1>
+            <p data-i18n="admin.subtitle">Create/edit accounts, assign Worker/Line Leader/Admin roles for Sakura.</p>
+            <span class="accent-bar"></span>
+        </div>
+        <div class="adm-badge" data-i18n="admin.badge">ADMIN ONLY</div>
+    </header>
+
+    <div class="adm-nav">
+        <a href="@Url.Content("~/admin/users")" class="active" data-i18n="admin.navUsers">👤 Manage Accounts</a>
+        <a href="@Url.Content("~/admin/activity-log")" data-i18n="admin.navLog">📋 Activity Log</a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(msgCode))
+    {
+        <div class="adm-banner ok" id="admBannerOk" data-code="@msgCode" data-param="@msgParam"></div>
+    }
+    @if (!string.IsNullOrEmpty(errCode))
+    {
+        <div class="adm-banner err" id="admBannerErr" data-code="@errCode" data-param="@errParam"></div>
+    }
+
+    <div class="adm-section">
+        <div class="adm-section-label"><span data-i18n="admin.createSectionLabel">Create New Account</span></div>
+        <form method="post" action="@Url.Content("~/admin/users/create")" class="adm-create-grid">
+            <div>
+                <label data-i18n="admin.usernameLabel">Username</label>
+                <input type="text" name="username" required autocomplete="off" />
+            </div>
+            <div>
+                <label data-i18n="admin.displayNameLabel">Display Name</label>
+                <input type="text" name="displayName" autocomplete="off" />
+            </div>
+            <div>
+                <label data-i18n="admin.passwordLabel">Password</label>
+                <input type="password" name="password" required autocomplete="new-password" />
+            </div>
+            <div>
+                <label data-i18n="admin.roleLabel">Role</label>
+                <select name="role">
+                    <option value="Worker">Worker</option>
+                    <option value="LineLeader">Line Leader</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><span data-i18n="admin.createBtn">+ Create Account</span></button>
+        </form>
+    </div>
+
+    <div class="adm-section">
+        <div class="adm-section-label">
+            <span data-i18n="admin.listSectionLabel">Account List</span>
+            <span class="adm-count">(@Model.Count)</span>
+        </div>
+
+        <div class="adm-rowhead">
+            <div data-i18n="admin.colAccount">Account</div>
+            <div data-i18n="admin.colCreated">Created</div>
+            <div data-i18n="admin.colDisplayName">Display Name</div>
+            <div data-i18n="admin.colRole">Role</div>
+            <div data-i18n="admin.colStatus">Status</div>
+            <div></div>
+            <div data-i18n="admin.colNewPassword">New Password</div>
+            <div></div>
+        </div>
+
+        @foreach (var user in Model)
+        {
+            <div class="adm-row">
+                <div>
+                    <span class="role-badge role-@user.Role">@user.Role</span>
+                    <div class="static-cell">@user.Username</div>
+                </div>
+                <div class="hint-cell">@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+
+                <form method="post" action="@Url.Content($"~/admin/users/{user.Id}/update")">
+                    <div>
+                        <input type="text" name="displayName" value="@user.DisplayName" autocomplete="off" />
+                    </div>
+                    <div>
+                        <select name="role">
+                            <option value="Worker" selected="@(user.Role == "Worker")">Worker</option>
+                            <option value="LineLeader" selected="@(user.Role == "LineLeader")">Line Leader</option>
+                            <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select name="isActive">
+                            <option value="true" selected="@(user.IsActive)" data-i18n="admin.statusActive">Active</option>
+                            <option value="false" selected="@(!user.IsActive)" data-i18n="admin.statusLocked">Locked</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-ghost">💾 <span data-i18n="admin.saveBtn">Save</span></button>
+                </form>
+
+                <form method="post" action="@Url.Content($"~/admin/users/{user.Id}/reset-password")" class="adm-reset-form">
+                    <div style="flex:1">
+                        <input type="password" name="newPassword" data-i18n-placeholder="admin.newPasswordPlaceholder" placeholder="New password" autocomplete="new-password" />
+                    </div>
+                    <button type="submit" class="btn btn-ghost">🔑 <span data-i18n="admin.resetBtn">Reset</span></button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <a class="adm-back" href="@Url.Content("~/sakura")" data-i18n="admin.backHome" style="display:inline-block;margin-top:6px">← Back to Sakura Home</a>
+</div>
+
+<button type="button" class="guide-btn" id="btnOpenGuide">
+    <span>❓</span>
+    <span data-i18n="adminGuide.btnLabel">Guide</span>
+</button>
+
+<div class="guide-modal-overlay" id="guideModalOverlay">
+    <div class="guide-modal">
+        <div class="guide-modal-header">
+            <h2 data-i18n="adminGuide.title">ACCOUNT ROLES GUIDE</h2>
+            <button type="button" class="guide-modal-close" id="btnCloseGuide" aria-label="Close">✕</button>
+        </div>
+        <div class="guide-modal-body">
+            <div class="guide-intro" data-i18n="adminGuide.intro">
+                Sakura has 3 account roles. Each role includes everything the role(s) below it can do.
+            </div>
+
+            <div class="guide-step s1">
+                <div class="num">👷</div>
+                <div class="content">
+                    <h3 data-i18n="adminGuide.workerTitle">WORKER — Day-to-day operations</h3>
+                    <ul>
+                        <li data-i18n="adminGuide.workerItem1">Print SN Label / Carton SN &amp; Pallet Label under a normal Work Order</li>
+                        <li data-i18n="adminGuide.workerItem2">Back Panel Station, FQC Station, Middle Panel Station</li>
+                        <li data-i18n="adminGuide.workerItem3">View print/scan History pages</li>
+                    </ul>
+                    <div class="result" data-i18n="adminGuide.workerResult">Cannot Reprint, cannot Rework/Repack, cannot manage Pallet Templates.</div>
+                </div>
+            </div>
+
+            <div class="guide-step s2">
+                <div class="num">🛠️</div>
+                <div class="content">
+                    <h3 data-i18n="adminGuide.supervisorTitle">LINE LEADER — Everything Worker can do, plus:</h3>
+                    <ul>
+                        <li data-i18n="adminGuide.supervisorItem1">Reprint SN Label / Carton / Pallet labels</li>
+                        <li data-i18n="adminGuide.supervisorItem2">Rework: Unpack, Repack, and process Rework Work Orders</li>
+                        <li data-i18n="adminGuide.supervisorItem3">Manage Pallet (remove a box from a pallet)</li>
+                        <li data-i18n="adminGuide.supervisorItem4">Manage Pallet Info Templates</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-step s3">
+                <div class="num">🛡️</div>
+                <div class="content">
+                    <h3 data-i18n="adminGuide.adminTitle">ADMIN — Everything Line Leader can do, plus:</h3>
+                    <ul>
+                        <li data-i18n="adminGuide.adminItem1">Account Administration (this page): create accounts, change roles, lock/unlock accounts, reset passwords</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-footer-note" data-i18n="adminGuide.footerNote">
+                Assign the lowest role that still covers what a person actually needs to do.
+            </div>
+        </div>
+        <div class="guide-modal-footer">
+            <button type="button" class="btn btn-primary" id="btnCloseGuide2" data-i18n="adminGuide.closeBtn">Got it</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var $btnOpenGuide = document.getElementById('btnOpenGuide');
+        var $guideModalOverlay = document.getElementById('guideModalOverlay');
+        var $btnCloseGuide = document.getElementById('btnCloseGuide');
+        var $btnCloseGuide2 = document.getElementById('btnCloseGuide2');
+
+        function openGuideModal() { $guideModalOverlay.classList.add('show'); }
+        function closeGuideModal() { $guideModalOverlay.classList.remove('show'); }
+
+        $btnOpenGuide.addEventListener('click', openGuideModal);
+        $btnCloseGuide.addEventListener('click', closeGuideModal);
+        $btnCloseGuide2.addEventListener('click', closeGuideModal);
+        $guideModalOverlay.addEventListener('click', function (e) { if (e.target === $guideModalOverlay) closeGuideModal(); });
+    })();
+</script>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+    <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+    <script>
+        // Banner thành công/lỗi từ TempData chỉ gửi kèm code + param (xem AdminController) —
+        // tự dịch sang EN/ZH ở đây thay vì hardcode tiếng Việt, đồng bộ với ngôn ngữ đang chọn.
+        (function () {
+            function renderBanner(id, prefix) {
+                var el = document.getElementById(id);
+                if (!el || !window.SakuraI18n) return;
+                var code = el.getAttribute('data-code');
+                if (!code) return;
+                var param = el.getAttribute('data-param') || '';
+                var text = window.SakuraI18n.t(code).split('{value}').join(param);
+                el.textContent = prefix + ' ' + text;
+            }
+            function renderAll() {
+                renderBanner('admBannerOk', '✓');
+                renderBanner('admBannerErr', '✗');
+            }
+            renderAll();
+            document.addEventListener('sakura:lang-changed', renderAll);
+        })();
+    </script>
+}

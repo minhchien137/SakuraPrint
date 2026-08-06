@@ -365,32 +365,6 @@
     }
     .sk-mode-tab .mode-icon { font-size: 15px; }
 
-    /* Password modal for unlocking Manual mode */
-    .sk-modal-overlay {
-        position: fixed; inset: 0; background: rgba(60,0,10,0.45); backdrop-filter: blur(4px); z-index: 200;
-        display: none; align-items: center; justify-content: center;
-    }
-    .sk-modal-overlay.show { display: flex; }
-    .sk-modal {
-        background: var(--white); border: 1px solid var(--gray-200); border-radius: 16px; padding: 26px 28px;
-        width: 320px; max-width: 90vw; box-shadow: var(--shadow-lg);
-    }
-    .sk-modal-title {
-        font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--gray-900);
-        margin-bottom: 14px; line-height: 1.5;
-    }
-    .sk-modal-input {
-        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
-        min-height: 44px; padding: 10px 14px; font-family: var(--font-body); font-size: 14px; color: var(--gray-900); outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .sk-modal-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
-    /* type="text" vs type="password" can inherit different UA default placeholder sizing —
-       force both to match the input's own font instead of relying on inheritance. */
-    .sk-modal-input::placeholder { font: 14px var(--font-body); opacity: 0.6; }
-    .sk-modal-error { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; color: var(--danger); margin-top: 8px; display: none; }
-    .sk-modal-error.show { display: block; }
-
     /* Generated serial output */
     .snl-serial-list {
         background: var(--gray-900); color: #86efac; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12.5px;
@@ -429,6 +403,7 @@
 </style>
 
 @await Html.PartialAsync("_LangSwitcher")
+@await Html.PartialAsync("_UserBadge")
 
 <div class="snl-page">
 
@@ -551,7 +526,7 @@
                         <span class="mode-icon">🏭</span>
                         <span data-i18n="snlabel.modeWorkOrder">Work Order</span>
                     </button>
-                    <button type="button" class="sk-mode-tab" data-mode="manual">
+                    <button type="button" class="sk-mode-tab" data-mode="manual" style="@(ViewBag.CanReprint == true ? "" : "display:none")">
                         <span class="mode-icon">🔁</span>
                         <span data-i18n="snlabel.modeManual">Reprint</span>
                     </button>
@@ -791,19 +766,6 @@
     </div>
 </div>
 
-<div class="sk-modal-overlay" id="pwModalOverlay">
-    <div class="sk-modal">
-        <div class="sk-modal-title" data-i18n="snlabel.manualPwTitle">Log in to open Reprint.</div>
-        <input type="text" id="pwUsername" class="sk-modal-input" data-i18n-placeholder="snlabel.manualPwUsernamePlaceholder" placeholder="Username" autocomplete="off" style="margin-bottom:10px" />
-        <input type="password" id="pwInput" class="sk-modal-input" data-i18n-placeholder="snlabel.manualPwPlaceholder" placeholder="Password" autocomplete="off" />
-        <div class="sk-modal-error" id="pwError" data-i18n="snlabel.manualPwWrong">Incorrect username or password.</div>
-        <div class="t-actions" style="margin-top:16px;justify-content:flex-end">
-            <button type="button" class="t-btn t-btn-ghost" id="btnPwCancel" data-i18n="snlabel.cancel">Cancel</button>
-            <button type="button" class="t-btn t-btn-primary" id="btnPwSubmit" data-i18n="snlabel.confirm">Confirm</button>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
 <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
@@ -935,13 +897,6 @@
         if (active) $reworkBannerWo.textContent = wo || '';
     }
 
-    const $pwOverlay  = document.getElementById('pwModalOverlay');
-    const $pwUsername = document.getElementById('pwUsername');
-    const $pwInput    = document.getElementById('pwInput');
-    const $pwError    = document.getElementById('pwError');
-    const $btnPwCancel= document.getElementById('btnPwCancel');
-    const $btnPwSubmit= document.getElementById('btnPwSubmit');
-
     const $reprintSection = document.getElementById('reprintSection');
     const $reprintSerial  = document.getElementById('reprintSerial');
     const $btnReprint     = document.getElementById('btnReprint');
@@ -954,11 +909,11 @@
     // sửa lại HTML/JS gì khác.
     const MANUAL_PRINT_ENABLED = false;
 
-    // Bắt buộc đăng nhập (Username + Password, xem SM_UserPermission) mỗi lần vào tab
-    // Reprint — không "remember me": trạng thái đăng nhập KHÔNG được lưu ở đâu cả (không
-    // localStorage/sessionStorage), nên F5, chuyển trang, hay chỉ đơn giản bấm sang tab Work
-    // Order rồi quay lại Reprint cũng đều phải đăng nhập lại (xem $modeTabs click handler).
-    const MANUAL_PW_GATE_ENABLED = true;
+    // Reprint/Rework chỉ dành cho LineLeader/Admin — đăng nhập 1 lần cho cả site (cookie
+    // auth, xem AccountController), KHÔNG còn modal password riêng cho từng tab nữa. Server
+    // vẫn là chốt chặn thật sự ([Authorize(Roles="LineLeader,Admin")] trên SakuraController) —
+    // cờ này chỉ để ẩn UI cho gọn với Worker (không thấy tab thì không bấm nhầm).
+    const CAN_REPRINT = @(ViewBag.CanReprint == true ? "true" : "false");
 
     let entryMode = 'wo'; // always defaults to Work Order on page load
     let woResolvedOk = false;
@@ -1122,7 +1077,7 @@
     // ── Flow gate 2: EAN + Serial Number stay locked until the Work Order has
     // been looked up successfully (also re-locked while a retry is pending). ──
     function updateEanSerialLock() {
-        const locked = !woResolvedOk || !!pendingRetrySerial || (isReworkWo && !reworkLoggedIn);
+        const locked = !woResolvedOk || !!pendingRetrySerial || (isReworkWo && !CAN_REPRINT);
         $eanInput.disabled = locked;
         $snInput.disabled = locked;
     }
@@ -1137,88 +1092,16 @@
         updatePrintButtonState();
     }
 
-    // Mode nào đang chờ đăng nhập xong mới thật sự chuyển sang — dùng chung 1 modal cho cả
-    // Manual (Reprint) lẫn Rework, đều bắt buộc đăng nhập lại mỗi lần vào (không "remember me").
-    let pendingMode = null;
-
-    // Rework giờ phát hiện NGAY TRONG tab Work Order (không qua tab riêng nữa) — vẫn bắt đăng
-    // nhập trước khi cho thao tác, nhưng KHÔNG mỗi lần lookup 1 WO rework là hỏi lại — chỉ hỏi
-    // 1 lần/phiên trang. Trạng thái lưu ở sessionStorage dưới 1 key DÙNG CHUNG với Rework.cshtml/
-    // CartonSN.cshtml — đăng nhập ở bất kỳ trang nào trong 3 trang Rework thì 2 trang còn lại tự
-    // nhận đã đăng nhập luôn trong cùng phiên làm việc (đóng tab/trình duyệt là mất, phải đăng
-    // nhập lại — vẫn giữ tinh thần "không remember me" giữa các phiên khác nhau).
-    const REWORK_LOGIN_SESSION_KEY = 'sakura_rework_logged_in';
-    let reworkLoggedIn = sessionStorage.getItem(REWORK_LOGIN_SESSION_KEY) === '1';
-    let pendingReworkLogin = false;
-
+    // Tab Reprint đã bị ẩn hẳn ở HTML khi !CAN_REPRINT (xem style inline trên button data-mode
+    // "manual"), nên click handler ở đây chỉ còn việc chuyển tab bình thường — không cần modal
+    // password nữa (đăng nhập 1 lần cho cả site, xem AccountController).
     $modeTabs.addEventListener('click', (e) => {
         const btn = e.target.closest('.sk-mode-tab');
         if (!btn) return;
         const mode = btn.dataset.mode;
         if (mode === entryMode) return;
-
-        if ((mode === 'manual' || mode === 'rework') && MANUAL_PW_GATE_ENABLED) {
-            pendingMode = mode;
-            openPasswordModal();
-            return;
-        }
         setMode(mode);
     });
-
-    // ── Reprint login gate — mở modal MỖI LẦN bấm vào tab Reprint (xem $modeTabs click
-    // handler, không có cờ "đã đăng nhập" nào được lưu lại). ─────────────────────────
-    function openPasswordModal() {
-        $pwUsername.value = '';
-        $pwInput.value = '';
-        $pwError.classList.remove('show');
-        $pwOverlay.classList.add('show');
-        $pwUsername.focus();
-    }
-
-    function closePasswordModal() {
-        $pwOverlay.classList.remove('show');
-    }
-
-    $btnPwCancel.addEventListener('click', () => { pendingReworkLogin = false; closePasswordModal(); });
-    $pwOverlay.addEventListener('click', (e) => { if (e.target === $pwOverlay) { pendingReworkLogin = false; closePasswordModal(); } });
-
-    async function submitPassword() {
-        const username = $pwUsername.value.trim();
-        const pw = $pwInput.value;
-        if (!username || !pw) return;
-        $btnPwSubmit.disabled = true;
-        try {
-            const res = await fetch(`${BASE}/api/sakura/snlabel/verify-reprint-login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password: pw })
-            });
-            const body = await res.json().catch(() => null);
-            if (!res.ok || !body || body.ok === false) {
-                $pwError.classList.add('show');
-                return;
-            }
-            closePasswordModal();
-            if (pendingReworkLogin) {
-                pendingReworkLogin = false;
-                reworkLoggedIn = true;
-                sessionStorage.setItem(REWORK_LOGIN_SESSION_KEY, '1');
-                updateEanSerialLock();
-                $eanInput.focus();
-            } else {
-                setMode(pendingMode || 'manual');
-                pendingMode = null;
-            }
-        } catch {
-            $pwError.classList.add('show');
-        } finally {
-            $btnPwSubmit.disabled = false;
-        }
-    }
-
-    $btnPwSubmit.addEventListener('click', submitPassword);
-    $pwUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPassword(); });
-    $pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPassword(); });
 
     // ── Work Order lookup ─────────────────────────────────────────────────────
     async function lookupWorkOrder() {
@@ -1270,18 +1153,19 @@
             $woResolved.style.display = 'flex';
             woResolvedOk = true;
             updateEanSerialLock(); // WO hợp lệ -> mở khóa EAN + Serial Number (trừ khi là Rework
-                                    // WO mà chưa đăng nhập — xem điều kiện trong updateEanSerialLock)
+                                    // WO mà tài khoản không đủ quyền — xem CAN_REPRINT)
 
             // Lookup thành công -> tự lưu WO luôn (như bấm nút Save) để F5 lại trang tự điền +
             // lookup lại, khỏi phải gõ/bấm Save tay mỗi lần.
             localStorage.setItem(LS_WO_KEY, wo);
             $btnSaveWo.classList.add('is-saved');
 
-            // Rework WO -> bắt đăng nhập trước khi cho thao tác (1 lần/phiên trang, xem khai báo
-            // reworkLoggedIn) — EAN/Serial vẫn khoá cho tới khi đăng nhập xong.
-            if (isReworkWo && !reworkLoggedIn && MANUAL_PW_GATE_ENABLED) {
-                pendingReworkLogin = true;
-                openPasswordModal();
+            // Rework WO nhưng tài khoản là Worker (không đủ quyền) -> báo rõ thay vì để khoá im
+            // lặng, EAN/Serial vẫn khoá (xem updateEanSerialLock).
+            if (isReworkWo && !CAN_REPRINT) {
+                showStatus($woStatus, `⚠ ${t('snlabel.reworkNeedsLineLeader', 'This is a Rework Work Order — ask a Line Leader/Admin to process it.')}`, 'err');
+                loadStatus();
+                return;
             }
 
             const lookupMsg = t('snlabel.woLookupSuccess', '{color} — {qty} pcs remaining.')

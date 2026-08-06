@@ -1,0 +1,84 @@
+@{
+    var isAuthed = User.Identity?.IsAuthenticated == true;
+    var displayName = User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name ?? "";
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    var roleLabel = role switch
+    {
+        "Admin" => "Administrator",
+        "LineLeader" => "Line Leader",
+        "Worker" => "Worker",
+        _ => role,
+    };
+}
+
+@if (isAuthed)
+{
+    <style>
+        .sk-user-badge {
+            position: fixed; bottom: 14px; left: 14px; z-index: 100;
+            display: flex; align-items: center;
+            background: var(--white); border: 1px solid var(--gray-200); border-radius: 22px;
+            box-shadow: var(--shadow-sm); font-family: var(--font-body);
+            overflow: hidden;
+        }
+        .sk-user-badge .ub-toggle {
+            width: 34px; height: 34px; min-width: 34px; flex-shrink: 0; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--red-xlight); color: var(--red-dark); font-size: 14px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s ease;
+        }
+        .sk-user-badge.open .ub-toggle { transform: rotate(180deg); }
+        .sk-user-badge .ub-panel {
+            display: flex; align-items: center; gap: 10px;
+            max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+            transition: max-width 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+        }
+        .sk-user-badge.open .ub-panel { max-width: 240px; opacity: 1; padding: 0 10px 0 4px; }
+        .sk-user-badge .who { display: flex; flex-direction: column; line-height: 1.25; }
+        .sk-user-badge .name { font-size: 12px; font-weight: 700; color: var(--gray-900); }
+        .sk-user-badge .role {
+            font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--red-dark);
+        }
+        .sk-user-badge form { margin: 0; }
+        .sk-user-badge .logout-btn {
+            width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--red-xlight); color: var(--red-dark); font-size: 12px;
+            display: flex; align-items: center; justify-content: center; transition: background 0.15s ease;
+        }
+        .sk-user-badge .logout-btn:hover { background: var(--red-light); }
+
+        @@media (max-width: 560px) {
+            .sk-user-badge { bottom: 10px; left: 10px; }
+        }
+    </style>
+
+    <div class="sk-user-badge" id="skUserBadge">
+        <button type="button" class="ub-toggle" id="skUserBadgeToggle" title="Tài khoản" aria-label="Tài khoản">›</button>
+        <div class="ub-panel">
+            <div class="who">
+                <span class="name">@displayName</span>
+                <span class="role">@roleLabel</span>
+            </div>
+            <form method="post" action="@Url.Content("~/account/logout")">
+                <button type="submit" class="logout-btn" title="Đăng xuất" aria-label="Đăng xuất">⏻</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var badge = document.getElementById('skUserBadge');
+            var toggle = document.getElementById('skUserBadgeToggle');
+            if (!badge || !toggle) return;
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                badge.classList.toggle('open');
+            });
+            document.addEventListener('click', function (e) {
+                if (badge.classList.contains('open') && !badge.contains(e.target)) {
+                    badge.classList.remove('open');
+                }
+            });
+        })();
+    </script>
+}

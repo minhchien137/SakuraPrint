@@ -1,4 +1,9 @@
--- SM_UserPermission — tài khoản đăng nhập để mở khoá tab Reprint ở trang SnLabel
+-- ⚠️ ĐÃ THAY THẾ bởi SM_UserPermission_RenameToSakuraAndAddRole.sql — bảng này được đổi tên
+-- thành SM_Sakura_UserPermission (bám convention SM_Sakura_*) và thêm Role/IsActive/DisplayName
+-- để dùng cho login toàn site Sakura (xem AccountController). Giữ file này lại làm lịch sử,
+-- KHÔNG chạy lại trên môi trường đã áp dụng script rename — chạy script rename thay thế.
+--
+-- SM_UserPermission (tên cũ) — tài khoản đăng nhập để mở khoá tab Reprint ở trang SnLabel
 -- (/sakura/snlabel). PasswordHash lưu dạng "{iterations}.{saltBase64}.{hashBase64}"
 -- (PBKDF2/SHA256) — xem PrintApp/Services/SimplePasswordHasher.cs. KHÔNG bao giờ lưu
 -- mật khẩu dạng plaintext vào cột này.

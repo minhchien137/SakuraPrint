@@ -3,10 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PrintApp.Models;
 
-// Tài khoản đăng nhập để mở khoá tab Reprint ở trang SnLabel (/sakura/snlabel) — bắt buộc
-// đăng nhập lại MỖI LẦN vào tab này (không "remember me"), kể cả chưa reload trang, chỉ
-// chuyển tab đi rồi quay lại. Xem SakuraController.VerifyReprintLogin.
-[Table("SM_UserPermission")]
+// Tài khoản đăng nhập cho toàn site Sakura (cookie auth, xem AccountController) — phân quyền
+// theo Role (Worker/LineLeader/Admin). Trước đây chỉ dùng để mở khoá tab Reprint qua modal
+// (VerifyReprintLogin, đã xoá) — nay là gate chung cho mọi trang /sakura/*. Bảng đổi tên từ
+// SM_UserPermission -> SM_Sakura_UserPermission, xem SM_UserPermission_RenameToSakuraAndAddRole.sql.
+// Role "LineLeader" trước đây tên là "Supervisor" — đổi tên theo yêu cầu, xem
+// SM_Sakura_UserPermission_RenameSupervisorToLineLeader.sql.
+[Table("SM_Sakura_UserPermission")]
 public class UserPermission
 {
     [Key]
@@ -23,10 +26,30 @@ public class UserPermission
     public string PasswordHash { get; set; } = "";
 
     public DateTime CreatedAt { get; set; }
+
+    // "Worker" | "LineLeader" | "Admin" — xem CK_SM_Sakura_UserPermission_Role.
+    [Required]
+    [StringLength(20)]
+    public string Role { get; set; } = "Worker";
+
+    public bool IsActive { get; set; } = true;
+
+    [StringLength(100)]
+    public string? DisplayName { get; set; }
 }
 
-public class ReprintLoginRequest
+public static class UserRoles
+{
+    public const string Worker = "Worker";
+    public const string LineLeader = "LineLeader";
+    public const string Admin = "Admin";
+
+    public static readonly string[] All = { Worker, LineLeader, Admin };
+}
+
+public class LoginRequest
 {
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";
+    public string? ReturnUrl { get; set; }
 }

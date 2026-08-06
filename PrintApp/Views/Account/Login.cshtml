@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "Đăng nhập — Sakura";
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var error = ViewBag.Error as string;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow:wght@600;700;800&display=swap');
+
+    /* ── Sigma Red design tokens — shared across all Sakura pages ─────────── */
+    :root {
+        --red:        #C8102E;
+        --red-dark:   #9B0B22;
+        --red-mid:    #E63950;
+        --red-light:  #FFE5E9;
+        --red-xlight: #FFF5F6;
+        --white:      #FFFFFF;
+        --gray-50:    #F9FAFB;
+        --gray-100:   #F3F4F6;
+        --gray-200:   #E5E7EB;
+        --gray-400:   #9CA3AF;
+        --gray-500:   #6B7280;
+        --gray-600:   #4B5563;
+        --gray-700:   #374151;
+        --gray-900:   #111827;
+        --danger:     #DC2626;
+        --shadow-sm:  0 1px 3px rgba(200,16,46,0.08);
+        --shadow-md:  0 4px 20px rgba(200,16,46,0.12);
+        --shadow-lg:  0 8px 40px rgba(200,16,46,0.18);
+        --font-body:  'Inter', sans-serif;
+        --font-head:  'Barlow', sans-serif;
+    }
+
+    body {
+        background: var(--gray-50) !important;
+        background-image:
+            radial-gradient(ellipse at 10% 30%, rgba(200,16,46,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse at 90% 70%, rgba(230,57,80,0.04) 0%, transparent 50%) !important;
+        color: var(--gray-900) !important;
+        font-family: var(--font-body) !important;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    body::before { content: none !important; }
+
+    .lg-wrap { width: 100%; max-width: 380px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
+
+    .lg-brand { text-align: center; margin-bottom: 28px; }
+    .lg-brand h1 {
+        font-family: var(--font-head); font-size: 42px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--red-dark); line-height: 1.1;
+    }
+    .lg-brand .accent-bar {
+        display: block; width: 40px; height: 4px; border-radius: 4px; margin: 12px auto 0;
+        background: linear-gradient(90deg, var(--red-dark), var(--red-mid));
+    }
+    .lg-brand p { font-size: 0.8rem; color: var(--gray-500); margin-top: 10px; }
+
+    .lg-card {
+        background: var(--white); border: 1px solid rgba(200,16,46,0.07); border-radius: 18px;
+        padding: 32px 28px; box-shadow: var(--shadow-md);
+    }
+
+    .lg-field { margin-bottom: 16px; }
+    .lg-field label {
+        display: block; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: var(--gray-700); margin-bottom: 6px;
+    }
+    .lg-field input {
+        width: 100%; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px;
+        min-height: 46px; padding: 10px 14px; font-family: var(--font-body); font-weight: 500; font-size: 14px;
+        color: var(--gray-900); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        box-sizing: border-box;
+    }
+    .lg-field input:hover { border-color: var(--red-mid); }
+    .lg-field input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.1); }
+
+    .lg-error {
+        font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; color: var(--danger);
+        background: var(--red-xlight); border: 1px solid var(--red-light); border-radius: 10px;
+        padding: 10px 14px; margin-bottom: 16px;
+    }
+
+    .lg-submit {
+        width: 100%; font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;
+        letter-spacing: 0.3px; color: var(--white); border: none; cursor: pointer;
+        min-height: 48px; border-radius: 10px; margin-top: 4px;
+        background: linear-gradient(135deg, var(--red-dark), var(--red-mid));
+        box-shadow: 0 4px 14px rgba(200,16,46,0.35); transition: all 0.2s ease;
+    }
+    .lg-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,16,46,0.4); }
+    .lg-submit:active { transform: translateY(0); }
+
+    .lg-footer {
+        text-align: center; margin-top: 22px;
+        font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.5px;
+        color: var(--gray-400);
+    }
+
+    /* ── Language switcher — fixed top-right, shared across all Sakura pages ── */
+    .sk-lang-switch {
+        position: fixed; top: 18px; right: 22px; z-index: 100;
+        display: flex; gap: 8px;
+        background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+        padding: 5px 6px; box-shadow: var(--shadow-sm);
+    }
+    .sk-lang-flag {
+        width: 26px; height: 26px; border-radius: 50%; overflow: hidden;
+        border: 1.5px solid transparent; padding: 0; cursor: pointer; background: none;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5; transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .sk-lang-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sk-lang-flag:hover { opacity: 0.85; transform: translateY(-1px); }
+    .sk-lang-flag.active { opacity: 1; border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+
+    @@media (max-width: 560px) {
+        .sk-lang-switch { top: 12px; right: 12px; padding: 4px 5px; gap: 6px; }
+        .sk-lang-flag { width: 22px; height: 22px; }
+    }
+</style>
+
+@await Html.PartialAsync("~/Views/Sakura/_LangSwitcher.cshtml")
+
+<div class="lg-wrap">
+    <div class="lg-brand">
+        <h1>SAKURA</h1>
+        <span class="accent-bar"></span>
+        <p data-i18n="account.brandSubtitle">Log in to continue</p>
+    </div>
+
+    <div class="lg-card">
+        <form method="post" action="@Url.Content("~/account/login")">
+            @if (!string.IsNullOrEmpty(returnUrl))
+            {
+                <input type="hidden" name="ReturnUrl" value="@returnUrl" />
+            }
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="lg-error" data-i18n="account.loginWrong">@error</div>
+            }
+
+            <div class="lg-field">
+                <label for="Username" data-i18n="account.usernameLabel">Username</label>
+                <input type="text" id="Username" name="Username" autocomplete="username" autofocus required />
+            </div>
+            <div class="lg-field">
+                <label for="Password" data-i18n="account.passwordLabel">Password</label>
+                <input type="password" id="Password" name="Password" autocomplete="current-password" required />
+            </div>
+
+            <button type="submit" class="lg-submit" data-i18n="account.submitBtn">Log In</button>
+        </form>
+    </div>
+
+    <div class="lg-footer" data-i18n="home.footer">Designed by SVN IT</div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/i18next@23.10.1/i18next.min.js"></script>
+    <script src="~/js/sakura-i18n.js" asp-append-version="true"></script>
+}

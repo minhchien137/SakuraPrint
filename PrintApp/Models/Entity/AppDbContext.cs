@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<LabelPvidEanLog> LabelPvidEanLogs { get; set; }
     public DbSet<CartonUnpackLog> CartonUnpackLogs { get; set; }
     public DbSet<SerialNumberRework> SerialNumberReworks { get; set; }
+    public DbSet<UserActivityLog> UserActivityLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
