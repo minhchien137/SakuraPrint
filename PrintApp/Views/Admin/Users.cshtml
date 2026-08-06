@@ -110,9 +110,11 @@
     .btn-ghost:hover { border-color: var(--red); color: var(--red-dark); background: var(--red-xlight); }
 
     .adm-rowhead, .adm-row {
-        display: grid; grid-template-columns: 1.3fr 1.1fr 1.2fr 1fr 1fr auto 1.2fr auto;
+        display: grid; grid-template-columns: 1.5fr 1.2fr 1.4fr 1.1fr 1.1fr 112px 112px 112px;
         gap: 14px; align-items: center;
     }
+    .btn-danger { background: var(--white); color: var(--danger); border: 1.5px solid var(--red-light); }
+    .btn-danger:hover { background: var(--red-xlight); border-color: var(--danger); }
     .adm-rowhead {
         padding: 0 14px 12px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
         color: var(--gray-400); border-bottom: 1.5px solid var(--gray-100);
@@ -185,6 +187,9 @@
         background: var(--white); border-radius: 20px; box-shadow: var(--shadow-lg);
         width: 100%; max-width: 640px; max-height: 88vh; display: flex; flex-direction: column;
     }
+    .guide-modal.narrow { max-width: 380px; }
+    .reset-modal-user { font-size: 0.85rem; color: var(--gray-600); margin-bottom: 14px; }
+    .reset-modal-user strong { color: var(--gray-900); }
     .guide-modal-header {
         display: flex; align-items: center; justify-content: space-between;
         padding: 20px 26px; border-bottom: 1px solid var(--gray-200); flex-shrink: 0;
@@ -304,9 +309,7 @@
             <div data-i18n="admin.colDisplayName">Display Name</div>
             <div data-i18n="admin.colRole">Role</div>
             <div data-i18n="admin.colStatus">Status</div>
-            <div></div>
-            <div data-i18n="admin.colNewPassword">New Password</div>
-            <div></div>
+            <div data-i18n="admin.colFunction" style="grid-column: span 3; text-align: center">Function</div>
         </div>
 
         @foreach (var user in Model)
@@ -338,11 +341,10 @@
                     <button type="submit" class="btn btn-ghost">💾 <span data-i18n="admin.saveBtn">Save</span></button>
                 </form>
 
-                <form method="post" action="@Url.Content($"~/admin/users/{user.Id}/reset-password")" class="adm-reset-form">
-                    <div style="flex:1">
-                        <input type="password" name="newPassword" data-i18n-placeholder="admin.newPasswordPlaceholder" placeholder="New password" autocomplete="new-password" />
-                    </div>
-                    <button type="submit" class="btn btn-ghost">🔑 <span data-i18n="admin.resetBtn">Reset</span></button>
+                <button type="button" class="btn btn-ghost open-reset-modal" data-id="@user.Id" data-username="@user.Username">🔑 <span data-i18n="admin.resetBtn">Reset</span></button>
+
+                <form method="post" action="@Url.Content($"~/admin/users/{user.Id}/delete")" class="adm-delete-form" data-username="@user.Username">
+                    <button type="submit" class="btn btn-danger">🗑️ <span data-i18n="admin.deleteBtn">Delete</span></button>
                 </form>
             </div>
         }
@@ -413,6 +415,26 @@
     </div>
 </div>
 
+<div class="guide-modal-overlay" id="resetModalOverlay">
+    <div class="guide-modal narrow">
+        <div class="guide-modal-header">
+            <h2 data-i18n="admin.resetModalTitle">Reset Password</h2>
+            <button type="button" class="guide-modal-close" id="btnCloseResetModal" aria-label="Close">✕</button>
+        </div>
+        <div class="guide-modal-body">
+            <p class="reset-modal-user"><span data-i18n="admin.resetModalUserLabel">Account:</span> <strong id="resetModalUser"></strong></p>
+            <form id="resetPasswordForm" method="post">
+                <label data-i18n="admin.newPasswordLabel">New Password</label>
+                <input type="password" name="newPassword" id="resetModalInput" autocomplete="new-password" required />
+            </form>
+        </div>
+        <div class="guide-modal-footer">
+            <button type="button" class="btn btn-ghost" id="btnCancelReset" data-i18n="admin.cancelBtn">Cancel</button>
+            <button type="submit" form="resetPasswordForm" class="btn btn-primary">🔑 <span data-i18n="admin.resetBtn">Reset</span></button>
+        </div>
+    </div>
+</div>
+
 <script>
     (function () {
         var $btnOpenGuide = document.getElementById('btnOpenGuide');
@@ -427,6 +449,35 @@
         $btnCloseGuide.addEventListener('click', closeGuideModal);
         $btnCloseGuide2.addEventListener('click', closeGuideModal);
         $guideModalOverlay.addEventListener('click', function (e) { if (e.target === $guideModalOverlay) closeGuideModal(); });
+    })();
+
+    // Modal "Reset Password" — bấm nút Reset ở 1 dòng thì mở modal, gán action form theo đúng
+    // Id tài khoản đó (dùng chung 1 form/1 modal cho mọi dòng thay vì input rải rác trong bảng).
+    (function () {
+        var $overlay = document.getElementById('resetModalOverlay');
+        var $form = document.getElementById('resetPasswordForm');
+        var $input = document.getElementById('resetModalInput');
+        var $userLabel = document.getElementById('resetModalUser');
+        var $btnClose = document.getElementById('btnCloseResetModal');
+        var $btnCancel = document.getElementById('btnCancelReset');
+
+        function openResetModal(id, username) {
+            $form.action = '@Url.Content("~/admin/users")/' + id + '/reset-password';
+            $userLabel.textContent = username;
+            $input.value = '';
+            $overlay.classList.add('show');
+            $input.focus();
+        }
+        function closeResetModal() { $overlay.classList.remove('show'); }
+
+        document.querySelectorAll('.open-reset-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openResetModal(btn.getAttribute('data-id'), btn.getAttribute('data-username'));
+            });
+        });
+        $btnClose.addEventListener('click', closeResetModal);
+        $btnCancel.addEventListener('click', closeResetModal);
+        $overlay.addEventListener('click', function (e) { if (e.target === $overlay) closeResetModal(); });
     })();
 </script>
 
@@ -452,6 +503,19 @@
             }
             renderAll();
             document.addEventListener('sakura:lang-changed', renderAll);
+        })();
+
+        // Xoá tài khoản là hành động không thể hoàn tác — bắt xác nhận trước khi submit.
+        (function () {
+            document.querySelectorAll('.adm-delete-form').forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    var username = form.getAttribute('data-username') || '';
+                    var msg = window.SakuraI18n
+                        ? window.SakuraI18n.t('admin.confirmDelete').split('{value}').join(username)
+                        : 'Delete account "' + username + '"? This cannot be undone.';
+                    if (!confirm(msg)) e.preventDefault();
+                });
+            });
         })();
     </script>
 }

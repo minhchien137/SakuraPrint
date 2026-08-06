@@ -23,6 +23,22 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
+[D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Account/Denied.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxEZW5pZWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Admin/ActivityLog.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cQWN0aXZpdHlMb2cuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Admin/Users.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXNlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/BackPanel/HistoryLaser.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja1BhbmVsXEhpc3RvcnlMYXNlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -85,6 +101,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Sakura/_LangSwitcher.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXF9MYW5nU3dpdGNoZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Sakura/_UserBadge.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2FrdXJhXF9Vc2VyQmFkZ2UuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PrintService-Sakura-MiddleCheck-/PrintApp/Views/Shared/_Layout.cshtml]
