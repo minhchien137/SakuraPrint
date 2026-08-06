@@ -127,6 +127,33 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Users));
     }
 
+    [HttpPost("/admin/users/{id:int}/delete")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        var user = await _db.UserPermissions.FindAsync(id);
+        if (user == null)
+        {
+            TempData["ErrCode"] = "admin.msgUserNotFound";
+            return RedirectToAction(nameof(Users));
+        }
+
+        // Chặn tự xoá chính tài khoản đang đăng nhập — cùng lý do với chặn tự đổi quyền ở
+        // UpdateUser (tránh tự khoá mình ra khỏi hệ thống).
+        bool isSelf = string.Equals(user.Username, User.Identity?.Name, StringComparison.OrdinalIgnoreCase);
+        if (isSelf)
+        {
+            TempData["ErrCode"] = "admin.msgCannotSelfDelete";
+            return RedirectToAction(nameof(Users));
+        }
+
+        _db.UserPermissions.Remove(user);
+        await _db.SaveChangesAsync();
+
+        TempData["MsgCode"] = "admin.msgDeleted";
+        TempData["MsgParam"] = user.Username;
+        return RedirectToAction(nameof(Users));
+    }
+
     // Xem lại nhật ký ai vào trang nào lúc mấy giờ (SM_Sakura_UserActivityLog, ghi bởi
     // Filters/LogPageVisitFilter — chỉ log các trang thao tác chính, không log History).
     [HttpGet("/admin/activity-log")]
