@@ -97,6 +97,7 @@
     .t-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
     .t-btn-ghost { background: var(--white); color: var(--gray-500); border: 1.5px solid var(--gray-200); }
     .t-btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-xlight); }
+    .t-btn-ghost.save-flash { background: var(--success); color: var(--white); border-color: var(--success); transition: all 0.2s ease; }
     .t-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-icon {
         flex-shrink: 0; background: var(--white); border: 1.5px solid var(--gray-200); color: var(--gray-500);
@@ -202,9 +203,7 @@
 
     <header class="snl-header">
         <div>
-            <h1 data-i18n="whLabel.title">PRINT LABEL WH</h1>
-            <p data-i18n="whLabel.subtitle">Scan Picking Name to print WH labels</p>
-            <span class="accent-bar"></span>
+            <h1 data-i18n="whLabel.title">Print WH Label</h1>
         </div>
         <div class="snl-badge">SAKURA</div>
     </header>
@@ -224,6 +223,17 @@
         </div>
 
         <div id="printerConfigBody" style="display:none">
+            <div class="mode-toggle" id="printerLangToggle" style="margin-bottom:12px">
+                <label id="lblZebra" class="active">
+                    <span class="mode-icon">🦓</span>
+                    <span data-i18n="whLabel.printerLangZebra">Zebra (ZPL)</span>
+                </label>
+                <label id="lblTsc">
+                    <span class="mode-icon">🏷️</span>
+                    <span data-i18n="whLabel.printerLangTsc">TSC (TSPL)</span>
+                </label>
+            </div>
+
             <div class="mode-toggle" id="modeToggle" style="margin-bottom:18px">
                 <label id="lblTcp" class="active">
                     <input type="radio" name="whlabel-print-mode" value="tcp" checked />
@@ -360,6 +370,7 @@
 
     let printMode = 'tcp';
     let bridgeOnline = false;
+    let printerLang = 'zebra'; // 'zebra' (ZPL) | 'tsc' (TSPL) — quyết định server build ZPL hay TSPL
 
     const LS = {
         ip: 'sakura_whlabel_ip',
@@ -367,8 +378,38 @@
         copies: 'sakura_whlabel_copies',
         mode: 'sakura_whlabel_print_mode',
         usbName: 'sakura_whlabel_usb_name',
-        saved: 'sakura_whlabel_printer_saved'
+        saved: 'sakura_whlabel_printer_saved',
+        lang: 'sakura_whlabel_printer_lang'
     };
+
+    const $lblZebra = document.getElementById('lblZebra');
+    const $lblTsc = document.getElementById('lblTsc');
+    function setPrinterLang(lang) {
+        printerLang = lang;
+        $lblZebra.classList.toggle('active', lang === 'zebra');
+        $lblTsc.classList.toggle('active', lang === 'tsc');
+        localStorage.setItem(LS.lang, lang);
+    }
+    // Đổi Zebra/TSC lúc đang có Picking hiển thị -> tra lại ngay để mã build sẵn trong currentLines
+    // (nút Print gửi thẳng mã này qua bridge) luôn khớp đúng loại máy đang chọn, không bị lệch nếu
+    // đổi toggle SAU khi đã Lookup.
+    function onPrinterLangChanged(lang) {
+        setPrinterLang(lang);
+        if ($pickingCode.value.trim()) lookupPicking();
+    }
+    $lblZebra.addEventListener('click', () => onPrinterLangChanged('zebra'));
+    $lblTsc.addEventListener('click', () => onPrinterLangChanged('tsc'));
+
+    // Nhãn "Đã lưu — Zebra (ZPL)"/"Đã lưu — TSC (TSPL)" cạnh nút Save, để biết rõ lần Save gần
+    // nhất đang chốt theo loại máy nào (không chỉ IP/Port) — dùng chung text key "cartonsn.savedHint"
+    // (đang là "✓ Saved" ở các trang khác) nhưng nối thêm tên loại máy riêng cho trang này.
+    function printerLangLabel() {
+        return printerLang === 'tsc' ? t('whLabel.printerLangTsc', 'TSC (TSPL)') : t('whLabel.printerLangZebra', 'Zebra (ZPL)');
+    }
+    function showSavedHint() {
+        $printerSavedHint.textContent = `${t('cartonsn.savedHint', '✓ Saved')} — ${printerLangLabel()}`;
+        $printerSavedHint.classList.add('show');
+    }
 
     function loadPrinterConfig() {
         const v = k => localStorage.getItem(k);
@@ -376,7 +417,8 @@
         if (v(LS.port)) $printerPort.value = v(LS.port);
         if (v(LS.copies)) $copies.value = v(LS.copies);
         setPrintMode(v(LS.mode) === 'usb' ? 'usb' : 'tcp');
-        if (v(LS.saved) === '1') $printerSavedHint.classList.add('show');
+        setPrinterLang(v(LS.lang) === 'tsc' ? 'tsc' : 'zebra');
+        if (v(LS.saved) === '1') showSavedHint();
     }
 
     $btnSavePrinter.addEventListener('click', () => {
@@ -384,8 +426,13 @@
         localStorage.setItem(LS.port, $printerPort.value.trim());
         localStorage.setItem(LS.copies, $copies.value.trim());
         localStorage.setItem(LS.usbName, $usbSelect.value || '');
+        localStorage.setItem(LS.lang, printerLang);
         localStorage.setItem(LS.saved, '1');
-        $printerSavedHint.classList.add('show');
+        showSavedHint();
+
+        // Nháy xanh nút Save 1 lúc cho rõ đã lưu thành công (ngoài chữ "✓ Saved — ..." cạnh nó).
+        $btnSavePrinter.classList.add('save-flash');
+        setTimeout(() => $btnSavePrinter.classList.remove('save-flash'), 1500);
     });
 
     function setPrintMode(mode) {
@@ -545,7 +592,7 @@
         $whLabelRows.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:16px">${t('whLabel.looking', 'Looking up…')}</td></tr>`;
 
         try {
-            const res = await fetch(`${BASE}/api/sakura/whlabel/lookup?pickingCode=${encodeURIComponent(code)}`);
+            const res = await fetch(`${BASE}/api/sakura/whlabel/lookup?pickingCode=${encodeURIComponent(code)}&printerType=${encodeURIComponent(printerLang)}`);
             const body = await res.json();
             if (!res.ok || !body.ok) throw new Error(window.SakuraI18n.translateApiError(body, t('whLabel.lookupFailed', 'Lookup failed.')));
 

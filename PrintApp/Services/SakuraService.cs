@@ -1403,6 +1403,7 @@ public class SakuraService
             "SnLabel" => ZplTemplates.DefaultSnLabel,
             "CartonLabel" => ZplTemplates.DefaultCartonLabel,
             "WHtoPDLabel" => ZplTemplates.DefaultWhToPdLabel,
+            "WHtoPDLabel_TSC" => ZplTemplates.DefaultWhToPdLabelTsc,
             _ => ""
         };
     }
@@ -1450,6 +1451,66 @@ public class SakuraService
             .Replace("{product}", product ?? "")
             .Replace("{lotQty}", qty.ToString("0.##"));
     }
+
+    // Bản TSPL (máy TSC, VD TTP-244 Pro) của tem WH — cùng dữ liệu với BuildWhToPdLabelZplAsync
+    // nhưng TSPL không có block text tự xuống dòng (khác ^FB của ZPL) nên phải tự wrap {product}
+    // thành tối đa 3 dòng trước khi thay vào template (xem WrapProductText).
+    public async Task<string> BuildWhToPdLabelTscZplAsync(string? lotNumber, string pickingName, string? product, decimal qty)
+    {
+        string template = await GetZplTemplateAsync("WHtoPDLabel_TSC");
+        var lines = WrapProductText(product, maxWidthUnits: 28, maxLines: 3);
+        return template
+            .Replace("{lotNumber}", lotNumber ?? "")
+            .Replace("{pickingName}", pickingName)
+            .Replace("{productLine1}", lines[0])
+            .Replace("{productLine2}", lines[1])
+            .Replace("{productLine3}", lines[2])
+            .Replace("{lotQty}", qty.ToString("0.##"));
+    }
+
+    // Wrap {product} theo BỀ RỘNG HIỂN THỊ (không phải số ký tự) — chữ Hán/CJK/Hangul chiếm ~2 lần
+    // bề rộng 1 ký tự Latin trên cùng cỡ chữ, đếm gộp theo số ký tự thường sẽ làm dòng chữ Trung
+    // tràn lề gấp đôi. 1 unit = bề rộng 1 ký tự Latin ở font "2" x2,y2 (24 dots) trong
+    // DefaultWhToPdLabelTsc — đổi cỡ chữ/vị trí template thì phải đổi maxWidthUnits theo.
+    // Wrap cứng theo từng ký tự (không giữ nguyên từ) vì mô tả sản phẩm tiếng Trung thường không
+    // có khoảng trắng để tách từ (VD "Z19TH25152-双色梭织面料(W=58"..." gần như 1 "từ" duy nhất) —
+    // wrap theo từ sẽ không cắt được, tràn hết ra 1 dòng. Nội dung dư dòng thứ maxLines bị bỏ.
+    private static string[] WrapProductText(string? text, int maxWidthUnits, int maxLines)
+    {
+        var lines = new string[maxLines];
+        for (int i = 0; i < maxLines; i++) lines[i] = "";
+        if (string.IsNullOrWhiteSpace(text)) return lines;
+
+        int lineIdx = 0;
+        var current = new System.Text.StringBuilder();
+        int currentWidth = 0;
+        foreach (char c in text.Trim())
+        {
+            int charWidth = IsWideChar(c) ? 2 : 1;
+            if (currentWidth + charWidth > maxWidthUnits && current.Length > 0)
+            {
+                lines[lineIdx] = current.ToString();
+                lineIdx++;
+                if (lineIdx >= maxLines) return lines;
+                current.Clear();
+                currentWidth = 0;
+            }
+            current.Append(c);
+            currentWidth += charWidth;
+        }
+        if (current.Length > 0 && lineIdx < maxLines) lines[lineIdx] = current.ToString();
+        return lines;
+    }
+
+    // Ước lượng ký tự "full-width" (chiếm ~2 lần bề rộng ký tự Latin thường) — CJK Unified
+    // Ideographs (chữ Hán), Hiragana/Katakana, Hangul, các dấu câu/ký hiệu full-width (VD "，").
+    private static bool IsWideChar(char c) =>
+        (c >= 0x1100 && c <= 0x115F) ||
+        (c >= 0x2E80 && c <= 0xA4CF) ||
+        (c >= 0xAC00 && c <= 0xD7A3) ||
+        (c >= 0xF900 && c <= 0xFAFF) ||
+        (c >= 0xFF00 && c <= 0xFF60) ||
+        (c >= 0xFFE0 && c <= 0xFFE6);
 
     // Carton SN Label — 1 label chứa nhiều placeholder khác nhau (khác với SnLabel chỉ có
     // {serialNumber}): tra màu → SKU/PV ID + mô tả, rồi thay từng {sn1}..{sn10} theo ĐÚNG VỊ

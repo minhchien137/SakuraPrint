@@ -117,8 +117,7 @@
             'tile.whlabel.title': 'Print Label WH',
             'tile.whlabel.desc': 'Print WH picking label by Picking Name',
 
-            'whLabel.title': 'PRINT LABEL WH',
-            'whLabel.subtitle': 'Scan Picking Name to print WH labels',
+            'whLabel.title': 'Print WH Label',
             'whLabel.pickingNameLabel': 'Picking Name',
             'whLabel.pickingNamePlaceholder': 'Scan or enter Picking Name (e.g. WH/INT/00107)',
             'whLabel.btnLookup': '🔍 Lookup',
@@ -135,6 +134,8 @@
             'whLabel.printSummary': '✓ Printed {ok}/{total}.',
             'whLabel.printFailedCount': '{n} failed.',
             'whLabel.backHome': '← Sakura Home',
+            'whLabel.printerLangZebra': 'Zebra (ZPL)',
+            'whLabel.printerLangTsc': 'TSC (TSPL)',
             'error.whLabel.missingPickingCode': 'Picking Name is required.',
             'error.whLabel.pickingNotFound': "Picking '{picking}' not found on Odoo (or has no lines).",
 
@@ -1192,8 +1193,7 @@
             'tile.whlabel.title': 'WH 标签打印',
             'tile.whlabel.desc': '按 Picking Name 打印 WH 标签',
 
-            'whLabel.title': 'WH 标签打印',
-            'whLabel.subtitle': '扫描 Picking Name 以打印 WH 标签',
+            'whLabel.title': 'Print WH Label',
             'whLabel.pickingNameLabel': 'Picking Name',
             'whLabel.pickingNamePlaceholder': '扫描或输入 Picking Name（例如 WH/INT/00107）',
             'whLabel.btnLookup': '🔍 查询',
@@ -1210,6 +1210,8 @@
             'whLabel.printSummary': '✓ 已打印 {ok}/{total}。',
             'whLabel.printFailedCount': '{n} 个失败。',
             'whLabel.backHome': '← Sakura 主页',
+            'whLabel.printerLangZebra': 'Zebra (ZPL)',
+            'whLabel.printerLangTsc': 'TSC (TSPL)',
             'error.whLabel.missingPickingCode': '请输入 Picking Name。',
             'error.whLabel.pickingNotFound': "在 Odoo 中未找到 Picking '{picking}'（或该 Picking 没有明细行）。",
 

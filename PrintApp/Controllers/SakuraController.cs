@@ -409,12 +409,13 @@ public class SakuraController : Controller
 
     [Authorize(Roles = "LineLeader,Admin")]
     [HttpGet("/api/sakura/whlabel/lookup")]
-    public async Task<IActionResult> WhLabelLookup([FromQuery] string pickingCode)
+    public async Task<IActionResult> WhLabelLookup([FromQuery] string pickingCode, [FromQuery] string printerType = "zebra")
     {
         if (string.IsNullOrWhiteSpace(pickingCode))
             return BadRequest(new { ok = false, error = "Thiếu Picking Name.", errorCode = "whLabel.missingPickingCode" });
 
         string code = pickingCode.Trim();
+        bool isTsc = string.Equals(printerType, "tsc", StringComparison.OrdinalIgnoreCase);
         try
         {
             var moveLines = await _viidoo.GetPickingMoveLinesAsync(code);
@@ -425,7 +426,9 @@ public class SakuraController : Controller
             foreach (var l in moveLines)
             {
                 string pickingName = l.PickingName ?? code;
-                string zpl = await _snLabel.BuildWhToPdLabelZplAsync(l.LotName, pickingName, l.ProductName, l.QtyDone);
+                string zpl = isTsc
+                    ? await _snLabel.BuildWhToPdLabelTscZplAsync(l.LotName, pickingName, l.ProductName, l.QtyDone)
+                    : await _snLabel.BuildWhToPdLabelZplAsync(l.LotName, pickingName, l.ProductName, l.QtyDone);
                 lines.Add(new
                 {
                     lotNumber = l.LotName,
