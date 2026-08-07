@@ -64,6 +64,11 @@ public class BackPanelController : Controller
 
             int currentSubNameSuffix = await GetCurrentMaxSubNameSuffixAsync(wo);
 
+            // Chặn ngay từ bước Lookup nếu WO đã nhập đủ số lượng (Odoo) — không cho chọn WO này
+            // để quét tiếp nữa, đúng ý "đổi WO khác" thay vì để chọn xong mới báo lỗi lúc quét SN.
+            if (result.Quantity is decimal totalQty1 && totalQty1 > 0 && currentSubNameSuffix >= totalQty1)
+                return BadRequest(new { ok = false, error = $"Work Order '{wo}' đã đủ số lượng ({currentSubNameSuffix}/{totalQty1}) — vui lòng đổi Work Order khác.", errorCode = "workOrder.quantityExceeded", errorParams = new { wo, current = currentSubNameSuffix, total = totalQty1 } });
+
             return Ok(new { ok = true, data = new { workOrder = wo, color = result.Color, productId = result.ProductId, quantity = result.Quantity, currentSubNameSuffix } });
         }
         catch (Exception ex)
@@ -85,6 +90,16 @@ public class BackPanelController : Controller
 
         string serial = req.SerialNumber.Trim();
         string workOrder = req.WorkOrder?.Trim() ?? "";
+
+        // Chốt chặn thật sự (server-side) — không tin riêng cờ khoá phía client, vì WO có thể vừa
+        // bị trạm khác nhập tới đủ số lượng ngay giữa phiên quét đang mở của trạm này.
+        if (req.TotalQuantity is decimal totalQty && totalQty > 0)
+        {
+            int currentCount = await GetCurrentMaxSubNameSuffixAsync(workOrder);
+            if (currentCount >= totalQty)
+                return BadRequest(new { ok = false, error = $"Work Order '{workOrder}' đã đủ số lượng ({currentCount}/{totalQty}) — vui lòng đổi Work Order khác.", errorCode = "workOrder.quantityExceeded", errorParams = new { wo = workOrder, current = currentCount, total = totalQty } });
+        }
+
         string? serialColor = SakuraService.TryResolveColorFromSerial(serial);
         if (serialColor == null)
             return BadRequest(new { ok = false, error = $"Serial '{serial}' không đúng định dạng.", errorCode = "serial.invalidFormat", errorParams = new { serial } });

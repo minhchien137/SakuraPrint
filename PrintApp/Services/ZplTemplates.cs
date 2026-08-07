@@ -111,4 +111,41 @@ public static class ZplTemplates
     // dùng sau khi có mã ZPL thật của tem Main Pallet Label. Để rỗng ở đây chỉ để không vỡ luồng
     // build (SakuraService.BuildPalletLabelZplAsync vẫn thay token bình thường vào chuỗi rỗng).
     public const string DefaultPalletLabel = "";
+
+    // Tem "Print Label WH" (~/sakura/whlabel) — in theo Picking Name (stock.picking, VD
+    // "WH/INT/00107") tra qua Odoo (ViidooService.GetPickingMoveLinesAsync). Khớp với bản đang
+    // active trong DB (key "WHtoPDLabel") tại thời điểm viết — chỉ dùng khi DB chưa seed.
+    // {lotNumber}=lot_id, {pickingName}=picking_id, {product}=product_id, {lotQty}=qty_done.
+    public const string DefaultWhToPdLabel = @"^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD15
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW2400
+^LL3600
+^LS0
+^BY10,3,550^FT335,1005^BCN,550,Y,N,N,A
+^FH\^FD{lotNumber}^FS
+^FT129,1493^A0N,150,152^FH\^CI28^FDPicking Name : ^FS^CI27
+^FT1217,1493^A0N,150,152^FH\^CI28^FD{pickingName}^FS^CI27
+^FT129,1799^A0N,150,152^FH\^CI28^FDProduct:^FS^CI27
+^FO237,1930^A0N,133,132^FB1950,3,0,L,0^FH\^CI28^FD{product}^FS^CI27
+^FT156,2607^A0N,150,152^FH\^CI28^FDLot Qty : ^FS^CI27
+^FT802,2607^A0N,150,152^FH\^CI28^FD{lotQty}^FS^CI27
+^PQ1,0,1,Y
+^XZ";
 }

@@ -283,6 +283,23 @@ public class SakuraController : Controller
             }
         };
 
+        // Chỉ LineLeader/Admin thấy tile này — trỏ tới /sakura/whlabel ([Authorize(Roles=...)] trên
+        // chính action đó). Ẩn hẳn với Worker thay vì để bấm vào rồi mới bị 403 (khác cách làm cũ ở
+        // Rework/CartonSnReprint — dùng luôn quy ước đúng của tile Admin bên dưới cho tính năng mới này).
+        if (User.IsInRole(UserRoles.LineLeader) || User.IsInRole(UserRoles.Admin))
+        {
+            tiles.Insert(0, new SakuraAppTile
+            {
+                Key = "whlabel",
+                Icon = "🏭",
+                Title = "Print Label WH",
+                Subtitle = "Print WH picking label by Picking Name",
+                Href = Url.Content("~/sakura/whlabel"),
+                Enabled = true,
+                Wide = true
+            });
+        }
+
         // Chỉ Admin thấy tile này — trỏ tới /admin/users (AdminController, [Authorize(Roles="Admin")]).
         if (User.IsInRole(UserRoles.Admin))
         {
@@ -377,6 +394,56 @@ public class SakuraController : Controller
     public IActionResult ReworkHistoryPage()
     {
         return View("~/Views/Sakura/ReworkHistory.cshtml");
+    }
+
+    // ── Print Label WH — quét Picking Name (stock.picking, VD "WH/INT/00107"), tra qua Odoo
+    // (ViidooService) và in 1 tem WHtoPDLabel cho mỗi dòng stock.move.line (lot) thuộc picking đó ──
+
+    [Authorize(Roles = "LineLeader,Admin")]
+    [TypeFilter(typeof(LogPageVisitFilter))]
+    [HttpGet("/sakura/whlabel")]
+    public IActionResult WhLabelIndex()
+    {
+        return View("~/Views/Sakura/WhLabel.cshtml");
+    }
+
+    [Authorize(Roles = "LineLeader,Admin")]
+    [HttpGet("/api/sakura/whlabel/lookup")]
+    public async Task<IActionResult> WhLabelLookup([FromQuery] string pickingCode)
+    {
+        if (string.IsNullOrWhiteSpace(pickingCode))
+            return BadRequest(new { ok = false, error = "Thiếu Picking Name.", errorCode = "whLabel.missingPickingCode" });
+
+        string code = pickingCode.Trim();
+        try
+        {
+            var moveLines = await _viidoo.GetPickingMoveLinesAsync(code);
+            if (moveLines.Count == 0)
+                return BadRequest(new { ok = false, error = $"Không tìm thấy Picking '{code}' trên Odoo (hoặc picking không có dòng nào).", errorCode = "whLabel.pickingNotFound", errorParams = new { picking = code } });
+
+            var lines = new List<object>();
+            foreach (var l in moveLines)
+            {
+                string pickingName = l.PickingName ?? code;
+                string zpl = await _snLabel.BuildWhToPdLabelZplAsync(l.LotName, pickingName, l.ProductName, l.QtyDone);
+                lines.Add(new
+                {
+                    lotNumber = l.LotName,
+                    pickingName,
+                    product = l.ProductName,
+                    qty = l.QtyDone,
+                    locationName = l.LocationName,
+                    locationDestName = l.LocationDestName,
+                    zpl
+                });
+            }
+
+            return Ok(new { ok = true, data = new { pickingName = code, lines } });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(BuildError(ex));
+        }
     }
 
     // ── API: printer list (for other Sakura pages that need it) ────────────────

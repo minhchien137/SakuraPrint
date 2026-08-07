@@ -1402,6 +1402,7 @@ public class SakuraService
         {
             "SnLabel" => ZplTemplates.DefaultSnLabel,
             "CartonLabel" => ZplTemplates.DefaultCartonLabel,
+            "WHtoPDLabel" => ZplTemplates.DefaultWhToPdLabel,
             _ => ""
         };
     }
@@ -1436,6 +1437,19 @@ public class SakuraService
 
     public static string BuildConcatenatedZpl(string templateContent, IEnumerable<string> serials) =>
         string.Concat(serials.Select(s => templateContent.Replace("{serialNumber}", s)));
+
+    // Tem "Print Label WH" (~/sakura/whlabel) — 1 tem cho 1 dòng stock.move.line (lot) thuộc
+    // picking đang quét. Xem ViidooService.GetPickingMoveLinesAsync — lotNumber/product có thể
+    // rỗng nếu Odoo trả false (không có lot / không xác định được sản phẩm).
+    public async Task<string> BuildWhToPdLabelZplAsync(string? lotNumber, string pickingName, string? product, decimal qty)
+    {
+        string template = await GetZplTemplateAsync("WHtoPDLabel");
+        return template
+            .Replace("{lotNumber}", lotNumber ?? "")
+            .Replace("{pickingName}", pickingName)
+            .Replace("{product}", product ?? "")
+            .Replace("{lotQty}", qty.ToString("0.##"));
+    }
 
     // Carton SN Label — 1 label chứa nhiều placeholder khác nhau (khác với SnLabel chỉ có
     // {serialNumber}): tra màu → SKU/PV ID + mô tả, rồi thay từng {sn1}..{sn10} theo ĐÚNG VỊ
