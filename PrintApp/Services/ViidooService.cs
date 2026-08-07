@@ -19,6 +19,18 @@ public class ViidooSearchResult
     public string? DropReworkType { get; set; }
 }
 
+// 1 dòng stock.move.line thuộc 1 stock.picking (VD "WH/INT/00107") — xem ViidooService.GetPickingMoveLinesAsync.
+public class ViidooPickingMoveLine
+{
+    public int Id { get; set; }
+    public string? LotName { get; set; }
+    public decimal QtyDone { get; set; }
+    public string? ProductName { get; set; }
+    public string? PickingName { get; set; }
+    public string? LocationName { get; set; }
+    public string? LocationDestName { get; set; }
+}
+
 // Tra cứu Work Order trên Odoo (mrp.production) — trả về mã sản phẩm, màu, số lượng.
 // Dùng chung bởi ViidooController (test endpoint độc lập) và SakuraController
 // (chế độ "In qua Work Order" ở Sakura/SnLabel).
@@ -30,6 +42,8 @@ public class ViidooService
     private const string OdooApiUrl = "https://sigmaworldwide.io/web/dataset/call_kw/mrp.production/web_search_read";
     private const string OdooProductReadUrl = "https://sigmaworldwide.io/web/dataset/call_kw/product.product/read";
     private const string OdooProductSearchUrl = "https://sigmaworldwide.io/web/dataset/call_kw/product.product/web_search_read";
+    private const string OdooPickingSearchUrl = "https://sigmaworldwide.io/web/dataset/call_kw/stock.picking/web_search_read";
+    private const string OdooMoveLineSearchUrl = "https://sigmaworldwide.io/web/dataset/call_kw/stock.move.line/web_search_read";
 
     // Số cấp WO cha tối đa sẽ truy ngược khi tìm màu (tránh lặp vô hạn).
     private const int MaxParentLookupDepth = 5;
@@ -282,6 +296,171 @@ public class ViidooService
             : null;
 
         return ExtractColorFromDescription(displayName);
+    }
+
+    // Tra stock.picking theo code (VD "WH/INT/00107") -> lấy toàn bộ dòng stock.move.line
+    // thuộc picking đó (lot, số lượng, sản phẩm, kho nguồn/đích). Trả về list rỗng nếu
+    // không tìm thấy picking hoặc picking không có move line nào.
+    public async Task<List<ViidooPickingMoveLine>> GetPickingMoveLinesAsync(string pickingCode)
+    {
+        string? cookie = await GetCookieFromDbAsync();
+        if (cookie == null)
+            throw new SakuraCodedException("odoo.cookieNotConfigured", "Odoo cookie not configured. Please update SVN_Defect_Cookie table.");
+
+        int? pickingId = await SearchPickingIdAsync(pickingCode, cookie);
+        if (pickingId == null) return new List<ViidooPickingMoveLine>();
+
+        return await SearchMoveLinesByPickingIdAsync(pickingId.Value, cookie);
+    }
+
+    // Gọi Odoo web_search_read trên stock.picking theo "name" (đúng chuỗi, VD "WH/INT/00107"),
+    // trả về id của picking hoặc null nếu không tìm thấy.
+    private async Task<int?> SearchPickingIdAsync(string pickingCode, string cookie)
+    {
+        string safeCode = JsonSerializer.Serialize(pickingCode);
+
+        string finalJson = $@"
+    {{
+        ""id"": 555555559,
+        ""jsonrpc"": ""2.0"",
+        ""method"": ""call"",
+        ""params"": {{
+            ""model"": ""stock.picking"",
+            ""method"": ""web_search_read"",
+            ""args"": [],
+            ""kwargs"": {{
+                ""limit"": 1,
+                ""offset"": 0,
+                ""order"": """",
+                ""context"": {{
+                    ""lang"": ""vi_VN"",
+                    ""tz"": ""Asia/Ho_Chi_Minh"",
+                    ""uid"": 2,
+                    ""allowed_company_ids"": [1]
+                }},
+                ""count_limit"": 1,
+                ""domain"": [[""name"", ""="", {safeCode}]],
+                ""fields"": [""name""]
+            }}
+        }}
+    }}";
+
+        var jsonContent = new StringContent(finalJson, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, OdooPickingSearchUrl) { Content = jsonContent };
+        request.Headers.Add("Cookie", cookie);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        string responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("error", out var error))
+        {
+            Console.WriteLine($"Odoo returned error: {error}");
+            return null;
+        }
+
+        if (!root.TryGetProperty("result", out var result) ||
+            !result.TryGetProperty("records", out var records) ||
+            records.ValueKind != JsonValueKind.Array ||
+            records.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        var record = records[0];
+        return record.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.Number
+            ? idEl.GetInt32()
+            : null;
+    }
+
+    // Gọi Odoo web_search_read trên stock.move.line theo picking_id, trả về mọi dòng
+    // (lot, sản phẩm, số lượng, kho nguồn/đích).
+    private async Task<List<ViidooPickingMoveLine>> SearchMoveLinesByPickingIdAsync(int pickingId, string cookie)
+    {
+        string finalJson = $@"
+    {{
+        ""id"": 555555560,
+        ""jsonrpc"": ""2.0"",
+        ""method"": ""call"",
+        ""params"": {{
+            ""model"": ""stock.move.line"",
+            ""method"": ""web_search_read"",
+            ""args"": [],
+            ""kwargs"": {{
+                ""limit"": 500,
+                ""offset"": 0,
+                ""order"": """",
+                ""context"": {{
+                    ""lang"": ""vi_VN"",
+                    ""tz"": ""Asia/Ho_Chi_Minh"",
+                    ""uid"": 2,
+                    ""allowed_company_ids"": [1]
+                }},
+                ""count_limit"": 10001,
+                ""domain"": [[""picking_id"", ""="", {pickingId}]],
+                ""fields"": [""lot_id"", ""qty_done"", ""product_id"", ""picking_id"", ""location_id"", ""location_dest_id""]
+            }}
+        }}
+    }}";
+
+        var jsonContent = new StringContent(finalJson, Encoding.UTF8, "application/json");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, OdooMoveLineSearchUrl) { Content = jsonContent };
+        request.Headers.Add("Cookie", cookie);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        string responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("error", out var error))
+        {
+            Console.WriteLine($"Odoo returned error: {error}");
+            return new List<ViidooPickingMoveLine>();
+        }
+
+        if (!root.TryGetProperty("result", out var result) ||
+            !result.TryGetProperty("records", out var records) ||
+            records.ValueKind != JsonValueKind.Array)
+        {
+            return new List<ViidooPickingMoveLine>();
+        }
+
+        var lines = new List<ViidooPickingMoveLine>();
+        foreach (var record in records.EnumerateArray())
+        {
+            lines.Add(new ViidooPickingMoveLine
+            {
+                Id = record.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.Number ? idEl.GetInt32() : 0,
+                LotName = GetArrayElementName(record, "lot_id"),
+                QtyDone = record.TryGetProperty("qty_done", out var qtyEl) && qtyEl.ValueKind == JsonValueKind.Number ? qtyEl.GetDecimal() : 0m,
+                ProductName = GetArrayElementName(record, "product_id"),
+                PickingName = GetArrayElementName(record, "picking_id"),
+                LocationName = GetArrayElementName(record, "location_id"),
+                LocationDestName = GetArrayElementName(record, "location_dest_id"),
+            });
+        }
+        return lines;
+    }
+
+    // Lấy phần tử [1] (tên hiển thị) của 1 field kiểu many2one Odoo trả về dạng [id, "name"].
+    // Trả về null nếu field là false (không có giá trị) hoặc không đúng dạng mảng.
+    private static string? GetArrayElementName(JsonElement record, string propertyName)
+    {
+        if (record.TryGetProperty(propertyName, out var field) &&
+            field.ValueKind == JsonValueKind.Array &&
+            field.GetArrayLength() >= 2)
+        {
+            var second = field[1];
+            return second.ValueKind == JsonValueKind.String ? second.GetString() : second.ToString();
+        }
+        return null;
     }
 
     // Gọi Odoo web_search_read trên mrp.production theo productionCode,

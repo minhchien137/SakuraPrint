@@ -49,6 +49,49 @@ public class ViidooController : ControllerBase
         }
     }
 
+    // Tra stock.picking theo code (VD "WH/INT/00107") -> trả về các dòng stock.move.line
+    // thuộc picking đó: lot, số lượng, sản phẩm, kho nguồn/đích.
+    [HttpGet("picking-move-lines")]
+    public async Task<IActionResult> PickingMoveLines([FromQuery] string pickingCode)
+    {
+        if (string.IsNullOrWhiteSpace(pickingCode))
+            return BadRequest(new { message = "pickingCode parameter is required" });
+
+        try
+        {
+            var lines = await _viidoo.GetPickingMoveLinesAsync(pickingCode);
+            if (lines.Count == 0)
+                return NotFound(new { message = "Picking not found or has no move lines" });
+
+            return Ok(lines.Select(l => new
+            {
+                id = l.Id,
+                lotName = l.LotName,
+                qtyDone = l.QtyDone,
+                productName = l.ProductName,
+                pickingName = l.PickingName,
+                locationName = l.LocationName,
+                locationDestName = l.LocationDestName,
+            }));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+        catch (HttpRequestException ex)
+        {
+            return StatusCode(500, new { message = "Error calling Odoo API", details = ex.Message });
+        }
+        catch (TaskCanceledException ex)
+        {
+            return StatusCode(408, new { message = "Request Timeout", details = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "General Error", details = ex.Message });
+        }
+    }
+
     // Debug: xem nguyên record thô Odoo trả về cho productionCode, để đối chiếu trực
     // tiếp khi 1 field (vd. product_id) trả ra không khớp với những gì thấy trên Odoo UI.
     [HttpGet("raw")]
