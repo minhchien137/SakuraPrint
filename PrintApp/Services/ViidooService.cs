@@ -91,6 +91,9 @@ public class ViidooService
         var record = await SearchProductionRecordAsync(productionCode, cookie);
         if (record == null) return null;
 
+        if (IsCancelled(record.Value))
+            throw new SakuraCodedException("workOrder.cancelled", $"Work Order '{productionCode}' đã bị hủy (cancel) trên Odoo.", new { wo = productionCode });
+
         string? productDescription = GetProductDescription(record.Value);
         string? productCode = ExtractCodeFromDescription(productDescription);
         decimal? quantity = record.Value.TryGetProperty("product_qty", out var qtyEl) && qtyEl.ValueKind == JsonValueKind.Number
@@ -146,7 +149,12 @@ public class ViidooService
             throw new SakuraCodedException("odoo.cookieNotConfigured", "Odoo cookie not configured. Please update SVN_Defect_Cookie table.");
 
         var record = await SearchProductionRecordAsync(productionCode, cookie);
-        return record == null ? null : GetProductDescription(record.Value);
+        if (record == null) return null;
+
+        if (IsCancelled(record.Value))
+            throw new SakuraCodedException("workOrder.cancelled", $"Work Order '{productionCode}' đã bị hủy (cancel) trên Odoo.", new { wo = productionCode });
+
+        return GetProductDescription(record.Value);
     }
 
     // Tra WO -> lấy product_id (dùng lại SearchAsync) -> gọi product.product/read để lấy
@@ -563,6 +571,14 @@ public class ViidooService
         }
         return null;
     }
+
+    // "state" trên mrp.production = "cancel" nghĩa là Work Order đã bị hủy trên Odoo.
+    // Dùng để chặn sớm ở SearchAsync/GetProductNameByWorkOrderAsync — không cho lấy dữ liệu
+    // (màu/số lượng/tên sản phẩm) từ 1 WO đã hủy, dù record vẫn còn tồn tại trên Odoo.
+    private static bool IsCancelled(JsonElement record) =>
+        record.TryGetProperty("state", out var stateEl) &&
+        stateEl.ValueKind == JsonValueKind.String &&
+        string.Equals(stateEl.GetString(), "cancel", StringComparison.OrdinalIgnoreCase);
 
     // Lấy id số của sản phẩm từ product_id[0] của record — ví dụ product_id: [1356, "..."] -> 1356.
     // Dùng ở trạm Laser để gửi kèm khi gọi API Nhập kết quả sản xuất (sẽ bổ sung sau).
