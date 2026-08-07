@@ -150,16 +150,19 @@ public static class ZplTemplates
 ^XZ";
 
     // Bản TSPL của WHtoPDLabel — dùng cho máy TSC (TTP-244 Pro, 203dpi), KHÔNG hiểu ZPL.
-    // Cùng khổ tem vật lý 4x6" như bản Zebra (WHtoPDLabel gốc là 2400x3600 dots @ 600dpi = 4x6";
-    // máy TSC ở đây là 203dpi nên toạ độ tính lại, KHÔNG phải quy đổi máy móc theo tỉ lệ).
-    // Layout: mỗi field xuống dòng riêng (label ở cột x=60, value thụt vào x=90) — không đặt
-    // label+value cùng 1 hàng để tránh lệch cột khi nội dung dài/ngắn khác nhau (Picking Name,
-    // Lot Qty...). Có 2 đường kẻ (BAR) ngăn cách 3 khối: Barcode / Picking+Product / Lot Qty.
+    // Khổ tem THẬT là 100x100mm (~799x799 dots @203dpi) — cuộn tem vuông "100*100*500" (500
+    // tem/cuộn), KHÁC khổ 4x6" chữ nhật của bản Zebra gốc, nên layout viết riêng cho khổ vuông
+    // này, không quy đổi máy móc từ bản kia.
+    // Layout: mỗi field xuống dòng riêng (label ở cột x=40, value thụt vào x=70) — không đặt
+    // label+value cùng 1 hàng để tránh lệch cột khi nội dung dài/ngắn khác nhau (Code, Lot Qty...).
+    // Có 2 đường kẻ (BAR) ngăn cách 3 khối: Barcode / Code+Product / Lot Qty. Module barcode
+    // (narrow=2) hẹp hơn bản 4x6" (3) vì bề ngang tem giờ chỉ còn ~719 dots, cần chỗ cho các
+    // lot number dài (VD "HDBR053101X061501I", 19 ký tự).
     // Human-readable của BARCODE tắt hẳn (tham số readable=0) — tự vẽ TEXT riêng cho {lotNumber}
     // ngay dưới barcode thay vì để máy tự sinh, vì tham số readable không hiển thị ổn định trên
     // 1 số firmware/trình giả lập TSPL. {productLine1/2/3} do SakuraService.WrapProductText tự
-    // xuống dòng sẵn (TSPL không có block text tự wrap như ^FB của ZPL) — đổi maxCharsPerLine bên
-    // đó (đang 28) nếu đổi cỡ chữ dòng Product ở đây.
+    // xuống dòng sẵn (TSPL không có block text tự wrap như ^FB của ZPL) — đổi maxWidthUnits bên
+    // đó (đang 28) nếu đổi cỡ chữ/vị trí dòng Product ở đây.
     // ⚠ GAP/DENSITY/SPEED và vị trí chính xác vẫn cần hiệu chỉnh lại khi in thử thật trên máy
     // (chạy calibrate cảm biến gap của đúng cuộn tem đang dùng trước khi in lô đầu tiên).
     // ⚠⚠ {product} có thể chứa chữ Hán/CJK (mô tả sản phẩm lấy nguyên văn từ Odoo) — font bitmap
@@ -169,7 +172,7 @@ public static class ZplTemplates
     // ra ô trống/dấu ? ở dòng Product khi chứa chữ Hán, TTP-244 Pro không có font CJK -> cần in
     // dòng đó dưới dạng ảnh (BITMAP, server tự render chữ ra bitmap) thay vì TEXT — báo lại để
     // làm tiếp phần này.
-    public const string DefaultWhToPdLabelTsc = @"SIZE 4,6
+    public const string DefaultWhToPdLabelTsc = @"SIZE 100 mm,100 mm
 GAP 3 mm,0 mm
 DIRECTION 1
 REFERENCE 0,0
@@ -177,17 +180,17 @@ DENSITY 8
 SPEED 4
 CODEPAGE UTF-8
 CLS
-BARCODE 60,50,""128"",190,0,0,3,3,""{lotNumber}""
-TEXT 60,250,""2"",0,2,2,""{lotNumber}""
-BAR 60,320,693,3
-TEXT 60,360,""2"",0,2,2,""Code:""
-TEXT 90,410,""3"",0,2,2,""{pickingName}""
-TEXT 60,480,""2"",0,2,2,""Product:""
-TEXT 90,530,""2"",0,2,2,""{productLine1}""
-TEXT 90,580,""2"",0,2,2,""{productLine2}""
-TEXT 90,630,""2"",0,2,2,""{productLine3}""
-BAR 60,700,693,3
-TEXT 60,740,""2"",0,2,2,""Lot Qty:""
-TEXT 90,790,""3"",0,2,2,""{lotQty}""
+BARCODE 40,30,""128"",140,0,0,2,2,""{lotNumber}""
+TEXT 40,190,""2"",0,2,2,""{lotNumber}""
+BAR 40,240,719,3
+TEXT 40,265,""2"",0,2,2,""Code:""
+TEXT 70,305,""3"",0,2,2,""{pickingName}""
+TEXT 40,365,""2"",0,2,2,""Product:""
+TEXT 70,405,""2"",0,2,1,""{productLine1}""
+TEXT 70,440,""2"",0,2,1,""{productLine2}""
+TEXT 70,475,""2"",0,2,1,""{productLine3}""
+BAR 40,525,719,3
+TEXT 40,550,""2"",0,2,2,""Lot Qty:""
+TEXT 70,590,""3"",0,2,2,""{lotQty}""
 PRINT 1,1";
 }

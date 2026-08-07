@@ -1403,7 +1403,7 @@ public class SakuraService
             "SnLabel" => ZplTemplates.DefaultSnLabel,
             "CartonLabel" => ZplTemplates.DefaultCartonLabel,
             "WHtoPDLabel" => ZplTemplates.DefaultWhToPdLabel,
-            "WHtoPDLabel_TSC" => ZplTemplates.DefaultWhToPdLabelTsc,
+            "WHtoPDLabelTCS" => ZplTemplates.DefaultWhToPdLabelTsc,
             _ => ""
         };
     }
@@ -1457,7 +1457,7 @@ public class SakuraService
     // thành tối đa 3 dòng trước khi thay vào template (xem WrapProductText).
     public async Task<string> BuildWhToPdLabelTscZplAsync(string? lotNumber, string pickingName, string? product, decimal qty)
     {
-        string template = await GetZplTemplateAsync("WHtoPDLabel_TSC");
+        string template = await GetZplTemplateAsync("WHtoPDLabelTCS");
         var lines = WrapProductText(product, maxWidthUnits: 28, maxLines: 3);
         return template
             .Replace("{lotNumber}", lotNumber ?? "")

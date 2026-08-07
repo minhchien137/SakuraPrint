@@ -324,8 +324,8 @@ app.post('/print-usb', async (req, res) => {
     return res.status(400).json({ error: 'Thiếu trường "zpl".' });
   if (!printerName || typeof printerName !== 'string')
     return res.status(400).json({ error: 'Thiếu trường "printerName".' });
-  if (!zpl.trim().startsWith('^XA'))
-    return res.status(400).json({ error: 'ZPL không hợp lệ — phải bắt đầu bằng ^XA.' });
+  // Không chặn theo "phải bắt đầu bằng ^XA" nữa — máy TSC dùng TSPL (bắt đầu bằng SIZE/GAP/...),
+  // không phải ZPL. Cùng cách xử lý với /print (TCP/IP) ở trên, chỉ forward nguyên văn cho máy in.
 
   console.log(`\n► [USB PRINT] ${new Date().toLocaleTimeString()}`);
   console.log(`  Printer: ${printerName}`);
