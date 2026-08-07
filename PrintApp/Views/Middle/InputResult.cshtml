@@ -414,10 +414,28 @@
     function updateWoProgress() {
         if (currentSubNameSuffix == null || expectedQuantity == null) {
             $woProgress.style.display = 'none';
-            return;
+        } else {
+            $woProgress.textContent = `${currentSubNameSuffix}/${expectedQuantity}`;
+            $woProgress.style.display = 'block';
         }
-        $woProgress.textContent = `${currentSubNameSuffix}/${expectedQuantity}`;
-        $woProgress.style.display = 'block';
+        applyQuantityGate();
+    }
+
+    // Chặn quét thêm ngay khi WO đã nhập đủ số lượng (Odoo) — khoá ô Serial Number + báo lỗi,
+    // để vận hành viên biết phải đổi Work Order khác thay vì cứ quét rồi mới bị API từ chối.
+    // Chỉ tự mở khoá lại nếu không đang bị khoá vì lý do khác (Try Again/Skip — pendingSerial).
+    function isQuantityExceeded() {
+        return expectedQuantity != null && currentSubNameSuffix != null && currentSubNameSuffix >= expectedQuantity;
+    }
+    function applyQuantityGate() {
+        if (isQuantityExceeded()) {
+            $serialNumber.disabled = true;
+            showStatus($serialStatus, `⚠ ${t('error.workOrder.quantityExceeded', "Work Order '{wo}' has already reached its full quantity ({current}/{total}) — please use a different Work Order.")
+                .replace('{wo}', $workOrder.value.trim()).replace('{current}', currentSubNameSuffix).replace('{total}', expectedQuantity)}`, 'err');
+            return true;
+        }
+        if (!pendingSerial) $serialNumber.disabled = false;
+        return false;
     }
 
     // SN đang bị khoá chờ Try Again/Skip vì fail ở bước 3 (bước 1/2 fail thì không khoá —
@@ -724,6 +742,10 @@
         }
         if (!expectedColor) {
             showStatus($serialStatus, `✗ ${t('middleInput.scanWoFirst', 'Scan a Work Order first.')}`, 'err');
+            $serialNumber.value = '';
+            return;
+        }
+        if (applyQuantityGate()) {
             $serialNumber.value = '';
             return;
         }

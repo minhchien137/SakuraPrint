@@ -19,4 +19,9 @@ public class SakuraAppTile
     // Nếu có, tile này là 1 nhóm (folder) — hiển thị như 1 card riêng chứa các
     // tile con bên trong thay vì 1 icon đơn trong lưới (vd "SN Label" chứa "Print" + "History").
     public List<SakuraAppTile>? Items { get; set; }
+
+    // True = hiển thị dạng card ngang full-width (giống header của 1 group như "Rework") thay vì
+    // ô icon vuông nhỏ trong lưới — dùng cho chức năng đơn (không có Items con) nhưng muốn nổi bật
+    // hơn/dễ bấm hơn trên PDA (VD "Universal Lookup"). Chỉ có tác dụng khi Items rỗng/null.
+    public bool Wide { get; set; } = false;
 }
